@@ -71,7 +71,7 @@ void CNotebook::on_insert(const Gtk::TextBuffer::iterator &iter,const Glib::ustr
 		end.forward_find_char([] (char c) { return c==' ' || c=='\n'; });
 		Glib::ustring str = sbuffer->get_text(start,end,true);
 		
-		int num,pad=0,len=0;
+		int num=0,pad=0,len=0;
 		//printf("word: %s\n",str.c_str());
 		
 		/* get initial indentation */
