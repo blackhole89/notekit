@@ -44,7 +44,9 @@ CNotebook::CNotebook()
 	
 	tag_extra_space = sbuffer->create_tag();
 	tag_extra_space->property_pixels_below_lines().set_value(8);
-	tag_extra_space->property_pixels_above_lines().set_value(8);}
+	tag_extra_space->property_pixels_above_lines().set_value(8);
+	
+	set_wrap_mode(Gtk::WRAP_WORD_CHAR);}
 
 void CNotebook::on_allocate(Gtk::Allocation &a)
 {
