@@ -8,6 +8,7 @@ CNavigationView::Columns::Columns() : Gtk::TreeModel::ColumnRecord()
 	add(name);
 	add(full_path);
 	add(ext);
+	add(ord);
 	add(type);
 }
 
@@ -18,6 +19,18 @@ CNavigationView::CNavigationView(std::string bp)
 	base=bp;
 	
 	ExpandDirectory("",NULL);
+	
+	store->set_sort_func(cols.name,[this] (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b) {
+		if((*b)[cols.type]==CT_ADDER) return -1;
+		else if((*a)[cols.type]==CT_ADDER) return 1;
+		else {
+			Glib::ustring namea, nameb;
+			if(((Glib::ustring)(*a)[cols.ord]).size()) namea = (*a)[cols.ord]; else namea= (*a)[cols.name];
+			if(((Glib::ustring)(*b)[cols.ord]).size()) nameb = (*b)[cols.ord]; else nameb= (*b)[cols.name];
+			return namea<nameb?-1:1;
+		}
+	});
+	store->set_sort_column(cols.name,Gtk::SORT_ASCENDING);
 }
 
 void CNavigationView::on_row_edit_start(Gtk::CellEditable* cell_editable, const Glib::ustring& path)
@@ -142,6 +155,11 @@ void CNavigationView::AttachView(Gtk::TreeView *view)
 {
 	v=view;
 	v->get_selection()->set_mode(Gtk::SELECTION_BROWSE);
+	/*v->get_selection()->set_select_function([this] (const Glib::RefPtr<Gtk::TreeModel>& m, const Gtk::TreeModel::Path& p, bool) {
+		int type = (*m->get_iter(p))[cols.type];
+		if(type==CT_DIR_LOADED || type==CT_DIR_UNLOADED) return false;
+		return true;
+	}); */ // this stops us from editing the directory name too...
 	v->set_size_request(200,-1);
 	v->set_headers_visible(false);
 	v->set_enable_tree_lines(true);
@@ -202,12 +220,19 @@ void CNavigationView::ExpandDirectory(std::string path, const Gtk::TreeNodeChild
 {
 	try {
 		Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(base+path);
-		Glib::RefPtr<Gio::FileEnumerator> child_enumeration = file->enumerate_children(G_FILE_ATTRIBUTE_STANDARD_NAME);
+		Glib::RefPtr<Gio::FileEnumerator> child_enumeration = file->enumerate_children("standard::name,nkorder");
 		
 		Glib::RefPtr<Gio::FileInfo> file_info;
-		while ((file_info = child_enumeration->next_file()))
+		std::vector<Glib::RefPtr<Gio::FileInfo> > files;
+		while ((file_info = child_enumeration->next_file())) files.push_back(file_info);
+		/*std::sort(files.begin(), files.end(), [](Glib::RefPtr<Gio::FileInfo> &a, Glib::RefPtr<Gio::FileInfo> &b) {
+			return (a->get_name() > b->get_name()); } ); */
+		
+		for( auto file_info : files )
 		{
 			std::string fname = file_info->get_name();
+			Glib::ustring order = file_info->get_attribute_as_string("nkorder");
+
 			bool is_dir = file_info->get_file_type()==Gio::FILE_TYPE_DIRECTORY;
 			
 			Gtk::TreeModel::iterator r;
@@ -219,6 +244,7 @@ void CNavigationView::ExpandDirectory(std::string path, const Gtk::TreeNodeChild
 				(*r)[cols.name] = fname;
 				(*r)[cols.full_path] = path+"/";
 				(*r)[cols.ext] = "";
+				(*r)[cols.ord] = order;
 				(*r)[cols.type] = CT_DIR_UNLOADED;
 				
 				CreateAdder(r);
@@ -231,6 +257,7 @@ void CNavigationView::ExpandDirectory(std::string path, const Gtk::TreeNodeChild
 					(*r)[cols.name] = fname.substr(0,pos);
 					(*r)[cols.full_path] = path+"/";
 					(*r)[cols.ext] = ".md";
+					(*r)[cols.ord] = order;
 					(*r)[cols.type] = CT_FILE;
 				}
 			}

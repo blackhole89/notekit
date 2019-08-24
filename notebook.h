@@ -65,6 +65,8 @@ public:
     bool on_button_release(GdkEventButton* event);
     bool on_motion_notify(GdkEventMotion* event);
 	
+	int modifier_keys; // modifier keys active during most recent keypress
+	virtual bool on_key_press_event(GdkEventKey *k);
 	void on_insert(const Gtk::TextBuffer::iterator &,const Glib::ustring& str,int len);
 	
 	guint8* on_serialize(const Glib::RefPtr<Gtk::TextBuffer>& content_buffer, const Gtk::TextBuffer::iterator& start, const Gtk::TextBuffer::iterator& end, gsize& length);

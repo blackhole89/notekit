@@ -61,15 +61,26 @@ void CStroke::Render(const Cairo::RefPtr<Cairo::Context> &ctx, float basex, floa
 	
 }
 
+#include <gdk/gdkkeysyms.h>
+
+bool CNotebook::on_key_press_event(GdkEventKey *k)
+{
+	modifier_keys = k->state & (GDK_MODIFIER_MASK);
+	return Gsv::View::on_key_press_event(k);
+}
+
 void CNotebook::on_insert(const Gtk::TextBuffer::iterator &iter,const Glib::ustring& str,int len)
 {	
 	if(str=="\n") {
+		if(modifier_keys & GDK_SHIFT_MASK) return;
 		/* extract previous line's first word and indentation preceding it */
 		Gtk::TextBuffer::iterator start = iter; start.backward_line();
 		Gtk::TextBuffer::iterator end = start; 
-		if(end.get_char()==' ') end.forward_find_char([] (char c) { return c!=' ' || c=='\n'; });
-		end.forward_find_char([] (char c) { return c==' ' || c=='\n'; });
+		if(end.get_char()==' ' || end.get_char()=='\t') end.forward_find_char([] (char c) { return (c!=' ' && c!='\t') || c=='\n'; });
+		end.forward_find_char([] (char c) { return c==' ' || c=='\t' || c=='\n'; });
+		end.forward_char();
 		Glib::ustring str = sbuffer->get_text(start,end,true);
+		end.forward_char();
 		
 		int num=0,pad=0,len=0;
 		//printf("word: %s\n",str.c_str());
@@ -81,18 +92,34 @@ void CNotebook::on_insert(const Gtk::TextBuffer::iterator &iter,const Glib::ustr
 		//printf("word: %s\n",str.c_str());
 		
 		/* try to parse as enumeration or the like */
-		sscanf(str.c_str(),"%d.%n",&num,&len);
+		sscanf(str.c_str(),"%d.%*1[ \t]%n",&num,&len);
 		char buf[512];
 		if(len==str.length() && num>0) {
+			if(end >= iter) {
+				sbuffer->erase(start,iter);
+				return;
+			}
 			sprintf(buf,"%*s%d. ",pad,"",num+1);
 			sbuffer->insert(iter,buf);
-		} else if(str=="*") {
+		} else if(str=="* ") {
+			if(end >= iter) {
+				sbuffer->erase(start,iter);
+				return;
+			}
 			sprintf(buf,"%*s* ",pad,"");
 			sbuffer->insert(iter,buf);
-		} else if(str=="-") {
+		} else if(str=="- ") {
+			if(end >= iter) {
+				sbuffer->erase(start,iter);
+				return;
+			}
 			sprintf(buf,"%*s- ",pad,"");
 			sbuffer->insert(iter,buf);
-		} else if(str==">") {
+		} else if(str=="> ") {
+			if(end == iter) {
+				sbuffer->erase(start,iter);
+				return;
+			}
 			sprintf(buf,"%*s> ",pad,"");
 			sbuffer->insert(iter,buf);
 		}

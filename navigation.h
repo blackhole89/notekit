@@ -19,6 +19,7 @@ public:
 		Gtk::TreeModelColumn<Glib::ustring> name;
 		Gtk::TreeModelColumn<Glib::ustring> full_path;
 		Gtk::TreeModelColumn<Glib::ustring> ext;
+		Gtk::TreeModelColumn<Glib::ustring> ord;
 		Gtk::TreeModelColumn<int> type;
 	};
 	
