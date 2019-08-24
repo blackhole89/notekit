@@ -120,4 +120,5 @@
   <style name="Others 2"                    foreground="#008B8B"/>
   <style name="Others 3"                    foreground="#6A5ACD"/>
 
+  <style name="markdown:invisible"             foreground="#FFFFFF"/>
 </style-scheme>

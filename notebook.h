@@ -50,6 +50,8 @@ class CNotebook : public Gsv::View
 public:
 	CNotebook();
 	
+	int margin_x;
+	
 	CStroke active;
 	bool is_drawing;
 	std::set<CBoundDrawing* > floats;
@@ -64,6 +66,9 @@ public:
     bool on_button_press(GdkEventButton* event);
     bool on_button_release(GdkEventButton* event);
     bool on_motion_notify(GdkEventMotion* event);
+	
+	Glib::RefPtr<Gtk::TextTag> tag_extra_space;
+	void on_highlight_updated(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
 	
 	int modifier_keys; // modifier keys active during most recent keypress
 	virtual bool on_key_press_event(GdkEventKey *k);

@@ -31,10 +31,11 @@
   </metadata>
 
   <styles>
-    <style id="header1" name="Header 1" map-to="def:heading2"/>
-    <style id="header2" name="Header 2" map-to="def:heading4"/>
+    <style id="header1" name="Header 1" map-to="def:heading1"/>
+    <style id="header2" name="Header 2" map-to="def:heading3"/>
     <style id="header3" name="Header 3" map-to="def:heading6"/>
-    <style id="horizontal-rule" name="Horizontal Rule" map-to="def:type"/>
+    <style id="invisible" name="Invisible"/>
+    <style id="horizontal-rule" name="Horizontal Rule" map-to="markdown:invisible"/>
     <style id="list-marker" name="List Marker" map-to="def:statement"/>
     <style id="code" name="Code" map-to="def:identifier"/>
     <style id="blockquote-marker" name="Blockquote Marker" map-to="def:shebang"/>
@@ -55,10 +56,10 @@
          ## Header 2
          ###Header 3###
     -->
-    <context id="atx-header1" style-ref="header1">
+    <context id="atx-header1" style-ref="header1" class="extra-space">
       <match>^#[^#]*$</match>
     </context>
-    <context id="atx-header2" style-ref="header2">
+    <context id="atx-header2" style-ref="header2" class="extra-space">
       <match>^##[^#]*$</match>
     </context>
     <context id="atx-header3" style-ref="header3">
@@ -72,13 +73,13 @@
          -
     -->
     <!-- Note: line break can't be used in regex, so only underline is matched. -->
-    <context id="setext-header1" style-ref="header1">
+<!--    <context id="setext-header1" style-ref="header1">
       <match>^(=+)[ \t]*$</match>
     </context>
 
     <context id="setext-header2" style-ref="header2">
       <match>^(-+)[ \t]*$</match>
-    </context>
+    </context> -->
 
 
 
@@ -87,7 +88,7 @@
          **  **  **  **  **
          _____
     -->
-    <context id="horizontal-rule" style-ref="horizontal-rule">
+    <context id="horizontal-rule" style-ref="horizontal-rule" class="hline">
       <match extended="true">
         ^[ ]{0,3}            # Maximum 3 spaces at the beginning of the line.
         (
@@ -387,8 +388,8 @@
         <context ref="atx-header1"/>
         <context ref="atx-header2"/>
         <context ref="atx-header3"/>
-        <context ref="setext-header1"/>
-        <context ref="setext-header2"/>
+<!--        <context ref="setext-header1"/>
+        <context ref="setext-header2"/> -->
         <context ref="horizontal-rule"/>
         <context ref="list"/>
         <context ref="code-block"/>

@@ -8,7 +8,11 @@ CNotebook::CNotebook()
 
 	Glib::RefPtr<Gsv::StyleSchemeManager> styleman = Gsv::StyleSchemeManager::create();
 	styleman->set_search_path({"sourceview/"});
-	sbuffer->set_style_scheme(styleman->get_scheme("classic"));
+	Glib::RefPtr<Gsv::StyleScheme> the_scheme;
+	the_scheme = styleman->get_scheme("classic");
+	sbuffer->set_style_scheme(the_scheme);
+	
+	
 	
 	Glib::RefPtr<Gsv::LanguageManager> langman = Gsv::LanguageManager::create();
 	langman->set_search_path({"sourceview/"});
@@ -28,6 +32,7 @@ CNotebook::CNotebook()
 	signal_button_release_event().connect(sigc::mem_fun(this,&CNotebook::on_button_release),false);
 	signal_motion_notify_event().connect(sigc::mem_fun(this,&CNotebook::on_motion_notify),false);
 	sbuffer->signal_insert().connect(sigc::mem_fun(this,&CNotebook::on_insert),true);
+	sbuffer->signal_highlight_updated().connect(sigc::mem_fun(this,&CNotebook::on_highlight_updated),true);
 	
 	GtkTextViewClass *k = GTK_TEXT_VIEW_GET_CLASS(gobj());
 	k->copy_clipboard = notebook_copy_clipboard;
@@ -35,7 +40,11 @@ CNotebook::CNotebook()
 	k->paste_clipboard = notebook_paste_clipboard;
 	//g_signal_connect(gobj(),"copy-clipboard",G_CALLBACK(notebook_copy_clipboard),NULL);
 	
-	is_drawing=false;}
+	is_drawing=false;
+	
+	tag_extra_space = sbuffer->create_tag();
+	tag_extra_space->property_pixels_below_lines().set_value(8);
+	tag_extra_space->property_pixels_above_lines().set_value(8);}
 
 void CNotebook::on_allocate(Gtk::Allocation &a)
 {
@@ -73,6 +82,8 @@ void CNotebook::on_insert(const Gtk::TextBuffer::iterator &iter,const Glib::ustr
 {	
 	if(str=="\n") {
 		if(modifier_keys & GDK_SHIFT_MASK) return;
+		if(!iter.ends_line()) return;
+		
 		/* extract previous line's first word and indentation preceding it */
 		Gtk::TextBuffer::iterator start = iter; start.backward_line();
 		Gtk::TextBuffer::iterator end = start; 
@@ -127,6 +138,7 @@ void CNotebook::on_insert(const Gtk::TextBuffer::iterator &iter,const Glib::ustr
 	/* TODO: we really should fix up the iterator, but this version of gtkmm erroneously sets iter to const */
 }
 
+/* redraw cairo overlay: active stroke, special widgets like lines, etc. */
 bool CNotebook::on_redraw_overlay(const Cairo::RefPtr<Cairo::Context> &ctx)
 {
 	int bx, by;
@@ -134,7 +146,45 @@ bool CNotebook::on_redraw_overlay(const Cairo::RefPtr<Cairo::Context> &ctx)
 	
 	active.Render(ctx,bx,by);
 	
+	/* draw horizontal rules */
+	Gdk::Rectangle rect;
+	get_visible_rect(rect);
+	
+	Gsv::Buffer::iterator i, end;
+	get_iter_at_location(i,rect.get_x(),rect.get_y());
+	get_iter_at_location(end,rect.get_x()+rect.get_width(),rect.get_y()+rect.get_height());
+	
+	do{
+		if(sbuffer->iter_has_context_class(i, "hline")) {
+			int y, height;
+			get_line_yrange(i,y,height);
+			int linex0,liney0;
+			buffer_to_window_coords(Gtk::TEXT_WINDOW_WIDGET,0,y+height,linex0,liney0);
+			
+			ctx->set_line_width(1.0);
+			ctx->set_source_rgba(.4,.4,.4,1);
+			ctx->move_to(linex0,liney0-height/2);
+			ctx->line_to(linex0+rect.get_width()-margin_x,liney0-height/2);
+			ctx->stroke();
+		}
+	}while(sbuffer->iter_forward_to_context_class_toggle(i, "hline") && i<end);
+	
 	return true;
+}
+
+void CNotebook::on_highlight_updated(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end)
+{
+	Gtk::TextBuffer::iterator i = start;
+	do {
+		Gtk::TextBuffer::iterator next = i;
+		if(!sbuffer->iter_forward_to_context_class_toggle(next, "extra-space")) next=end;
+		if(sbuffer->iter_has_context_class(i, "extra-space")) {
+			sbuffer->apply_tag(tag_extra_space, i, next);
+		} else {
+			sbuffer->remove_tag(tag_extra_space, i, next);
+		}
+		i=next;
+	} while(i<end);
 }
 
 void CNotebook::Widget2Doc(double in_x, double in_y, double &out_x, double &out_y)
