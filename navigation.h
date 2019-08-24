@@ -21,6 +21,7 @@ public:
 		Gtk::TreeModelColumn<Glib::ustring> ext;
 		Gtk::TreeModelColumn<Glib::ustring> ord;
 		Gtk::TreeModelColumn<int> type;
+		Gtk::TreeModelColumn<int> expanded;
 	};
 	
 	Columns cols;
@@ -43,6 +44,7 @@ public:
 	
 	void HandleRename(std::string oldname, std::string newname);
 	void FixPaths(std::string path, const Gtk::TreeNodeChildren *node);
+	void MaybeDeleteSelected();
 	
 	void CreateAdder(Gtk::TreeModel::iterator row);
 	
@@ -50,8 +52,13 @@ public:
 	void on_row_edit_commit(const Glib::ustring& path_string, const Glib::ustring& new_text);
 	void on_row_activated(const Gtk::TreeModel::Path &path, const Gtk::TreeViewColumn *col);
 	bool on_expand_row(const Gtk::TreeModel::iterator& iter, const Gtk::TreeModel::Path& path);
+	void on_postexpand_row(const Gtk::TreeModel::iterator& iter, const Gtk::TreeModel::Path& path);
+	void on_collapse_row(const Gtk::TreeModel::iterator& iter, const Gtk::TreeModel::Path& path);
 	
-	sigc::connection conns[4];
+	Gtk::Menu popup;
+	void on_button_press_event(GdkEventButton* event);
+	
+	sigc::connection conns[7];
 };
 
 #endif

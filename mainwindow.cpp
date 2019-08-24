@@ -37,7 +37,8 @@ CMainWindow::CMainWindow() : nav_model("notesbase")
 
 	sview_scroll.add( sview);
 	//split.override_background_color(Gdk::RGBA("rgb(255,255,255)"));
-	filler.set_size_request(16,-1);
+	filler.set_size_request(32,-1);
+	sview.margin_x=32;
 	split.pack_start(filler,Gtk::PACK_SHRINK);
 	filler.override_background_color(Gdk::RGBA("rgb(255,255,255)"));
 	//split.set_spacing(16);
@@ -94,6 +95,10 @@ void CMainWindow::OpenDocument(std::string filename)
 	
 	if(filename=="") {
 		active_document="";
+		
+		sbuffer->begin_not_undoable_action();
+		sbuffer->set_text("");
+		sbuffer->end_not_undoable_action();
 		return;
 	}
 	
@@ -104,7 +109,7 @@ void CMainWindow::OpenDocument(std::string filename)
 	sbuffer->begin_not_undoable_action();
 	sbuffer->set_text("");
 	Gtk::TextBuffer::iterator i = sbuffer->begin();
-	sbuffer->deserialize(sbuffer,"text/notekit-markdown",i,(guint8*)buf,length);
+	if(length) sbuffer->deserialize(sbuffer,"text/notekit-markdown",i,(guint8*)buf,length);
 	//sbuffer->set_text(buf);
 	sbuffer->end_not_undoable_action();
 	

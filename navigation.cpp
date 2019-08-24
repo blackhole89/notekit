@@ -3,6 +3,8 @@
 
 #include <giomm/file.h>
 
+extern CMainWindow *mainwindow;
+
 CNavigationView::Columns::Columns() : Gtk::TreeModel::ColumnRecord()
 {
 	add(name);
@@ -10,6 +12,7 @@ CNavigationView::Columns::Columns() : Gtk::TreeModel::ColumnRecord()
 	add(ext);
 	add(ord);
 	add(type);
+	add(expanded);
 }
 
 CNavigationView::CNavigationView(std::string bp)
@@ -18,8 +21,7 @@ CNavigationView::CNavigationView(std::string bp)
 	
 	base=bp;
 	
-	ExpandDirectory("",NULL);
-	
+	/* set up sorting */
 	store->set_sort_func(cols.name,[this] (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b) {
 		if((*b)[cols.type]==CT_ADDER) return -1;
 		else if((*a)[cols.type]==CT_ADDER) return 1;
@@ -41,8 +43,6 @@ void CNavigationView::on_row_edit_start(Gtk::CellEditable* cell_editable, const 
 			pEntry->set_text("");
 	}
 }
-
-extern CMainWindow *mainwindow;
 
 void CNavigationView::on_row_edit_commit(const Glib::ustring& path_string, const Glib::ustring& new_text)
 {
@@ -88,7 +88,7 @@ void CNavigationView::on_row_edit_commit(const Glib::ustring& path_string, const
 				if(!system(cmd.c_str())) {
 					auto newrow = store->insert(row);
 					
-					(*newrow)[cols.name] = new_text;
+					(*newrow)[cols.name] = new_text.substr(0,new_text.size()-1);
 					(*newrow)[cols.full_path] = (Glib::ustring)(*row)[cols.full_path];
 					(*newrow)[cols.ext] = "";
 					(*newrow)[cols.type] = CT_DIR_LOADED;
@@ -114,6 +114,7 @@ void CNavigationView::on_row_edit_commit(const Glib::ustring& path_string, const
 					(*newrow)[cols.type] = CT_FILE;
 					
 					v->set_cursor(store->get_path(newrow));
+					mainwindow->OpenDocument(Row2Path(newrow));
 				}
 			}
 			break;
@@ -143,13 +144,46 @@ void CNavigationView::on_row_activated(const Gtk::TreeModel::Path &path, const G
 	mainwindow->OpenDocument(fname);
 }
 
+#include <sys/xattr.h>
+
 bool CNavigationView::on_expand_row(const Gtk::TreeModel::iterator& iter, const Gtk::TreeModel::Path& path)
 {
 	if( (*iter)[cols.type] == CT_DIR_UNLOADED )
 		ExpandDirectory( (Glib::ustring)(*iter)[cols.full_path] + (Glib::ustring)(*iter)[cols.name], &iter->children() );
 	(*iter)[cols.type] = CT_DIR_LOADED;
+	
+	int attr='1';
+	setxattr((base+Row2Path(iter)).c_str(),"user.nkexpand",&attr,1,0);
+	(*iter)[cols.expanded]=1;
+	
 	return false;
 }
+
+void CNavigationView::on_postexpand_row(const Gtk::TreeModel::iterator& iter, const Gtk::TreeModel::Path& path)
+{
+	for(auto r : iter->children()) {
+		if( r[cols.expanded] ) {
+			v->expand_row(store->get_path(r),false);
+		}
+	}
+}
+
+void CNavigationView::on_collapse_row(const Gtk::TreeModel::iterator& iter, const Gtk::TreeModel::Path& path)
+{
+	/* not unloading the row for now */
+	int attr='0';
+	setxattr((base+Row2Path(iter)).c_str(),"user.nkexpand",&attr,0,0);
+	(*iter)[cols.expanded]=0;
+}
+
+void CNavigationView::on_button_press_event(GdkEventButton* event)
+{
+	if( (event->type == GDK_BUTTON_PRESS) && (event->button == 3) )
+	{
+		popup.popup_at_pointer((GdkEvent*)event);
+	}
+}
+
 
 void CNavigationView::AttachView(Gtk::TreeView *view)
 {
@@ -178,12 +212,93 @@ void CNavigationView::AttachView(Gtk::TreeView *view)
 	
 	conns[2] = v->signal_row_activated().connect(sigc::mem_fun(this,&CNavigationView::on_row_activated));
 	conns[3] = v->signal_test_expand_row().connect(sigc::mem_fun(this,&CNavigationView::on_expand_row));
+	conns[4] = v->signal_row_expanded().connect(sigc::mem_fun(this,&CNavigationView::on_postexpand_row));
+	conns[5] = v->signal_row_collapsed().connect(sigc::mem_fun(this,&CNavigationView::on_collapse_row));
+	
+	conns[6] = v->signal_button_press_event().connect_notify(sigc::mem_fun(this,&CNavigationView::on_button_press_event),false);
+	
+	/* expand root directory */
+	ExpandDirectory("",NULL);
+	for(auto r : store->children()) {
+		if( r[cols.expanded] ) {
+			v->expand_row(store->get_path(r),false);
+		}
+	}
 	
 	Gtk::TreeModel::iterator adder;
 	adder = store->append();
 	(*adder)[cols.name]="+";
-	(*adder)[cols.full_path]="";
+	(*adder)[cols.full_path]="/";
 	(*adder)[cols.type]=CT_ADDER;
+	
+	/* create popup menu */
+	auto item = new Gtk::MenuItem("_Delete", true);
+	Gtk::manage(item);
+	item->signal_activate().connect( sigc::mem_fun(this,&CNavigationView::MaybeDeleteSelected) );
+	popup.append(*item);
+	popup.accelerate(*v);
+	popup.show_all();
+}
+
+void CNavigationView::MaybeDeleteSelected()
+{
+	
+	Gtk::TreeIter i = v->get_selection()->get_selected();
+	switch( (*i)[cols.type] ) {
+		case CT_FILE: {
+			Gtk::MessageDialog dialog(*mainwindow, "Delete note "+(*i)[cols.name]+"?",
+				false /* use_markup */, Gtk::MESSAGE_QUESTION,
+				Gtk::BUTTONS_OK_CANCEL);
+				dialog.set_secondary_text("This action can not be undone.");
+
+			int result = dialog.run();
+
+			//Handle the response:
+			if(result==Gtk::RESPONSE_OK) {
+				mainwindow->OpenDocument("");
+				
+				std::string cmd;
+				cmd = "rm \"";
+				cmd += base;
+				cmd += (Glib::ustring)(*i)[cols.full_path];
+				cmd += (Glib::ustring)(*i)[cols.name];
+				cmd += (Glib::ustring)(*i)[cols.ext];
+				cmd += "\"";
+
+				if(!system(cmd.c_str())) {
+					store->erase(i);
+				}
+			}
+			break;
+		}
+		case CT_DIR_LOADED:
+		case CT_DIR_UNLOADED: {
+			Gtk::MessageDialog dialog(*mainwindow, "Delete FOLDER "+(*i)[cols.name]+"?",
+				false /* use_markup */, Gtk::MESSAGE_WARNING,
+				Gtk::BUTTONS_OK_CANCEL);
+				dialog.set_secondary_text("This action can not be undone, and many notes may be lost.");
+
+			int result = dialog.run();
+
+			//Handle the response:
+			if(result==Gtk::RESPONSE_OK) {
+				mainwindow->OpenDocument("");
+				
+				std::string cmd;
+				cmd = "rm -r \"";
+				cmd += base;
+				cmd += (Glib::ustring)(*i)[cols.full_path];
+				cmd += (Glib::ustring)(*i)[cols.name];
+				cmd += (Glib::ustring)(*i)[cols.ext];
+				cmd += "\"";
+
+				if(!system(cmd.c_str())) {
+					store->erase(i);
+				}
+			}
+			break;
+		}
+	}
 }
 
 void CNavigationView::HandleRename(std::string oldname, std::string newname)
@@ -220,7 +335,7 @@ void CNavigationView::ExpandDirectory(std::string path, const Gtk::TreeNodeChild
 {
 	try {
 		Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(base+path);
-		Glib::RefPtr<Gio::FileEnumerator> child_enumeration = file->enumerate_children("standard::name,nkorder");
+		Glib::RefPtr<Gio::FileEnumerator> child_enumeration = file->enumerate_children("standard::name,xattr::nkorder,xattr::nkexpand");
 		
 		Glib::RefPtr<Gio::FileInfo> file_info;
 		std::vector<Glib::RefPtr<Gio::FileInfo> > files;
@@ -231,7 +346,7 @@ void CNavigationView::ExpandDirectory(std::string path, const Gtk::TreeNodeChild
 		for( auto file_info : files )
 		{
 			std::string fname = file_info->get_name();
-			Glib::ustring order = file_info->get_attribute_as_string("nkorder");
+			Glib::ustring order = file_info->get_attribute_as_string("xattr::nkorder");
 
 			bool is_dir = file_info->get_file_type()==Gio::FILE_TYPE_DIRECTORY;
 			
@@ -248,6 +363,13 @@ void CNavigationView::ExpandDirectory(std::string path, const Gtk::TreeNodeChild
 				(*r)[cols.type] = CT_DIR_UNLOADED;
 				
 				CreateAdder(r);
+				
+				/* WARN: this needs the view to already be attached */
+				if(file_info->get_attribute_string("xattr::nkexpand").size()) {
+					(*r)[cols.expanded] = 1;
+				} else {
+					(*r)[cols.expanded] = 0;
+				}
 			} else {
 				size_t pos;
 				if((pos = fname.find(".md"))!=std::string::npos) {
