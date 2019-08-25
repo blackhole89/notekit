@@ -120,5 +120,9 @@
   <style name="Others 2"                    foreground="#008B8B"/>
   <style name="Others 3"                    foreground="#6A5ACD"/>
 
+  <!-- custom overrides -->
+  <style name="markdown:tag"         foreground="#A0A8C0"/>
+
+  <style name="markdown:list-marker" foreground="#A0A8C0" bold="true"/>
   <style name="markdown:invisible"             foreground="#FFFFFF"/>
 </style-scheme>

@@ -35,6 +35,7 @@
     <style id="header2" name="Header 2" map-to="def:heading3"/>
     <style id="header3" name="Header 3" map-to="def:heading6"/>
     <style id="invisible" name="Invisible"/>
+    <style id="tag" name="Tag"/>
     <style id="horizontal-rule" name="Horizontal Rule" map-to="markdown:invisible"/>
     <style id="list-marker" name="List Marker" map-to="def:statement"/>
     <style id="code" name="Code" map-to="def:identifier"/>
@@ -57,13 +58,22 @@
          ###Header 3###
     -->
     <context id="atx-header1" style-ref="header1" class="extra-space">
-      <match>^#[^#]*$</match>
+      <match>^(#)[^#]*$</match>
+      <include>
+         <context sub-pattern="1" style-ref="tag" />
+      </include>
     </context>
     <context id="atx-header2" style-ref="header2" class="extra-space">
-      <match>^##[^#]*$</match>
+      <match>^(##)[^#]*$</match>
+      <include>
+         <context sub-pattern="1" style-ref="tag" />
+      </include>
     </context>
-    <context id="atx-header3" style-ref="header3">
-      <match>^###.*$</match>
+    <context id="atx-header3" style-ref="header3" class="extra-space">
+      <match>^(###).*$</match>
+      <include>
+         <context sub-pattern="1" style-ref="tag" />
+      </include>
     </context>
 
     <!-- Examples:

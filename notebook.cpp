@@ -50,7 +50,7 @@ CNotebook::CNotebook()
 
 void CNotebook::on_allocate(Gtk::Allocation &a)
 {
-	printf("alloc %d %d\n",a.get_width(),a.get_height());
+	//printf("alloc %d %d\n",a.get_width(),a.get_height());
 	overlay.size_allocate(a);
 	if(overlay.get_window()) {
 		/* if we don't do this, some mystery subset of signals gets eaten */
@@ -164,7 +164,7 @@ bool CNotebook::on_redraw_overlay(const Cairo::RefPtr<Cairo::Context> &ctx)
 			buffer_to_window_coords(Gtk::TEXT_WINDOW_WIDGET,0,y+height,linex0,liney0);
 			
 			ctx->set_line_width(1.0);
-			ctx->set_source_rgba(.4,.4,.4,1);
+			ctx->set_source_rgba(.627,.659,.75,1);
 			ctx->move_to(linex0+margin_x,liney0-height/2);
 			ctx->line_to(linex0+rect.get_width()-margin_x,liney0-height/2);
 			ctx->stroke();
