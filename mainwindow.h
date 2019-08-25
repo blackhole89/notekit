@@ -35,13 +35,14 @@ protected:
 	Gtk::TreeView nav;
 	CNavigationView nav_model;
 	
+	Gtk::ScrolledWindow nav_scroll;
 	Gtk::ScrolledWindow sview_scroll;
 	CNotebook sview;
 	Glib::RefPtr<Gsv::Buffer> sbuffer;
 	
-	Gtk::Button testbutton;
 	
 	Gtk::HeaderBar hbar;
+	Gtk::Button appbutton;
 };
 
 #endif // MAINWINDOW_H

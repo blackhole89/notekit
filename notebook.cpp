@@ -165,7 +165,7 @@ bool CNotebook::on_redraw_overlay(const Cairo::RefPtr<Cairo::Context> &ctx)
 			
 			ctx->set_line_width(1.0);
 			ctx->set_source_rgba(.4,.4,.4,1);
-			ctx->move_to(linex0,liney0-height/2);
+			ctx->move_to(linex0+margin_x,liney0-height/2);
 			ctx->line_to(linex0+rect.get_width()-margin_x,liney0-height/2);
 			ctx->stroke();
 		}
@@ -223,9 +223,9 @@ bool CNotebook::on_button_release(GdkEventButton *e)
 	if(is_drawing) {
 		is_drawing=false;
 		
-		sbuffer->begin_user_action();
+		sbuffer->begin_not_undoable_action();
 		CommitStroke();
-		sbuffer->end_user_action();
+		sbuffer->end_not_undoable_action();
 		
 		return true;
 	}

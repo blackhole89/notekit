@@ -18,11 +18,18 @@ CMainWindow::CMainWindow() : nav_model("notesbase")
 	
 	hbar.set_show_close_button(true);
 	hbar.set_title("NoteKit");
+	appbutton.set_image_from_icon_name("accessories-text-editor", Gtk::ICON_SIZE_BUTTON, true);
+	set_icon_name("accessories-text-editor");
+	
+	hbar.pack_start(appbutton);
 	set_titlebar(hbar);
 	
 	nav_model.AttachView(&nav);
 	nav.get_style_context()->add_class("sidebar");
-	split.pack_start(nav,Gtk::PACK_SHRINK);
+	
+	nav_scroll.add(nav);
+	nav_scroll.set_size_request(200,-1);
+	split.pack_start(nav_scroll,Gtk::PACK_SHRINK);
 	
 	get_style_context()->add_provider(sview_css,GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 	nav.get_style_context()->add_provider(sview_css,GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
@@ -37,9 +44,10 @@ CMainWindow::CMainWindow() : nav_model("notesbase")
 
 	sview_scroll.add( sview);
 	//split.override_background_color(Gdk::RGBA("rgb(255,255,255)"));
-	filler.set_size_request(32,-1);
+	//filler.set_size_request(32,-1);
 	sview.margin_x=32;
-	split.pack_start(filler,Gtk::PACK_SHRINK);
+	sview.property_left_margin().set_value(32);
+	//split.pack_start(filler,Gtk::PACK_SHRINK);
 	filler.override_background_color(Gdk::RGBA("rgb(255,255,255)"));
 	//split.set_spacing(16);
 	split.pack_end( sview_scroll );
@@ -95,6 +103,7 @@ void CMainWindow::OpenDocument(std::string filename)
 	
 	if(filename=="") {
 		active_document="";
+		hbar.set_subtitle("");
 		
 		sbuffer->begin_not_undoable_action();
 		sbuffer->set_text("");
@@ -115,6 +124,7 @@ void CMainWindow::OpenDocument(std::string filename)
 	
 	
 	active_document = filename;
+	hbar.set_subtitle(active_document);
 	
 	/*Glib::RefPtr<Gtk::TextBuffer::ChildAnchor> anch = sbuffer->create_child_anchor(sbuffer->begin());
 	testbutton.set_text("hello world");
