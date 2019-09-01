@@ -6,26 +6,35 @@ CNotebook::CNotebook()
 {
 	sbuffer = get_source_buffer();
 
+	/* load syntax highlighting scheme */
 	Glib::RefPtr<Gsv::StyleSchemeManager> styleman = Gsv::StyleSchemeManager::create();
 	styleman->set_search_path({"sourceview/"});
 	Glib::RefPtr<Gsv::StyleScheme> the_scheme;
 	the_scheme = styleman->get_scheme("classic");
 	sbuffer->set_style_scheme(the_scheme);
 	
-	
-	
 	Glib::RefPtr<Gsv::LanguageManager> langman = Gsv::LanguageManager::create();
 	langman->set_search_path({"sourceview/"});
 	sbuffer->set_language(langman->get_language("markdown"));
 	
+	/* register our serialisation formats */
 	sbuffer->register_serialize_format("text/notekit-markdown",sigc::mem_fun(this,&CNotebook::on_serialize));
 	sbuffer->register_deserialize_format("text/notekit-markdown",sigc::mem_fun(this,&CNotebook::on_deserialize));
 	
 	Glib::RefPtr<Gtk::TargetList> l = sbuffer->get_copy_target_list();
 	
+	/* create drawing overlay */
 	add_child_in_window(overlay,Gtk::TEXT_WINDOW_WIDGET,0,0);
-	//overlay.add_events(Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK | Gdk::POINTER_MOTION_MASK);
-	//overlay.get_parent()->
+	
+	/* define actions that the toolbar will hook up to */
+	actions = Gio::SimpleActionGroup::create();
+	#define ACTION(name,param1,param2) actions->add_action(name, sigc::bind( sigc::mem_fun(this,&CNotebook::on_action), std::string(name), param1, param2 ) )
+	ACTION("cmode-edit",NB_ACTION_CMODE,1);
+	ACTION("stroke1",NB_ACTION_STROKE,1);
+	ACTION("stroke2",NB_ACTION_STROKE,2);
+	ACTION("stroke3",NB_ACTION_STROKE,3);
+	
+	/* connect signals */
 	signal_size_allocate().connect(sigc::mem_fun(this,&CNotebook::on_allocate));
 	overlay.signal_draw().connect(sigc::mem_fun(this,&CNotebook::on_redraw_overlay));
 	signal_button_press_event().connect(sigc::mem_fun(this,&CNotebook::on_button_press),false);
@@ -34,6 +43,7 @@ CNotebook::CNotebook()
 	sbuffer->signal_insert().connect(sigc::mem_fun(this,&CNotebook::on_insert),true);
 	sbuffer->signal_highlight_updated().connect(sigc::mem_fun(this,&CNotebook::on_highlight_updated),true);
 	
+	/* overwrite clipboard signals with our custom impls */
 	GtkTextViewClass *k = GTK_TEXT_VIEW_GET_CLASS(gobj());
 	k->copy_clipboard = notebook_copy_clipboard;
 	k->cut_clipboard = notebook_cut_clipboard;
@@ -42,11 +52,21 @@ CNotebook::CNotebook()
 	
 	is_drawing=false;
 	
+	/* create tags for style aspects that the syntax highlighter doesn't handle */
 	tag_extra_space = sbuffer->create_tag();
 	tag_extra_space->property_pixels_below_lines().set_value(8);
 	tag_extra_space->property_pixels_above_lines().set_value(8);
 	
 	set_wrap_mode(Gtk::WRAP_WORD_CHAR);}
+
+void CNotebook::on_action(std::string name,int type,int param)
+{
+	switch(type) {
+	case NB_ACTION_STROKE:
+		stroke_width=param;
+		break;
+	}
+}
 
 void CNotebook::on_allocate(Gtk::Allocation &a)
 {
@@ -207,8 +227,8 @@ bool CNotebook::on_button_press(GdkEventButton *e)
 		printf("sig: %f %f %f %f\n",e->x, e->y, x,y);
 	
 		active.Reset();
-		active.r=active.g=active.b=0; active.a=1;
-		active.Append(x,y,ReadPressure(e->device));
+		//active.r=active.g=active.b=0; active.a=1;
+		active.Append(x,y, stroke_width*ReadPressure(e->device));
 		
 		is_drawing = true;
 	
@@ -238,7 +258,7 @@ bool CNotebook::on_motion_notify(GdkEventMotion *e)
 		double x,y;
 		Widget2Doc(e->x,e->y,x,y); 
 	
-		active.Append(x,y,ReadPressure(e->device)*2);
+		active.Append(x,y,stroke_width*ReadPressure(e->device));
 		
 		overlay.queue_draw_area(e->x-32,e->y-32,64,64);
 	}

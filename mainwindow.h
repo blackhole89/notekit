@@ -8,6 +8,10 @@
 #include "notebook.h"
 #include "navigation.h"
 
+enum {
+	WND_ACTION_COLOR
+};
+
 class CMainWindow : public Gtk::Window
 {
 public:
@@ -25,9 +29,12 @@ public:
 	void OpenDocument(std::string filename);
 	
 	void FocusDocument();
+	
+	void GetColor(int id, float &r, float &g, float &b);
 protected:
 	//Signal handlers:
 	bool on_close(GdkEventAny* any_event);
+	void on_action(std::string name,int type, int param);
 
 	Gtk::HBox split;
 	//Gtk::Box filler;

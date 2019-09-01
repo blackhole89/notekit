@@ -10,16 +10,18 @@ CMainWindow::CMainWindow() : nav_model("notesbase")
 	// make sure document is in place for tree expansion so we can set the selection
 	selected_document = config["active_document"].asString();
 	
-	// Sets the border width of the window.
+	// set up window
 	set_border_width(0);
 	set_size_request(900,600);
 	
+	/* load stylesheet */
 	Glib::RefPtr<Gtk::CssProvider> sview_css = Gtk::CssProvider::create();
 	sview_css->load_from_path("data/stylesheet.css");
 
 	get_style_context()->add_class("notekit");
 	override_background_color(Gdk::RGBA("rgba(0,0,0,0)"));
 	
+	/* set up header bar */
 	hbar.set_show_close_button(true);
 	hbar.set_title("NoteKit");
 	appbutton.set_image_from_icon_name("accessories-text-editor", Gtk::ICON_SIZE_BUTTON, true);
@@ -28,6 +30,7 @@ CMainWindow::CMainWindow() : nav_model("notesbase")
 	hbar.pack_start(appbutton);
 	set_titlebar(hbar);
 	
+	/* install tree view */
 	nav_model.AttachView(this,&nav);
 	nav.get_style_context()->add_class("sidebar");
 	
@@ -38,6 +41,8 @@ CMainWindow::CMainWindow() : nav_model("notesbase")
 	get_style_context()->add_provider(sview_css,GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 	nav.get_style_context()->add_provider(sview_css,GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
+	/* install document view */
+	sbuffer = sview.get_source_buffer();
 	sview.get_style_context()->add_provider(sview_css,GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 	sview.set_name("mainView");
 	sview_scroll.get_style_context()->add_provider(sview_css,GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
@@ -54,12 +59,15 @@ CMainWindow::CMainWindow() : nav_model("notesbase")
 	//split.set_spacing(16);
 	split.pack_start( sview_scroll );
 	
-	sbuffer = sview.get_source_buffer();
-	
+	/* install tool palette */
 	InitToolbar();
+	// some actions need data from the main window and therefore need to live here
+	insert_action_group("notebook",sview.actions);
 	UpdateToolbarColors();
 	split.pack_start(*toolbar,Gtk::PACK_SHRINK);
+	on_action("color1",WND_ACTION_COLOR,1);
 	
+	/* add the overall vbox */
 	add(split);
 
 	show_all();
@@ -119,15 +127,46 @@ void CMainWindow::InitToolbar()
 	//toolbar_style->load_from_path("data/test.css");
 	//toolbar->get_style_context()->add_provider(toolbar_style,GTK_STYLE_PROVIDER_PRIORITY_USER);
 	
-	for(int i=1;i<=2;++i) {
-		char buf[8];
+	Gtk::RadioToolButton *b0;
+	for(int i=1;i<=config["colors"].size();++i) {
+		char buf[255];
 		Gtk::Widget *sdfg;
 		
 		sprintf(buf,"color%d",i);
-		toolbar_builder->get_widget(buf,sdfg);
-		sdfg->get_style_context()->add_provider(toolbar_style,GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+		
+		#define ACTION(name,param1,param2) sview.actions->add_action(name, sigc::bind( sigc::mem_fun(this,&CMainWindow::on_action), std::string(name), param1, param2 ) )
+		ACTION(buf,WND_ACTION_COLOR,i);
+		
+		Gtk::RadioToolButton *b;
+		if(i==1) {
+			b = b0 = new Gtk::RadioToolButton(buf);
+		} else {
+			Gtk::RadioToolButton::Group g = b0->get_group(); // because for some reason, the group argument is &
+			b = new Gtk::RadioToolButton(g, buf);
+		}
+		b->set_icon_name("pick-color-symbolic");
+		b->set_name(buf);
+		b->get_style_context()->add_provider(toolbar_style,GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+		sprintf(buf,"notebook.color%d",i);
+		gtk_actionable_set_action_name(GTK_ACTIONABLE(b->gobj()), buf);
+		
+		Gtk::manage(b);
+		toolbar->append(*b);
+		
+		
+		/*toolbar_builder->get_widget(buf,sdfg);
+		sdfg->get_style_context()->add_provider(toolbar_style,GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);*/
 	}
 	//Gtk::StyleContext::add_provider_for_screen(Gdk::Screen::get_default(),toolbar_style,GTK_STYLE_PROVIDER_PRIORITY_USER);
+}
+
+void CMainWindow::GetColor(int id, float &r, float &g, float &b)
+{
+	Json::Value def;
+	def["r"]=def["g"]=def["b"]=0;
+	r=config["colors"].get(id-1,def)["r"].asFloat();
+	g=config["colors"].get(id-1,def)["g"].asFloat();
+	b=config["colors"].get(id-1,def)["b"].asFloat();
 }
 
 void CMainWindow::UpdateToolbarColors()
@@ -232,4 +271,15 @@ bool CMainWindow::on_close(GdkEventAny* any_event)
 	FetchAndSave();
 	
 	return false;
+}
+
+void CMainWindow::on_action(std::string name, int type, int param)
+{
+	printf("%s\n",name.c_str());
+	switch(type) {
+	case WND_ACTION_COLOR:
+		GetColor(param, sview.active.r,sview.active.g, sview.active.b);
+		sview.active.a=1;
+		break;
+	}
 }

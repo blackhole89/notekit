@@ -53,6 +53,7 @@
       <object class="GtkRadioToolButton" id="small">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <property name="action_name">notebook.stroke1</property>
         <property name="use_underline">True</property>
         <property name="icon_name">small-pen-symbolic</property>
       </object>
@@ -65,6 +66,7 @@
       <object class="GtkRadioToolButton">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <property name="action_name">notebook.stroke2</property>
         <property name="use_underline">True</property>
         <property name="icon_name">medium-pen-symbolic</property>
         <property name="active">True</property>
@@ -79,9 +81,9 @@
       <object class="GtkRadioToolButton">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <property name="action_name">notebook.stroke3</property>
         <property name="use_underline">True</property>
         <property name="icon_name">large-pen-symbolic</property>
-        <property name="active">True</property>
         <property name="group">small</property>
       </object>
       <packing>
@@ -93,36 +95,6 @@
       <object class="GtkSeparatorToolItem">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-      </object>
-      <packing>
-        <property name="expand">False</property>
-        <property name="homogeneous">True</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkRadioToolButton" id="color1">
-        <property name="name">color1</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="use_underline">True</property>
-        <property name="icon_name">pick-color-symbolic</property>
-        <property name="active">True</property>
-      </object>
-      <packing>
-        <property name="expand">False</property>
-        <property name="homogeneous">True</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkRadioToolButton" id="color2">
-        <property name="name">color2</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">__glade_unnamed_5</property>
-        <property name="use_underline">True</property>
-        <property name="icon_name">pick-color-symbolic</property>
-        <property name="active">True</property>
-        <property name="group">color1</property>
       </object>
       <packing>
         <property name="expand">False</property>

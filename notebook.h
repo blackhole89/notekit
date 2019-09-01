@@ -51,16 +51,25 @@ public:
 	void Deserialize(std::string input);
 };
 
+enum {
+	NB_ACTION_CMODE,
+	NB_ACTION_STROKE,
+	NB_ACTION_COLOR
+};
+
 class CNotebook : public Gsv::View
 {
 public:
 	CNotebook();
+	
+	Glib::RefPtr<Gio::SimpleActionGroup> actions;
 	
 	int margin_x;
 	
 	CStroke active;
 	bool is_drawing;
 	std::set<CBoundDrawing* > floats;
+	float stroke_width;
 	void CommitStroke();
 	
 	Glib::RefPtr<Gsv::Buffer> sbuffer;
@@ -72,6 +81,8 @@ public:
     bool on_button_press(GdkEventButton* event);
     bool on_button_release(GdkEventButton* event);
     bool on_motion_notify(GdkEventMotion* event);
+	
+	void on_action(std::string name, int type, int param);
 	
 	Glib::RefPtr<Gtk::TextTag> tag_extra_space;
 	void on_highlight_updated(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
