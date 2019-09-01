@@ -31,10 +31,12 @@ public:
 	void FocusDocument();
 	
 	void GetColor(int id, float &r, float &g, float &b);
+	void SetColor(int id, float r, float g, float b);
 protected:
 	//Signal handlers:
 	bool on_close(GdkEventAny* any_event);
 	void on_action(std::string name,int type, int param);
+	bool on_click_color(GdkEventButton *btn, int num);
 
 	Gtk::HBox split;
 	//Gtk::Box filler;

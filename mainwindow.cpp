@@ -146,6 +146,7 @@ void CMainWindow::InitToolbar()
 		}
 		b->set_icon_name("pick-color-symbolic");
 		b->set_name(buf);
+		b->signal_button_press_event().connect(sigc::bind(sigc::mem_fun(this,&CMainWindow::on_click_color),i));
 		b->get_style_context()->add_provider(toolbar_style,GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 		sprintf(buf,"notebook.color%d",i);
 		gtk_actionable_set_action_name(GTK_ACTIONABLE(b->gobj()), buf);
@@ -168,6 +169,16 @@ void CMainWindow::GetColor(int id, float &r, float &g, float &b)
 	g=config["colors"].get(id-1,def)["g"].asFloat();
 	b=config["colors"].get(id-1,def)["b"].asFloat();
 }
+
+void CMainWindow::SetColor(int id, float r, float g, float b)
+{
+	Json::Value def;
+	def["r"]=def["g"]=def["b"]=0;
+	config["colors"][id-1]["r"]=r;
+	config["colors"][id-1]["g"]=g;
+	config["colors"][id-1]["b"]=b;
+}
+
 
 void CMainWindow::UpdateToolbarColors()
 {
@@ -282,4 +293,35 @@ void CMainWindow::on_action(std::string name, int type, int param)
 		sview.active.a=1;
 		break;
 	}
+}
+
+bool CMainWindow::on_click_color(GdkEventButton* e, int number)
+{
+	if(e->button == 3) {
+		// right click
+		Gtk::ColorChooserDialog dialog("Select a color");
+		dialog.set_transient_for(*this);
+		
+		char buf[32];
+		float r,g,b;
+		GetColor(number,r,g,b);
+		sprintf(buf,"rgb(%d,%d,%d)",(int)(r*255),(int)(g*255),(int)(b*255));
+		
+		dialog.set_rgba(Gdk::RGBA(buf));
+		
+		const int result = dialog.run();
+		
+		switch(result) {
+		case Gtk::RESPONSE_OK: {
+			Gdk::RGBA col = dialog.get_rgba();
+			SetColor(number,col.get_red(),col.get_green(),col.get_blue());
+			UpdateToolbarColors();
+			break;
+		}
+		default:;
+		}
+
+		return true;
+	}
+	return false;
 }
