@@ -1,8 +1,8 @@
 .PHONY: clean All
 
 All:
-	@echo "----------Building project:[ notekit - Release ]----------"
+	@echo "----------Building project:[ notekit - Debug ]----------"
 	@"$(MAKE)" -f  "notekit.mk"
 clean:
-	@echo "----------Cleaning project:[ notekit - Release ]----------"
+	@echo "----------Cleaning project:[ notekit - Debug ]----------"
 	@"$(MAKE)" -f  "notekit.mk" clean
