@@ -289,7 +289,7 @@ void CNotebook::CommitStroke()
 	
 	if(d==NULL) {
 		/* couldn't find a region to merge with; create a new image */
-		d = new CBoundDrawing();
+		d = new CBoundDrawing(get_window(Gtk::TEXT_WINDOW_TEXT));
 		Gtk::manage(d); 
 		get_iter_at_location(i,x0,y0);
 		
@@ -370,7 +370,7 @@ bool CNotebook::on_deserialize(const Glib::RefPtr<Gtk::TextBuffer>& content_buff
 			pos+=7; pos0=pos;
 			pos=str.find(')',pos);
 			
-			CBoundDrawing *d = new CBoundDrawing();
+			CBoundDrawing *d = new CBoundDrawing(get_window(Gtk::TEXT_WINDOW_TEXT));
 			Gtk::manage(d);
 			
 			/* store iterator through mark creation */
@@ -424,10 +424,12 @@ void CStroke::GetBBox(float &x0, float &x1, float &y0, float &y1)
 	}
 }
 
-/* bound drawing */
+/* **** bound drawings (i.e. those that are part of a document) **** */
 
-CBoundDrawing::CBoundDrawing() : Glib::ObjectBase("CBoundDrawing"), Gtk::DrawingArea()
+/* store the Gdk::Window so we can create accelerated surfaces for whatever app is rendering on */
+CBoundDrawing::CBoundDrawing(Glib::RefPtr<Gdk::Window> wnd) : Glib::ObjectBase("CBoundDrawing"), Gtk::DrawingArea()
 {
+	target_window=wnd;
 	w=h=1;
 	selected=false;
 	
@@ -437,41 +439,92 @@ CBoundDrawing::CBoundDrawing() : Glib::ObjectBase("CBoundDrawing"), Gtk::Drawing
 	signal_configure_event().connect([] (GdkEventConfigure* e) {  printf("confevent %d %d\n",e->width,e->height); return true; } );
 }
 
-void CBoundDrawing::UpdateSize()
+/* Change the drawing's size, possibly resizing the internal buffer in the process */
+void CBoundDrawing::UpdateSize(int neww, int newh)
 {
-	w=h=1;
-	for(auto &str : strokes) {
-		for(int i=0;i<str.xcoords.size();++i) {
-			if(str.xcoords[i]+str.pcoords[i]>w) w=str.xcoords[i]+str.pcoords[i];
-			if(str.ycoords[i]+str.pcoords[i]>h) h=str.ycoords[i]+str.pcoords[i];
+	if(w!=neww || h!=newh) {
+		// size changed; need to recreate Cairo surface
+		Cairo::RefPtr<Cairo::Surface> newptr = target_window->create_similar_surface(Cairo::CONTENT_COLOR_ALPHA,neww,newh);
+		image_ctx = Cairo::Context::create(newptr);
+		// copy old surface
+		if(image) {
+			image_ctx->save();
+			image_ctx->set_source(image,0,0);
+			image_ctx->rectangle(0,0,w,h);
+			image_ctx->set_operator(Cairo::OPERATOR_SOURCE);
+			image_ctx->fill();
+			image_ctx->restore();
 		}
+		// replace surface
+		image = newptr;
 	}
 	
+	w=neww; h=newh;
 	set_size_request(w,h);
 }
 
+/* iterate over all the strokes and determine the minimum size to fit them */
+void CBoundDrawing::RecalculateSize()
+{
+	int neww=1, newh=1;
+	for(auto &str : strokes) {
+		for(int i=0;i<str.xcoords.size();++i) {
+			if(str.xcoords[i]+str.pcoords[i]>neww) neww=str.xcoords[i]+str.pcoords[i];
+			if(str.ycoords[i]+str.pcoords[i]>newh) newh=str.ycoords[i]+str.pcoords[i];
+		}
+	}
+	
+	UpdateSize(neww, newh);
+}
+
+/* push and draw a new stroke, shifting it by (dx,dy) to accommodate the local coordinate system */
 void CBoundDrawing::AddStroke(CStroke &s, float dx, float dy)
 {
+	int neww=w, newh=h;
 	strokes.push_back(s);
 	for(int i=0;i<s.xcoords.size();++i) {
 		int newx, newy, newp;
 		newx=(strokes.back().xcoords[i]+=dx);
 		newy=(strokes.back().ycoords[i]+=dy);
 		newp=strokes.back().pcoords[i];
-		if(newx+newp>w) w=newx+newp;
-		if(newy+newp>h) h=newy+newp;
+		if(newx+newp>neww) neww=newx+newp;
+		if(newy+newp>newh) newh=newy+newp;
 	}
 	
-	set_size_request(w,h);
+	UpdateSize(neww, newh);
+	
+	strokes.back().Render(image_ctx,0,0);
 }
 
 bool CBoundDrawing::on_draw(const Cairo::RefPtr<Cairo::Context> &ctx)
 {
-	for(auto &str : strokes) {
+	/* for(auto &str : strokes) {
 		str.Render(ctx,0,0);
 		//printf("%f %f\n",strokes[0].xcoords[0],strokes[0].ycoords[0]);
-	}
+	}*/
+	/* blit our internal buffer */
+	ctx->set_source(image,0,0);
+	ctx->rectangle(0,0,w,h);
+	ctx->fill();
+	
 	return true;
+}
+
+void CBoundDrawing::Redraw()
+{
+	/* clear buffer */
+	image_ctx->save();
+	image_ctx->set_source_rgba(0,0,0,0);
+	image_ctx->rectangle(0,0,w,h);
+	image_ctx->set_operator(Cairo::OPERATOR_SOURCE);
+	image_ctx->fill();
+	image_ctx->restore();
+	
+	/* redraw all strokes */
+	for(auto &str : strokes) {
+		str.Render(image_ctx,0,0);
+		//printf("%f %f\n",strokes[0].xcoords[0],strokes[0].ycoords[0]);
+	}
 }
 
 bool CBoundDrawing::on_button_press_event(GdkEventButton* event)
@@ -547,8 +600,8 @@ void CBoundDrawing::Deserialize(std::string input)
 	uLongf long_len = len;
 	uncompress((unsigned char*)&raw_data[0],&long_len,&compressed[0],compressed.size());
 	
-	w = raw_data[0];
-	h = raw_data[1];
+	int neww = raw_data[0];
+	int newh = raw_data[1];
 	int pos=3;
 	for(int nstrokes = 0; nstrokes<raw_data[2]; ++nstrokes) {
 		strokes.push_back(CStroke());
@@ -563,7 +616,8 @@ void CBoundDrawing::Deserialize(std::string input)
 		pos += 5+3*ncoords;
 	}
 	
-	set_size_request(w,h);
+	UpdateSize(neww, newh);
+	Redraw();
 }
 
 void CBoundDrawing::on_unrealize()

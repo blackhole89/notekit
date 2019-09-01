@@ -22,7 +22,7 @@ public:
 class CBoundDrawing : public Gtk::DrawingArea
 {
 public:
-	CBoundDrawing();
+	CBoundDrawing(Glib::RefPtr<Gdk::Window> wnd);
 	
 	std::vector<CStroke> strokes;
 	
@@ -30,7 +30,13 @@ public:
 	
 	bool selected;
 	
-	void UpdateSize();
+	Glib::RefPtr<Gdk::Window> target_window;
+	Cairo::RefPtr<Cairo::Surface> image;
+	Cairo::RefPtr<Cairo::Context> image_ctx;
+	void UpdateSize(int w, int h);
+	void Redraw();
+	
+	void RecalculateSize();
 	void AddStroke(CStroke &s, float dx, float dy);
 	
 	virtual bool on_button_press_event(GdkEventButton* event);
