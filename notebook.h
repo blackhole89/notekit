@@ -57,6 +57,11 @@ enum {
 	NB_ACTION_COLOR
 };
 
+enum {
+	NB_MODE_TEXT,
+	NB_MODE_DRAW
+};
+
 class CNotebook : public Gsv::View
 {
 public:
@@ -66,11 +71,15 @@ public:
 	
 	int margin_x;
 	
-	CStroke active;
-	bool is_drawing;
+	/* mouse input related data */
+	CStroke active; // current stroke
+	bool is_drawing; // whether we are in the process of drawing one
 	std::set<CBoundDrawing* > floats;
-	float stroke_width;
+	float stroke_width; // width of current stroke
 	void CommitStroke();
+	
+	GdkDevice *last_device; // most recently seen device
+	std::map<GdkDevice*,int> devicemodes; // current input modes, per device
 	
 	Glib::RefPtr<Gsv::Buffer> sbuffer;
 	

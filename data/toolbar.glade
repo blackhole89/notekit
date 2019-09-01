@@ -10,10 +10,11 @@
     <property name="toolbar_style">icons</property>
     <property name="icon_size">2</property>
     <child>
-      <object class="GtkRadioToolButton" id="edit">
+      <object class="GtkRadioToolButton" id="text">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="tooltip_text" translatable="yes">Edit text</property>
+        <property name="action_name">notebook.cmode-text</property>
         <property name="use_underline">True</property>
         <property name="stock_id">gtk-justify-left</property>
         <property name="active">True</property>
@@ -28,11 +29,12 @@
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="tooltip_text" translatable="yes">Freehand drawing</property>
+        <property name="action_name">notebook.cmode-draw</property>
         <property name="label" translatable="yes">draw</property>
         <property name="use_underline">True</property>
         <property name="stock_id">gtk-edit</property>
         <property name="active">True</property>
-        <property name="group">edit</property>
+        <property name="group">text</property>
       </object>
       <packing>
         <property name="expand">False</property>
@@ -63,7 +65,7 @@
       </packing>
     </child>
     <child>
-      <object class="GtkRadioToolButton">
+      <object class="GtkRadioToolButton" id="medium">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="action_name">notebook.stroke2</property>
@@ -78,7 +80,7 @@
       </packing>
     </child>
     <child>
-      <object class="GtkRadioToolButton">
+      <object class="GtkRadioToolButton" id="large">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="action_name">notebook.stroke3</property>

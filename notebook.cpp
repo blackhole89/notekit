@@ -29,7 +29,8 @@ CNotebook::CNotebook()
 	/* define actions that the toolbar will hook up to */
 	actions = Gio::SimpleActionGroup::create();
 	#define ACTION(name,param1,param2) actions->add_action(name, sigc::bind( sigc::mem_fun(this,&CNotebook::on_action), std::string(name), param1, param2 ) )
-	ACTION("cmode-edit",NB_ACTION_CMODE,1);
+	ACTION("cmode-text",NB_ACTION_CMODE,NB_MODE_TEXT);
+	ACTION("cmode-draw",NB_ACTION_CMODE,NB_MODE_DRAW);
 	ACTION("stroke1",NB_ACTION_STROKE,1);
 	ACTION("stroke2",NB_ACTION_STROKE,2);
 	ACTION("stroke3",NB_ACTION_STROKE,3);
@@ -62,6 +63,9 @@ CNotebook::CNotebook()
 void CNotebook::on_action(std::string name,int type,int param)
 {
 	switch(type) {
+	case NB_ACTION_CMODE:
+		devicemodes[last_device]=param;
+		break;
 	case NB_ACTION_STROKE:
 		stroke_width=param;
 		break;
@@ -82,6 +86,7 @@ void CStroke::Render(const Cairo::RefPtr<Cairo::Context> &ctx, float basex, floa
 {
 	ctx->translate(-basex,-basey);
 	ctx->set_source_rgba(r,g,b,a);
+	ctx->set_line_cap(Cairo::LINE_CAP_ROUND);
 	for(int i=1;i<xcoords.size();++i) {
 		ctx->set_line_width(pcoords[i]);
 		ctx->move_to(xcoords[i-1],ycoords[i-1]);
@@ -220,21 +225,34 @@ void CNotebook::Widget2Doc(double in_x, double in_y, double &out_x, double &out_
 
 bool CNotebook::on_button_press(GdkEventButton *e)
 {
-	if(gdk_device_get_n_axes(e->device)>4) {
-		double x,y;
-		Widget2Doc(e->x,e->y,x,y);
-	
-		printf("sig: %f %f %f %f\n",e->x, e->y, x,y);
-	
-		active.Reset();
-		//active.r=active.g=active.b=0; active.a=1;
-		active.Append(x,y, stroke_width*ReadPressure(e->device));
-		
-		is_drawing = true;
-	
-		return true;
+	GdkDevice *d = gdk_event_get_source_device((GdkEvent*)e);
+	if(!devicemodes.count(d)) {
+		if(gdk_device_get_n_axes(d)>4) {
+			// assume it's a pen
+			devicemodes[d] = NB_MODE_DRAW;
+		} else {
+			devicemodes[d] = NB_MODE_TEXT;
+		}
 	}
-	return false;
+	switch(devicemodes[d]) {
+		case NB_MODE_TEXT:
+			return false;
+		case NB_MODE_DRAW: {
+			double x,y;
+			Widget2Doc(e->x,e->y,x,y);
+		
+			printf("sig: %f %f %f %f\n",e->x, e->y, x,y);
+		
+			active.Reset();
+			//active.r=active.g=active.b=0; active.a=1;
+			active.Append(x,y, stroke_width*ReadPressure(e->device));
+			
+			is_drawing = true;
+		
+			return true;
+		}
+		default: return false;
+	}
 	
 }
 

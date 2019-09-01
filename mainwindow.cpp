@@ -50,13 +50,8 @@ CMainWindow::CMainWindow() : nav_model("notesbase")
 	//sview.set_border_window_size(Gtk::TEXT_WINDOW_LEFT,16);
 
 	sview_scroll.add( sview);
-	//split.override_background_color(Gdk::RGBA("rgb(255,255,255)"));
-	//filler.set_size_request(32,-1);
 	sview.margin_x=32;
 	sview.property_left_margin().set_value(32);
-	//split.pack_start(filler,Gtk::PACK_SHRINK);
-	//filler.override_background_color(Gdk::RGBA("rgb(255,255,255)"));
-	//split.set_spacing(16);
 	split.pack_start( sview_scroll );
 	
 	/* install tool palette */
@@ -72,10 +67,16 @@ CMainWindow::CMainWindow() : nav_model("notesbase")
 
 	show_all();
 	
+	/* workaround */
+	Gtk::RadioToolButton *b;
+	toolbar_builder->get_widget("medium",b); b->set_active();
+	
 	OpenDocument(selected_document);
 	
 	close_after_saving=false;
 	close_handler = this->signal_delete_event().connect( sigc::mem_fun(this, &CMainWindow::on_close) );
+	
+	signal_motion_notify_event().connect(sigc::mem_fun(this,&CMainWindow::on_motion_notify),false);
 }
 
 void CMainWindow::LoadConfig()
@@ -124,9 +125,8 @@ void CMainWindow::InitToolbar()
 	
 	toolbar_style = Gtk::CssProvider::create();
 	toolbar_style->load_from_data("#color1 { -gtk-icon-palette: warning #ff00ff; }");
-	//toolbar_style->load_from_path("data/test.css");
-	//toolbar->get_style_context()->add_provider(toolbar_style,GTK_STYLE_PROVIDER_PRIORITY_USER);
 	
+	/* generate colour buttons */
 	Gtk::RadioToolButton *b0;
 	for(int i=1;i<=config["colors"].size();++i) {
 		char buf[255];
@@ -153,12 +153,7 @@ void CMainWindow::InitToolbar()
 		
 		Gtk::manage(b);
 		toolbar->append(*b);
-		
-		
-		/*toolbar_builder->get_widget(buf,sdfg);
-		sdfg->get_style_context()->add_provider(toolbar_style,GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);*/
 	}
-	//Gtk::StyleContext::add_provider_for_screen(Gdk::Screen::get_default(),toolbar_style,GTK_STYLE_PROVIDER_PRIORITY_USER);
 }
 
 void CMainWindow::GetColor(int id, float &r, float &g, float &b)
@@ -322,6 +317,37 @@ bool CMainWindow::on_click_color(GdkEventButton* e, int number)
 		}
 
 		return true;
+	}
+	return false;
+}
+
+bool CMainWindow::on_motion_notify(GdkEventMotion *e)
+{
+	GdkDevice *d = gdk_event_get_source_device((GdkEvent*)e);
+	
+	if(d != sview.last_device) {
+		sview.last_device = d;
+		
+		Gtk::RadioToolButton *b;
+		
+		if(!sview.devicemodes.count(d)) {
+			if(gdk_device_get_n_axes(d)>4) {
+				// assume it's a pen
+				sview.devicemodes[d] = NB_MODE_DRAW;
+			} else {
+				sview.devicemodes[d] = NB_MODE_TEXT;
+			}
+		}
+		
+		switch(sview.devicemodes[d]) {
+		case NB_MODE_DRAW:
+			toolbar_builder->get_widget("draw",b);
+			break;
+		case NB_MODE_TEXT:
+			toolbar_builder->get_widget("text",b);
+			break;
+		}
+		b->set_active();
 	}
 	return false;
 }
