@@ -3,7 +3,7 @@
 
 #include <giomm/file.h>
 
-extern CMainWindow *mainwindow;
+//extern CMainWindow *mainwindow;
 
 CNavigationView::Columns::Columns() : Gtk::TreeModel::ColumnRecord()
 {
@@ -165,6 +165,10 @@ void CNavigationView::on_postexpand_row(const Gtk::TreeModel::iterator& iter, co
 		if( r[cols.expanded] ) {
 			v->expand_row(store->get_path(r),false);
 		}
+		Glib::ustring name = r[cols.full_path]+r[cols.name]+r[cols.ext];
+		if( name==mainwindow->selected_document ) {
+			v->get_selection()->select( r );
+		}
 	}
 }
 
@@ -185,9 +189,11 @@ void CNavigationView::on_button_press_event(GdkEventButton* event)
 }
 
 
-void CNavigationView::AttachView(Gtk::TreeView *view)
+void CNavigationView::AttachView(CMainWindow *w, Gtk::TreeView *view)
 {
-	v=view;
+	mainwindow=w;
+	v=view;	
+	
 	v->get_selection()->set_mode(Gtk::SELECTION_BROWSE);
 	/*v->get_selection()->set_select_function([this] (const Glib::RefPtr<Gtk::TreeModel>& m, const Gtk::TreeModel::Path& p, bool) {
 		int type = (*m->get_iter(p))[cols.type];
@@ -222,6 +228,10 @@ void CNavigationView::AttachView(Gtk::TreeView *view)
 	for(auto r : store->children()) {
 		if( r[cols.expanded] ) {
 			v->expand_row(store->get_path(r),false);
+		}
+		Glib::ustring name = r[cols.full_path]+r[cols.name]+r[cols.ext];
+		if( name==mainwindow->selected_document ) {
+			v->get_selection()->select( r );
 		}
 	}
 	

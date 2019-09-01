@@ -439,6 +439,7 @@ CBoundDrawing::CBoundDrawing(Glib::RefPtr<Gdk::Window> wnd) : Glib::ObjectBase("
 	signal_configure_event().connect([] (GdkEventConfigure* e) {  printf("confevent %d %d\n",e->width,e->height); return true; } );
 }
 
+
 /* Change the drawing's size, possibly resizing the internal buffer in the process */
 void CBoundDrawing::UpdateSize(int neww, int newh)
 {

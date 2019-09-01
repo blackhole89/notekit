@@ -3,7 +3,7 @@
 
 #include <gtkmm.h>
 
-//#include <webkit2/webkit2.h>
+#include <json/json.h>
 
 #include "notebook.h"
 #include "navigation.h"
@@ -15,8 +15,7 @@ public:
 	virtual ~CMainWindow();
 
 	std::string active_document;
-	std::string loading_document;
-	std::string saving_document;
+	std::string selected_document;
 	
 	bool close_after_saving;
 	sigc::connection close_handler;
@@ -31,16 +30,31 @@ protected:
 	bool on_close(GdkEventAny* any_event);
 
 	Gtk::HBox split;
-	Gtk::Box filler;
+	//Gtk::Box filler;
+	
+	/* config */
+	Json::Value config;
+	void LoadConfig();
+	void SaveConfig();
+	
+	/* tree view on the left */
+	Gtk::ScrolledWindow nav_scroll;
 	Gtk::TreeView nav;
 	CNavigationView nav_model;
 	
-	Gtk::ScrolledWindow nav_scroll;
+	/* document view */
 	Gtk::ScrolledWindow sview_scroll;
 	CNotebook sview;
 	Glib::RefPtr<Gsv::Buffer> sbuffer;
 	
+	/* tool palette */
+	Glib::RefPtr<Gtk::Builder> toolbar_builder;
+	Glib::RefPtr<Gtk::CssProvider> toolbar_style;
+	Gtk::Toolbar *toolbar;
+	void InitToolbar();
+	void UpdateToolbarColors();
 	
+	/* header */
 	Gtk::HeaderBar hbar;
 	Gtk::Button appbutton;
 };

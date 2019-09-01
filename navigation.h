@@ -10,6 +10,8 @@ enum {
 	CT_ADDER
 };
 
+class CMainWindow;
+
 class CNavigationView {
 public:
 	class Columns : public Gtk::TreeModel::ColumnRecord {
@@ -30,6 +32,7 @@ public:
 
 	std::string base;
 	
+	CMainWindow *mainwindow;
 	Gtk::TreeView *v;
 	/*Gtk::CellRendererText name_renderer;
 	Gtk::CellRendererPixbuf icon_renderer;
@@ -39,7 +42,7 @@ public:
 	
 	std::string Row2Path(Gtk::TreeModel::iterator row);
 
-	void AttachView(Gtk::TreeView *v);
+	void AttachView(CMainWindow *w, Gtk::TreeView *v);
 	void ExpandDirectory(std::string path, const Gtk::TreeNodeChildren *node);
 	
 	void HandleRename(std::string oldname, std::string newname);
