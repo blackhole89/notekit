@@ -2,19 +2,19 @@
 ## Auto Generated makefile by CodeLite IDE
 ## any manual changes will be erased      
 ##
-## Debug
+## Release
 ProjectName            :=notekit
-ConfigurationName      :=Debug
+ConfigurationName      :=Release
 WorkspacePath          :=/d0/coding/notekit
 ProjectPath            :=/d0/coding/notekit
-IntermediateDirectory  :=./Debug
+IntermediateDirectory  :=./Release
 OutDir                 := $(IntermediateDirectory)
 CurrentFileName        :=
 CurrentFilePath        :=
 CurrentFileFullPath    :=
 User                   :=Matvey Soloviev
-Date                   :=01/09/19
-CodeLitePath           :=/home/negativezero/.codelite
+Date                   :=09/01/19
+CodeLitePath           :=
 LinkerName             :=/usr/bin/g++
 SharedObjectLinkerName :=/usr/bin/g++ -shared -fPIC
 ObjectSuffix           :=.o
@@ -28,14 +28,14 @@ LibraryPathSwitch      :=-L
 PreprocessorSwitch     :=-D
 SourceSwitch           :=-c 
 OutputFile             :=$(IntermediateDirectory)/$(ProjectName)
-Preprocessors          :=
+Preprocessors          :=$(PreprocessorSwitch)NDEBUG 
 ObjectSwitch           :=-o 
 ArchiveOutputSwitch    := 
 PreprocessOnlySwitch   :=-E
 ObjectsFileList        :="notekit.txt"
 PCHCompileFlags        :=
 MakeDirCommand         :=mkdir -p
-LinkOptions            := $(shell pkg-config --libs gtkmm-3.0) $(shell pkg-config --libs gtksourceviewmm-3.0) $(shell pkg-config webkit2gtk-4.0 --libs) $(shell pkg-config --libs jsoncpp) 
+LinkOptions            := $(shell pkg-config --libs gtkmm-3.0) $(shell pkg-config --libs gtksourceviewmm-3.0) $(shell pkg-config webkit2gtk-4.0 --libs) $(shell pkg-config --libs jsoncpp) $(shell pkg-config --libs gtkmm-3.0) $(shell pkg-config webkit2gtk-4.0 --libs)
 IncludePath            :=  $(IncludeSwitch). $(IncludeSwitch). 
 IncludePCH             := 
 RcIncludePath          := 
@@ -50,8 +50,8 @@ LibPath                := $(LibraryPathSwitch).
 AR       := /usr/bin/ar rcu
 CXX      := /usr/bin/g++
 CC       := /usr/bin/gcc
-CXXFLAGS := $(shell pkg-config --cflags gtkmm-3.0) $(shell pkg-config --cflags gtksourceviewmm-3.0) $(shell pkg-config --cflags jsoncpp) -g -Wall -O0 $(Preprocessors)
-CFLAGS   :=  -g -O0 -Wall $(Preprocessors)
+CXXFLAGS := $(shell pkg-config --cflags gtkmm-3.0) $(shell pkg-config --cflags gtksourceviewmm-3.0) $(shell pkg-config --cflags jsoncpp) -O2 -Wall $(shell pkg-config --cflags gtkmm-3.0) $(shell pkg-config webkit2gtk-4.0 --cflags) $(Preprocessors)
+CFLAGS   :=  -O2 -Wall $(Preprocessors)
 ASFLAGS  := 
 AS       := /usr/bin/as
 
@@ -59,7 +59,6 @@ AS       := /usr/bin/as
 ##
 ## User defined environment variables
 ##
-CodeLiteDir:=/usr/share/codelite
 Objects0=$(IntermediateDirectory)/main.cpp$(ObjectSuffix) $(IntermediateDirectory)/navigation.cpp$(ObjectSuffix) $(IntermediateDirectory)/notebook.cpp$(ObjectSuffix) $(IntermediateDirectory)/mainwindow.cpp$(ObjectSuffix) 
 
 
@@ -79,11 +78,11 @@ $(OutputFile): $(IntermediateDirectory)/.d $(Objects)
 	$(LinkerName) $(OutputSwitch)$(OutputFile) @$(ObjectsFileList) $(LibPath) $(Libs) $(LinkOptions)
 
 MakeIntermediateDirs:
-	@test -d ./Debug || $(MakeDirCommand) ./Debug
+	@test -d ./Release || $(MakeDirCommand) ./Release
 
 
 $(IntermediateDirectory)/.d:
-	@test -d ./Debug || $(MakeDirCommand) ./Debug
+	@test -d ./Release || $(MakeDirCommand) ./Release
 
 PreBuild:
 
@@ -129,6 +128,6 @@ $(IntermediateDirectory)/mainwindow.cpp$(PreprocessSuffix): mainwindow.cpp
 ## Clean
 ##
 clean:
-	$(RM) -r ./Debug/
+	$(RM) -r ./Release/
 
 

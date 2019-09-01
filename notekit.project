@@ -27,6 +27,7 @@
       </Compiler>
       <Linker Options="$(shell pkg-config --libs gtkmm-3.0);$(shell pkg-config --libs gtksourceviewmm-3.0);$(shell pkg-config webkit2gtk-4.0 --libs);$(shell pkg-config --libs jsoncpp)">
         <LibraryPath Value="."/>
+        <Library Value="z"/>
       </Linker>
       <ResourceCompiler Options=""/>
     </GlobalSettings>
@@ -34,9 +35,7 @@
       <Compiler Options="-g;-Wall;-O0" C_Options="-g;-O0;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
         <IncludePath Value="."/>
       </Compiler>
-      <Linker Options="" Required="yes">
-        <Library Value="z"/>
-      </Linker>
+      <Linker Options="" Required="yes"/>
       <ResourceCompiler Options="" Required="no"/>
       <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./Debug" Command="./$(IntermediateDirectory)/$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="." PauseExecWhenProcTerminates="no" IsGUIProgram="no" IsEnabled="yes"/>
       <BuildSystem Name="Default"/>
