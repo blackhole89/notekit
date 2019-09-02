@@ -31,6 +31,7 @@ CNotebook::CNotebook()
 	#define ACTION(name,param1,param2) actions->add_action(name, sigc::bind( sigc::mem_fun(this,&CNotebook::on_action), std::string(name), param1, param2 ) )
 	ACTION("cmode-text",NB_ACTION_CMODE,NB_MODE_TEXT);
 	ACTION("cmode-draw",NB_ACTION_CMODE,NB_MODE_DRAW);
+	ACTION("cmode-erase",NB_ACTION_CMODE,NB_MODE_ERASE);
 	ACTION("stroke1",NB_ACTION_STROKE,1);
 	ACTION("stroke2",NB_ACTION_STROKE,2);
 	ACTION("stroke3",NB_ACTION_STROKE,3);
@@ -51,7 +52,7 @@ CNotebook::CNotebook()
 	k->paste_clipboard = notebook_paste_clipboard;
 	//g_signal_connect(gobj(),"copy-clipboard",G_CALLBACK(notebook_copy_clipboard),NULL);
 	
-	is_drawing=false;
+	active_state=NB_STATE_NOTHING;
 	
 	/* create tags for style aspects that the syntax highlighter doesn't handle */
 	tag_extra_space = sbuffer->create_tag();
@@ -247,8 +248,13 @@ bool CNotebook::on_button_press(GdkEventButton *e)
 			//active.r=active.g=active.b=0; active.a=1;
 			active.Append(x,y, stroke_width*ReadPressure(e->device));
 			
-			is_drawing = true;
+			active_state = NB_STATE_DRAW;
 		
+			return true;
+		}
+		case NB_MODE_ERASE: {
+			active_state = NB_STATE_ERASE;
+			
 			return true;
 		}
 		default: return false;
@@ -258,12 +264,14 @@ bool CNotebook::on_button_press(GdkEventButton *e)
 
 bool CNotebook::on_button_release(GdkEventButton *e)
 {
-	if(is_drawing) {
-		is_drawing=false;
+	if(active_state!=NB_STATE_NOTHING) {
+		if(active_state==NB_STATE_DRAW) {
+			sbuffer->begin_not_undoable_action();
+			CommitStroke();
+			sbuffer->end_not_undoable_action();
+		}
 		
-		sbuffer->begin_not_undoable_action();
-		CommitStroke();
-		sbuffer->end_not_undoable_action();
+		active_state=NB_STATE_NOTHING;
 		
 		return true;
 	}
@@ -272,13 +280,18 @@ bool CNotebook::on_button_release(GdkEventButton *e)
 
 bool CNotebook::on_motion_notify(GdkEventMotion *e)
 {
-	if(is_drawing) {
+	if(active_state==NB_STATE_DRAW) {
 		double x,y;
 		Widget2Doc(e->x,e->y,x,y); 
 	
 		active.Append(x,y,stroke_width*ReadPressure(e->device));
 		
 		overlay.queue_draw_area(e->x-32,e->y-32,64,64);
+	} else if (active_state==NB_STATE_ERASE) {
+		double x,y;
+		Widget2Doc(e->x,e->y,x,y); 
+		
+		EraseAtPosition(x,y);
 	}
 	return false;
 }
@@ -292,6 +305,26 @@ float CNotebook::ReadPressure(GdkDevice *d)
     if(gdk_device_get_axis(d,axes,GDK_AXIS_PRESSURE,&r))
         return r;
     else return 1.0;
+}
+
+/* x, y are in buffer coordinates */
+void CNotebook::EraseAtPosition(float x, float y)
+{
+	Gtk::TextBuffer::iterator i;
+	int trailing;
+	get_iter_at_position(i,trailing,x,y);
+	
+	if(i.get_child_anchor()) {
+		auto w = i.get_child_anchor()->get_widgets();
+		if(w.size()) {
+			CBoundDrawing* d = dynamic_cast<CBoundDrawing*>(w[0]);
+			/* found a region to erase from; we can adjust for its real location,
+			 * but that's relative to the text body, so need to fixup */
+			int bx, by;
+			window_to_buffer_coords(Gtk::TEXT_WINDOW_TEXT,0,0,bx,by);
+			d->EraseAt(x-(d->get_allocation().get_x())-bx,y-(d->get_allocation().get_y())-by,stroke_width,true);
+		}
+	}
 }
 
 void CNotebook::CommitStroke()
@@ -528,12 +561,61 @@ void CBoundDrawing::AddStroke(CStroke &s, float dx, float dy)
 		newp=strokes.back().pcoords[i];
 		if(newx+newp>neww) neww=newx+newp;
 		if(newy+newp>newh) newh=newy+newp;
+		/* add to stroke cache */
+		strokefinder.insert( { BUCKET(newx,newy), { strokes.size()-1, i } } );
 	}
 	
 	UpdateSize(neww, newh);
 	
 	strokes.back().Render(image_ctx,0,0);
 }
+
+void CBoundDrawing::EraseAt(float x, float y, float radius, bool whole_stroke)
+{	
+	std::set<int> buckets;
+	buckets.insert(BUCKET(x,y));
+	buckets.insert(BUCKET(x-radius,y-radius));
+	buckets.insert(BUCKET(x+radius,y-radius));
+	buckets.insert(BUCKET(x-radius,y+radius));
+	buckets.insert(BUCKET(x+radius,y+radius));
+	
+	bool did_erase = false;
+
+	using T = std::unordered_multimap<int, strokeRef>::iterator;
+	for(int b : buckets) {
+	restart:
+		std::pair<T,T> is = strokefinder.equal_range(b); // pair of iterators
+		
+		for(T i=is.first; i!=is.second; ++i) {
+			float dx = strokes[i->second.index].xcoords[i->second.offset] - x;
+			float dy = strokes[i->second.index].ycoords[i->second.offset] - y;
+			
+			if(dx*dx + dy*dy < radius*radius) {
+				did_erase=true;
+				int to_del = i->second.index;
+				strokes.erase(strokes.begin()+to_del);
+				/* remove stroke from strokefinder, move up remaining strokes */
+				for(T i=strokefinder.begin(),j;i!=strokefinder.end();i=j) {
+					j=i; ++j;
+					if(i->second.index==to_del) strokefinder.erase(i);
+					else if(i->second.index>to_del) {
+						strokefinder.insert( { i->first,{ i->second.index-1, i->second.offset } } );
+						strokefinder.erase(i);
+					}
+				}
+				goto restart;
+			}
+		}
+	}
+	
+	if(did_erase) {
+		/*printf("Remaining: %d\n",strokefinder.size());
+		for(T i=strokefinder.begin();i!=strokefinder.end();++i) {
+			printf("  %d: %d %d\n",i->first,i->second.index,i->second.offset);
+		}*/
+		Redraw();
+		queue_draw();
+	}}
 
 bool CBoundDrawing::on_draw(const Cairo::RefPtr<Cairo::Context> &ctx)
 {

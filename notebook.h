@@ -2,6 +2,7 @@
 #define NOTEBOOK_H
 
 #include <set>
+#include <unordered_map>
 
 #include <gtkmm.h>
 #include <gtksourceviewmm.h>
@@ -26,6 +27,13 @@ public:
 	
 	std::vector<CStroke> strokes;
 	
+	static const int BUCKET_SIZE = 16;
+	static constexpr int BUCKET(int x,int y) {
+		return ((y/BUCKET_SIZE)<<16) + (x/BUCKET_SIZE);
+	}
+	struct strokeRef { int index; int offset; };
+	std::unordered_multimap<int, strokeRef> strokefinder;
+	
 	int w,h;
 	
 	bool selected;
@@ -38,6 +46,7 @@ public:
 	
 	void RecalculateSize();
 	void AddStroke(CStroke &s, float dx, float dy);
+	void EraseAt(float x, float y, float radius, bool whole_stroke);
 	
 	virtual bool on_button_press_event(GdkEventButton* event);
 	virtual bool on_button_release_event(GdkEventButton* event);
@@ -59,7 +68,14 @@ enum {
 
 enum {
 	NB_MODE_TEXT,
-	NB_MODE_DRAW
+	NB_MODE_DRAW,
+	NB_MODE_ERASE
+};
+
+enum {
+	NB_STATE_NOTHING=0,
+	NB_STATE_DRAW,
+	NB_STATE_ERASE
 };
 
 class CNotebook : public Gsv::View
@@ -73,10 +89,11 @@ public:
 	
 	/* mouse input related data */
 	CStroke active; // current stroke
-	bool is_drawing; // whether we are in the process of drawing one
+	int active_state; // whether we are in the process of drawing in some mode
 	std::set<CBoundDrawing* > floats;
 	float stroke_width; // width of current stroke
 	void CommitStroke();
+	void EraseAtPosition(float x, float y);
 	
 	GdkDevice *last_device; // most recently seen device
 	std::map<GdkDevice*,int> devicemodes; // current input modes, per device

@@ -2,7 +2,7 @@
 #include "navigation.h"
 #include <iostream>
 
-CMainWindow::CMainWindow() : nav_model("notesbase")
+CMainWindow::CMainWindow() : nav_model("notesbase"), sview()
 {
 	// Load config.
 	LoadConfig();
@@ -345,6 +345,9 @@ bool CMainWindow::on_motion_notify(GdkEventMotion *e)
 			break;
 		case NB_MODE_TEXT:
 			toolbar_builder->get_widget("text",b);
+			break;
+		case NB_MODE_ERASE:
+			toolbar_builder->get_widget("erase",b);
 			break;
 		}
 		b->set_active();
