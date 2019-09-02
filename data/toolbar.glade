@@ -45,6 +45,7 @@
       <object class="GtkRadioToolButton" id="erase">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <property name="tooltip_text" translatable="yes">Erase strokes</property>
         <property name="action_name">notebook.cmode-erase</property>
         <property name="use_underline">True</property>
         <property name="stock_id">gtk-clear</property>

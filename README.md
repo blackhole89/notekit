@@ -32,10 +32,9 @@ Nothing about this has been tested on other platforms than X11-based Linux.
 * The program loads a custom Gtk+ stylesheet found in `data/stylesheet.css`. Clear it if parts of the UI look wonky.
 
 ## Project status
-Late alpha. Creating and editing notes and drawing works well enough, but many basic quality-of-life features (such as an eraser tool) are still missing.
+Late alpha. Creating and editing notes and drawing works well enough, but many basic quality-of-life features (such as resizing/moving drawings) are still missing.
 
 ## Planned features
-* An eraser tool.
 * Selecting strokes, moving and transforming selections, etc.
 * Floating figures (so drawings can exist on top of text rather than as blocks that text floats around).
 * LaTeX math using `lasem`.
