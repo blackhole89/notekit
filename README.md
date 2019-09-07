@@ -12,7 +12,7 @@ I figured it would be nice to have a free-software, platform-independent OneNote
 * tablet input
 
 ## How to build
-Either invoke `cmake .` followed by `make`, or get [CodeLite](https://codelite.org/), open and build the workspace.
+Either invoke `cmake .` followed by `make` (which will build a binary at `cmake-build-Release/output/notekit`), or get [CodeLite](https://codelite.org/), open and build the workspace.
 
 Required libraries:
 
@@ -31,6 +31,7 @@ Nothing about this has been tested on other platforms than X11-based Linux.
 * Files are saved automatically when the window is closed, or when a different file is opened.
 * The document formatting is mostly based on standard `GtkSourceView` language and style files. If you want to change colours or syntax highlighting rules, you can edit them in the `sourceview/` subfolder.
 * The program loads a custom Gtk+ stylesheet found in `data/stylesheet.css`. Clear it if parts of the UI look wonky.
+* When copypasting text into other applications, drawings will be automatically converted into data URL PNGs.
 
 ## Project status
 Late alpha. Creating and editing notes and drawing works well enough, but many basic quality-of-life features (such as resizing/moving drawings) are still missing.
