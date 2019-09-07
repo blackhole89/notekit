@@ -12,7 +12,7 @@ I figured it would be nice to have a free-software, platform-independent OneNote
 * tablet input
 
 ## How to build
-Either invoke `make`, or get [CodeLite](https://codelite.org/), open and build the workspace.
+Either invoke `cmake .` followed by `make`, or get [CodeLite](https://codelite.org/), open and build the workspace.
 
 Required libraries:
 
