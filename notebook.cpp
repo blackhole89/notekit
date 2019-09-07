@@ -244,7 +244,7 @@ bool CNotebook::on_button_press(GdkEventButton *e)
 			double x,y;
 			Widget2Doc(e->x,e->y,x,y);
 		
-			printf("sig: %f %f %f %f\n",e->x, e->y, x,y);
+			//printf("sig: %f %f %f %f\n",e->x, e->y, x,y);
 		
 			active.Reset();
 			//active.r=active.g=active.b=0; active.a=1;
@@ -347,11 +347,12 @@ void CNotebook::CommitStroke()
 		if(i.get_child_anchor()) {
 			auto w = i.get_child_anchor()->get_widgets();
 			if(w.size()) {
-				printf("match?\n");
+				//printf("match?\n");
 				d = dynamic_cast<CBoundDrawing*>(w[0]);
 				break;
 			}
 		}
+		if(i==sbuffer->begin()) break; // nothing more to the left
 		Gtk::TextBuffer::iterator j = i;
 		--j;
 		gunichar prev_char = j.get_char();
@@ -359,7 +360,7 @@ void CNotebook::CommitStroke()
 			break;
 		}
 		i=j;
-	} while(i!=sbuffer->begin());
+	} while(true);
 	
 	if(d!=NULL) {
 		/* found a region to merge with above; we can adjust for its real location,
@@ -374,7 +375,7 @@ void CNotebook::CommitStroke()
 			if(k.get_child_anchor()) {
 				auto w = k.get_child_anchor()->get_widgets();
 				if(w.size()) {
-					printf("match below?\n");
+					//printf("match below?\n");
 					d = dynamic_cast<CBoundDrawing*>(w[0]);
 					break;
 				}
@@ -394,7 +395,7 @@ void CNotebook::CommitStroke()
 			Gdk::Rectangle r;
 			get_iter_location(i,r);
 			
-			printf("get rect: %d %d %d %d\n",r.get_x(),r.get_y(),r.get_width(),r.get_height());
+			//printf("get rect: %d %d %d %d\n",r.get_x(),r.get_y(),r.get_width(),r.get_height());
 			
 			/* once again, need to correct allocation to be in buffer coords */
 			int bx, by;
@@ -493,11 +494,11 @@ bool CNotebook::on_deserialize(const Glib::RefPtr<Gtk::TextBuffer>& content_buff
 			Gtk::manage(d);
 			
 			/* store iterator through mark creation */
-			printf("before: %d\n",iter.get_offset());
+			//printf("before: %d\n",iter.get_offset());
 			auto mk = content_buffer->create_mark(iter,false);
 			auto anch = content_buffer->create_child_anchor(iter);
 			iter = content_buffer->get_iter_at_mark(mk);
-			printf("after: %d\n",iter.get_offset());
+			//printf("after: %d\n",iter.get_offset());
 			content_buffer->delete_mark(mk);
 			
 			
@@ -555,7 +556,7 @@ CBoundDrawing::CBoundDrawing(Glib::RefPtr<Gdk::Window> wnd) : Glib::ObjectBase("
 	//set_size_request(100,100);
 	
 	signal_draw().connect(sigc::mem_fun(this,&CBoundDrawing::on_draw));
-	signal_configure_event().connect([] (GdkEventConfigure* e) {  printf("confevent %d %d\n",e->width,e->height); return true; } );
+	//signal_configure_event().connect([] (GdkEventConfigure* e) {  printf("confevent %d %d\n",e->width,e->height); return true; } );
 }
 
 
