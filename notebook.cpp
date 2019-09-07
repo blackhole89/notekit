@@ -573,6 +573,7 @@ void CBoundDrawing::UpdateSize(int neww, int newh, int dx, int dy)
 				str.ycoords[i]-=dy;
 			}
 		}
+		RebuildStrokefinder(); // buckets changed
 	}
 	if(w!=neww || h!=newh) {
 		// size changed; need to recreate Cairo surface
@@ -607,6 +608,17 @@ void CBoundDrawing::RecalculateSize()
 	}
 	
 	UpdateSize(neww, newh);
+}
+
+void CBoundDrawing::RebuildStrokefinder()
+{
+	strokefinder.clear();
+	
+	for(int j=0;j<strokes.size();++j) {
+		for(int i=0;i<strokes[j].xcoords.size();++i) {
+			strokefinder.insert( { BUCKET(strokes[j].xcoords[i],strokes[j].ycoords[i]), { j, i } } );
+		}
+	}
 }
 
 /* push and draw a new stroke, shifting it by (dx,dy) to accommodate the local coordinate system */
@@ -812,8 +824,11 @@ void CBoundDrawing::Deserialize(std::string input)
 		strokes.back().ycoords.resize(ncoords); memcpy(&strokes.back().ycoords[0], &raw_data[pos+5+ncoords], 4*ncoords);
 		strokes.back().pcoords.resize(ncoords); memcpy(&strokes.back().pcoords[0], &raw_data[pos+5+2*ncoords], 4*ncoords);
 		pos += 5+3*ncoords;
+		
+		
 	}
 	
+	RebuildStrokefinder();
 	UpdateSize(neww, newh);
 	Redraw();
 }

@@ -43,6 +43,7 @@ public:
 	Cairo::RefPtr<Cairo::Context> image_ctx;
 	void UpdateSize(int w, int h, int dx=0, int dy=0);
 	void Redraw();
+	void RebuildStrokefinder();
 	
 	void RecalculateSize();
 	void AddStroke(CStroke &s, float dx, float dy);
