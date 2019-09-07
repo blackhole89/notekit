@@ -18,8 +18,10 @@ CNotebook::CNotebook()
 	sbuffer->set_language(langman->get_language("markdown"));
 	
 	/* register our serialisation formats */
-	sbuffer->register_serialize_format("text/notekit-markdown",sigc::mem_fun(this,&CNotebook::on_serialize));
+	sbuffer->register_serialize_format("text/notekit-markdown", sigc::bind( sigc::mem_fun(this,&CNotebook::on_serialize), false ));
 	sbuffer->register_deserialize_format("text/notekit-markdown",sigc::mem_fun(this,&CNotebook::on_deserialize));
+	
+	sbuffer->register_serialize_format("text/plain", sigc::bind( sigc::mem_fun(this,&CNotebook::on_serialize), true ));
 	
 	Glib::RefPtr<Gtk::TargetList> l = sbuffer->get_copy_target_list();
 	
@@ -441,7 +443,7 @@ void CNotebook::CommitStroke()
 	active.Reset();
 }
 
-guint8* CNotebook::on_serialize(const Glib::RefPtr<Gtk::TextBuffer>& content_buffer, const Gtk::TextBuffer::iterator& start, const Gtk::TextBuffer::iterator& end, gsize& length)
+guint8* CNotebook::on_serialize(const Glib::RefPtr<Gtk::TextBuffer>& content_buffer, const Gtk::TextBuffer::iterator& start, const Gtk::TextBuffer::iterator& end, gsize& length, bool render_images)
 {
 	Glib::ustring buf;
 	Gtk::TextBuffer::iterator pos0 = start, pos1 = start;
@@ -453,7 +455,10 @@ guint8* CNotebook::on_serialize(const Glib::RefPtr<Gtk::TextBuffer>& content_buf
 			auto w = pos0.get_child_anchor()->get_widgets();
 			if(w.size()) {
 				CBoundDrawing *d = dynamic_cast<CBoundDrawing*>(w[0]);
-				buf += d->Serialize();
+				if(render_images)
+					buf += d->SerializePNG();
+				else
+					buf += d->Serialize();
 			}
 			++pos0; ++pos1;
 		}
@@ -721,6 +726,23 @@ bool CBoundDrawing::on_motion_notify_event(GdkEventMotion* event)
 
 #include "base64.h"
 #include <zlib.h>
+
+Cairo::ErrorStatus append_fn(const unsigned char* data, unsigned int length, std::vector<unsigned char> *target)
+{
+	target->insert(target->end(),data,data+length);
+	return CAIRO_STATUS_SUCCESS;
+}
+
+std::string CBoundDrawing::SerializePNG()
+{
+	std::string ret;
+	ret+="![](data:image/png;base64,";
+	std::vector<unsigned char> buf; 
+	image->write_to_png_stream(sigc::bind(&append_fn, &buf));
+	ret+=base64Encode(buf);
+	ret+=")";
+	return ret;
+}
 
 std::string CBoundDrawing::Serialize()
 {

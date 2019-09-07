@@ -57,6 +57,7 @@ public:
 	virtual void destroy_notify_();
 	
 	std::string Serialize();
+	std::string SerializePNG();
 	void Deserialize(std::string input);
 };
 
@@ -117,7 +118,7 @@ public:
 	virtual bool on_key_press_event(GdkEventKey *k);
 	void on_insert(const Gtk::TextBuffer::iterator &,const Glib::ustring& str,int len);
 	
-	guint8* on_serialize(const Glib::RefPtr<Gtk::TextBuffer>& content_buffer, const Gtk::TextBuffer::iterator& start, const Gtk::TextBuffer::iterator& end, gsize& length);
+	guint8* on_serialize(const Glib::RefPtr<Gtk::TextBuffer>& content_buffer, const Gtk::TextBuffer::iterator& start, const Gtk::TextBuffer::iterator& end, gsize& length, bool render_images);
 	bool on_deserialize(const Glib::RefPtr<Gtk::TextBuffer>& content_buffer, Gtk::TextBuffer::iterator& iter, const guint8* data, gsize length, bool create_tags); 
 	
 	

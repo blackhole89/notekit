@@ -51,7 +51,9 @@ void cut_or_copy(GtkTextBuffer *buffer, GtkClipboard  *clipboard, bool delete_re
 	
 	CClipboardDataRecord *rec = new CClipboardDataRecord;
 	rec->markdown = gtk_text_buffer_serialize(buffer,buffer,gdk_atom_intern("text/notekit-markdown",true),&start,&end,&rec->markdown_len);
-	rec->plaintext = gtk_text_iter_get_visible_text (&start, &end);
+	gsize trash;
+	rec->plaintext = (gchar*)gtk_text_buffer_serialize(buffer,buffer,gdk_atom_intern("text/plain",true),&start,&end,&trash);
+	//rec->plaintext = gtk_text_iter_get_visible_text (&start, &end);
 	
 	GtkTargetList *l = gtk_target_list_new(NULL,0);
 	
