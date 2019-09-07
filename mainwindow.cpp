@@ -231,15 +231,20 @@ void CMainWindow::OpenDocument(std::string filename)
 	FetchAndSave();
 	
 	if(filename=="") {
+		sview.set_editable(false);
+		sview.set_can_focus(false);
+		
 		active_document="";
 		hbar.set_subtitle("");
 		config["active_document"]="";
 		
 		sbuffer->begin_not_undoable_action();
-		sbuffer->set_text("");
+		sbuffer->set_text("( Nothing opened. Please create or open a file. ) ");
 		sbuffer->end_not_undoable_action();
 		return;
 	}
+	sview.set_editable(true);
+	sview.set_can_focus(true);
 	
 	char *buf; gsize length;
 	Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(nav_model.base + "/" + filename);
