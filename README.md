@@ -11,6 +11,14 @@ I figured it would be nice to have a free-software, platform-independent OneNote
 * simple, standard on-disk format
 * tablet input
 
+## How to install
+
+Currently, there is only one binary build available:
+
+* [Linux x86_64](http://twilightro.kafuka.org/%7Eblackhole89/files/notekit-20190907.tar.gz) (Git version of 2019-09-07)
+
+To run the binary, you will in addition require at least the following packages: `libgtkmm-3.0-1v5 libgtksourceviewmm-3.0-0v5 libjsoncpp1 zlib1g`, where the version of `libgtkmm-3.0-1v5` is at least 3.20. (In particular, this means that Ubuntu 16.04 LTS (xenial) and derived distributions are too old.) If the binary does not work for you, it is recommended that you build from source, as described below.
+
 ## How to build
 Either invoke `cmake .` followed by `make` (which will build a binary at `cmake-build-Release/output/notekit`), or get [CodeLite](https://codelite.org/), open and build the workspace.
 
