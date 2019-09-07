@@ -1,7 +1,8 @@
 struct CClipboardDataRecord {
 	guint8* markdown;
 	gsize markdown_len;
-	gchar *plaintext;};
+	guint8* plaintext;
+	gsize plaintext_len;};
 
 static void
 clipboard_clear_contents_cb (GtkClipboard *clipboard,
@@ -24,7 +25,7 @@ clipboard_get_contents_cb (GtkClipboard     *clipboard,
 	{
 		gtk_selection_data_set(selection_data,gtk_selection_data_get_target (selection_data),8,rec->markdown,rec->markdown_len);
 	} else {
-		gtk_selection_data_set_text (selection_data, rec->plaintext, -1);
+		gtk_selection_data_set_text (selection_data, (gchar*)rec->plaintext, rec->plaintext_len);
 	}
 }
 
@@ -51,8 +52,7 @@ void cut_or_copy(GtkTextBuffer *buffer, GtkClipboard  *clipboard, bool delete_re
 	
 	CClipboardDataRecord *rec = new CClipboardDataRecord;
 	rec->markdown = gtk_text_buffer_serialize(buffer,buffer,gdk_atom_intern("text/notekit-markdown",true),&start,&end,&rec->markdown_len);
-	gsize trash;
-	rec->plaintext = (gchar*)gtk_text_buffer_serialize(buffer,buffer,gdk_atom_intern("text/plain",true),&start,&end,&trash);
+	rec->plaintext = gtk_text_buffer_serialize(buffer,buffer,gdk_atom_intern("text/plain",true),&start,&end,&rec->plaintext_len);
 	//rec->plaintext = gtk_text_iter_get_visible_text (&start, &end);
 	
 	GtkTargetList *l = gtk_target_list_new(NULL,0);
@@ -204,8 +204,8 @@ clipboard_rich_text_received (GtkClipboard *clipboard,
 
 		if (!retval)
 		{
-			g_warning ("error pasting: %s\n", error->message);
 			g_clear_error (&error);
+			g_warning ("error pasting: %s\n", error->message);
 		}
 
 		if (request_data->interactive)
