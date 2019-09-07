@@ -41,7 +41,7 @@ public:
 	Glib::RefPtr<Gdk::Window> target_window;
 	Cairo::RefPtr<Cairo::Surface> image;
 	Cairo::RefPtr<Cairo::Context> image_ctx;
-	void UpdateSize(int w, int h);
+	void UpdateSize(int w, int h, int dx=0, int dy=0);
 	void Redraw();
 	
 	void RecalculateSize();

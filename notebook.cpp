@@ -338,8 +338,9 @@ void CNotebook::CommitStroke()
 	//add_child_in_window(*d,Gtk::TEXT_WINDOW_TEXT,x0,y0);
 	
 	/* search for preceding regions we can merge with */
-	Gtk::TextBuffer::iterator i;
+	Gtk::TextBuffer::iterator i,k;
 	get_iter_at_location(i,x0,y0);
+	k=i; // for later
 	do {
 		if(i.get_child_anchor()) {
 			auto w = i.get_child_anchor()->get_widgets();
@@ -358,37 +359,79 @@ void CNotebook::CommitStroke()
 		i=j;
 	} while(i!=sbuffer->begin());
 	
-	if(d==NULL) {
-		/* couldn't find a region to merge with; create a new image */
-		d = new CBoundDrawing(get_window(Gtk::TEXT_WINDOW_TEXT));
-		Gtk::manage(d); 
-		get_iter_at_location(i,x0,y0);
-		
-		/* figure out where it got anchored in the text, so we can translate the stroke correctly */
-		Gdk::Rectangle r;
-		get_iter_location(i,r);
-		
-		if(r.get_x() > x0) {
-			/* end of document, line too far to the right; add a new line */
-			/* TODO: check this logic */
-			sbuffer->insert(i,"\n");
-			get_iter_at_location(i,x0,y0);
-			get_iter_location(i,r);
-		}
-		
-		auto anch = sbuffer->create_child_anchor(i);
-		add_child_at_anchor(*d,anch);
-		
-		//printf("anchoring: %f %f -> %d %d\n",x0,y0,r.get_x(),r.get_y());
-	
-		d->AddStroke(active,-(r.get_x()),-(r.get_y()));
-	} else {
-		/* found a region to merge with; we can adjust for its real location,
+	if(d!=NULL) {
+		/* found a region to merge with above; we can adjust for its real location,
 		 * but that's relative to the text body, so need to fixup */
 		int bx, by;
 		window_to_buffer_coords(Gtk::TEXT_WINDOW_TEXT,0,0,bx,by);
 		//printf("fix: %d %d\n",bx,by);
 		d->AddStroke(active,-(d->get_allocation().get_x())-bx,-(d->get_allocation().get_y())-by);
+	} else {
+		/* can't merge up, but maybe there's a region further down that can be expanded? */
+		do {
+			if(k.get_child_anchor()) {
+				auto w = k.get_child_anchor()->get_widgets();
+				if(w.size()) {
+					printf("match below?\n");
+					d = dynamic_cast<CBoundDrawing*>(w[0]);
+					break;
+				}
+			}
+			gunichar next_char = k.get_char();
+			if(!g_unichar_isspace(next_char) && next_char!=0xFFFC) {
+				break;
+			}
+			++k;
+		} while(k!=sbuffer->end());
+		
+		if(d!=NULL) {
+			/* found a region to merge with below; we need to expand it before adding this stroke */
+			
+			/* find where the drawing should start */
+			get_iter_at_location(i,x0,y0);
+			Gdk::Rectangle r;
+			get_iter_location(i,r);
+			
+			printf("get rect: %d %d %d %d\n",r.get_x(),r.get_y(),r.get_width(),r.get_height());
+			
+			/* once again, need to correct allocation to be in buffer coords */
+			int bx, by;
+			window_to_buffer_coords(Gtk::TEXT_WINDOW_TEXT,0,0,bx,by);
+			
+			int dx = -d->get_allocation().get_x()-bx + r.get_x(),
+				dy = -d->get_allocation().get_y()-by + r.get_y();
+			
+			d->UpdateSize(d->w, d->h, dx, dy);
+			
+			d->AddStroke(active,-(r.get_x()),-(r.get_y()));
+			
+			/* eat intermittent spaces */
+			sbuffer->erase(i,k);
+		} else {
+			/* couldn't find a region to merge with; create a new image */
+			d = new CBoundDrawing(get_window(Gtk::TEXT_WINDOW_TEXT));
+			Gtk::manage(d); 
+			get_iter_at_location(i,x0,y0);
+			
+			/* figure out where it got anchored in the text, so we can translate the stroke correctly */
+			Gdk::Rectangle r;
+			get_iter_location(i,r);
+			
+			if(r.get_x() > x0) {
+				/* end of document, line too far to the right; add a new line */
+				/* TODO: check this logic */
+				sbuffer->insert(i,"\n");
+				get_iter_at_location(i,x0,y0);
+				get_iter_location(i,r);
+			}
+			
+			auto anch = sbuffer->create_child_anchor(i);
+			add_child_at_anchor(*d,anch);
+			
+			//printf("anchoring: %f %f -> %d %d\n",x0,y0,r.get_x(),r.get_y());
+		
+			d->AddStroke(active,-(r.get_x()),-(r.get_y()));
+		}
 	}
 	
 	d->show();
@@ -512,8 +555,20 @@ CBoundDrawing::CBoundDrawing(Glib::RefPtr<Gdk::Window> wnd) : Glib::ObjectBase("
 
 
 /* Change the drawing's size, possibly resizing the internal buffer in the process */
-void CBoundDrawing::UpdateSize(int neww, int newh)
+/* dx, dy move the top left corner; neww, newh are relative to the OLD top left corner */
+void CBoundDrawing::UpdateSize(int neww, int newh, int dx, int dy)
 {
+	neww-=dx; newh-=dy;
+	
+	if(dx!=0 || dy!=0) {
+		// origin changed; need to move strokes
+		for(auto &str : strokes) {
+			for(int i=0;i<str.xcoords.size();++i) {
+				str.xcoords[i]-=dx;
+				str.ycoords[i]-=dy;
+			}
+		}
+	}
 	if(w!=neww || h!=newh) {
 		// size changed; need to recreate Cairo surface
 		Cairo::RefPtr<Cairo::Surface> newptr = target_window->create_similar_surface(Cairo::CONTENT_COLOR_ALPHA,neww,newh);
@@ -521,8 +576,8 @@ void CBoundDrawing::UpdateSize(int neww, int newh)
 		// copy old surface
 		if(image) {
 			image_ctx->save();
-			image_ctx->set_source(image,0,0);
-			image_ctx->rectangle(0,0,w,h);
+			image_ctx->set_source(image,-dx,-dy);
+			image_ctx->rectangle(-dx,-dy,w,h);
 			image_ctx->set_operator(Cairo::OPERATOR_SOURCE);
 			image_ctx->fill();
 			image_ctx->restore();
