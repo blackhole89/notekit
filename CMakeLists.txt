@@ -55,7 +55,7 @@ execute_process(COMMAND
     OUTPUT_VARIABLE
     CL_TMP_VAR
     OUTPUT_STRIP_TRAILING_WHITESPACE)
-string(STRIP ${CL_TMP_VAR} CL_VAR_3)
+string(STRIP "${CL_TMP_VAR}" CL_VAR_3)
 add_definitions(${CL_VAR_1})
 add_definitions(${CL_VAR_2})
 add_definitions(${CL_VAR_3})
@@ -80,12 +80,6 @@ execute_process(COMMAND
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 string(STRIP ${CL_TMP_VAR} CL_VAR_5)
 execute_process(COMMAND 
-    pkg-config webkit2gtk-4.0 --libs
-    OUTPUT_VARIABLE
-    CL_TMP_VAR
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
-string(STRIP ${CL_TMP_VAR} CL_VAR_6)
-execute_process(COMMAND 
     pkg-config --libs jsoncpp
     OUTPUT_VARIABLE
     CL_TMP_VAR
@@ -93,7 +87,6 @@ execute_process(COMMAND
 string(STRIP ${CL_TMP_VAR} CL_VAR_7)
 set(LINK_OPTIONS ${CL_VAR_4})
 set(LINK_OPTIONS ${LINK_OPTIONS} ${CL_VAR_5})
-set(LINK_OPTIONS ${LINK_OPTIONS} ${CL_VAR_6})
 set(LINK_OPTIONS ${LINK_OPTIONS} ${CL_VAR_7})
 
 

@@ -144,18 +144,24 @@ void CNavigationView::on_row_activated(const Gtk::TreeModel::Path &path, const G
 	mainwindow->OpenDocument(fname);
 }
 
+#ifdef XATTRS
 #include <sys/xattr.h>
+#endif
 
 bool CNavigationView::on_expand_row(const Gtk::TreeModel::iterator& iter, const Gtk::TreeModel::Path& path)
 {
 	if( (*iter)[cols.type] == CT_DIR_UNLOADED )
 		ExpandDirectory( (Glib::ustring)(*iter)[cols.full_path] + (Glib::ustring)(*iter)[cols.name], &iter->children() );
 	(*iter)[cols.type] = CT_DIR_LOADED;
-	
+#ifdef XATTRS	
 	int attr='1';
 	setxattr((base+Row2Path(iter)).c_str(),"user.nkexpand",&attr,1,0);
+#else
+	Glib::RefPtr<Gio::File> f = Gio::File::create_for_path(base+Row2Path(iter));
+	f->set_attribute_string("xattr::nkexpand","1",Gio::FILE_QUERY_INFO_NONE);
+#endif
 	(*iter)[cols.expanded]=1;
-	
+
 	return false;
 }
 
@@ -175,8 +181,13 @@ void CNavigationView::on_postexpand_row(const Gtk::TreeModel::iterator& iter, co
 void CNavigationView::on_collapse_row(const Gtk::TreeModel::iterator& iter, const Gtk::TreeModel::Path& path)
 {
 	/* not unloading the row for now */
+#ifdef XATTRS
 	int attr='0';
 	setxattr((base+Row2Path(iter)).c_str(),"user.nkexpand",&attr,0,0);
+#else
+	Glib::RefPtr<Gio::File> f = Gio::File::create_for_path(base+Row2Path(iter));
+	f->set_attribute_string("xattr::nkexpand","0",Gio::FILE_QUERY_INFO_NONE);
+#endif
 	(*iter)[cols.expanded]=0;
 }
 
@@ -345,7 +356,7 @@ void CNavigationView::ExpandDirectory(std::string path, const Gtk::TreeNodeChild
 {
 	try {
 		Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(base+path);
-		Glib::RefPtr<Gio::FileEnumerator> child_enumeration = file->enumerate_children("standard::name,xattr::nkorder,xattr::nkexpand");
+		Glib::RefPtr<Gio::FileEnumerator> child_enumeration = file->enumerate_children("standard::name,standard::type,xattr::nkorder,xattr::nkexpand");
 		
 		Glib::RefPtr<Gio::FileInfo> file_info;
 		std::vector<Glib::RefPtr<Gio::FileInfo> > files;
@@ -355,14 +366,14 @@ void CNavigationView::ExpandDirectory(std::string path, const Gtk::TreeNodeChild
 		
 		for( auto file_info : files )
 		{
-			std::string fname = file_info->get_name();
+			std::string fname = file_info->get_name(); 
 			Glib::ustring order = file_info->get_attribute_as_string("xattr::nkorder");
 
 			bool is_dir = file_info->get_file_type()==Gio::FILE_TYPE_DIRECTORY;
 			
 			Gtk::TreeModel::iterator r;
 			
-			if(is_dir) {
+			if(is_dir) { 
 				if(node) r=store->prepend(*node);
 				else r=store->prepend();
 			
@@ -395,6 +406,6 @@ void CNavigationView::ExpandDirectory(std::string path, const Gtk::TreeNodeChild
 			}
 		}
 	} catch(Gio::Error &e) {
-		printf("%s\n",e.what().c_str());
+		printf("Gio error when expanding directory: %s\n",e.what().c_str());
 	}
 }
