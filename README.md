@@ -13,9 +13,10 @@ I figured it would be nice to have a free-software, platform-independent OneNote
 
 ## How to install
 
-Currently, there is only one binary build available:
+You can download the following binary builds:
 
 * [Linux x86_64](http://twilightro.kafuka.org/%7Eblackhole89/files/notekit-20190907.tar.gz) (Git version of 2019-09-07)
+* [Windows x86_64](http://twilightro.kafuka.org/%7Eblackhole89/files/notekit-20190908.zip) (Git version of 2019-09-08). The Windows version is less tested and incapable of remembering which folders are opened to mingw-w64's lack of support for xattrs.
 
 To run the binary, you will in addition require at least the following packages: `libgtkmm-3.0-1v5 libgtksourceviewmm-3.0-0v5 libjsoncpp1 zlib1g`, where the version of `libgtkmm-3.0-1v5` is at least 3.20. (In particular, this means that Ubuntu 16.04 LTS (xenial) and derived distributions are too old.) If the binary does not work for you, it is recommended that you build from source, as described below.
 
@@ -29,7 +30,8 @@ Required libraries:
 * `libjsoncpp-dev` ~ 1.7.4 (config files; older versions may work)
 * `zlib1g-dev`
 
-Nothing about this has been tested on other platforms than X11-based Linux.
+Development and testing was exclusively conducted on X11-based Linux. The one tested way of building on Windows involves [MSYS2](https://www.msys2.org/)'s mingw-w64 package family (following the `cmake` route outlined above). Since MSYS2's `coreutils` depend on its Cygwin fork, the released Windows binary packages instead include a subset of coreutils from [GnuWin32](http://gnuwin32.sourceforge.net/).
+
 ## Usage notes
 * Notes are saved in `notesbase/` relative to the binary path. (This will be made configurable eventually.)
 * To create a new note, doubleclick a `+` node in the tree view and enter a name.
