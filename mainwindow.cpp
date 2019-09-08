@@ -41,6 +41,11 @@ CMainWindow::CMainWindow() : nav_model("notesbase"), sview()
 	get_style_context()->add_provider(sview_css,GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 	nav.get_style_context()->add_provider(sview_css,GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
+	/* load cursor types for document */
+	pen_cursor = Gdk::Cursor::create(Gdk::Display::get_default(),"default");
+	text_cursor = Gdk::Cursor::create(Gdk::Display::get_default(),"text");
+	eraser_cursor = Gdk::Cursor::create(Gdk::Display::get_default(),"cell");
+
 	/* install document view */
 	sbuffer = sview.get_source_buffer();
 	sview.get_style_context()->add_provider(sview_css,GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
@@ -330,8 +335,11 @@ bool CMainWindow::on_motion_notify(GdkEventMotion *e)
 {
 	GdkDevice *d = gdk_event_get_source_device((GdkEvent*)e);
 	
+	bool device_switched=false;
+	
 	if(d != sview.last_device) {
 		sview.last_device = d;
+		device_switched=true;
 		
 		Gtk::RadioToolButton *b;
 		
@@ -357,5 +365,22 @@ bool CMainWindow::on_motion_notify(GdkEventMotion *e)
 		}
 		b->set_active();
 	}
+	
+	if(device_switched || sview.update_cursor) {
+		sview.update_cursor=false;
+		
+		switch(sview.devicemodes[d]) {
+		case NB_MODE_DRAW:
+			sview.SetCursor(pen_cursor);
+			break;
+		case NB_MODE_TEXT:
+			sview.SetCursor(text_cursor);
+			break;
+		case NB_MODE_ERASE:
+			sview.SetCursor(eraser_cursor);
+			break;
+		}
+	}
+	
 	return false;
 }

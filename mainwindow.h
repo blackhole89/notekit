@@ -56,6 +56,7 @@ protected:
 	Gtk::ScrolledWindow sview_scroll;
 	CNotebook sview;
 	Glib::RefPtr<Gsv::Buffer> sbuffer;
+	Glib::RefPtr<Gdk::Cursor> pen_cursor, text_cursor, eraser_cursor;
 	
 	/* tool palette */
 	Glib::RefPtr<Gtk::Builder> toolbar_builder;

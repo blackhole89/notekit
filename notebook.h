@@ -98,7 +98,10 @@ public:
 	void EraseAtPosition(float x, float y);
 	
 	GdkDevice *last_device; // most recently seen device
+	bool update_cursor; // signal to main window to update cursor
 	std::map<GdkDevice*,int> devicemodes; // current input modes, per device
+	
+	void SetCursor(Glib::RefPtr<Gdk::Cursor> c);
 	
 	Glib::RefPtr<Gsv::Buffer> sbuffer;
 	

@@ -55,6 +55,7 @@ CNotebook::CNotebook()
 	//g_signal_connect(gobj(),"copy-clipboard",G_CALLBACK(notebook_copy_clipboard),NULL);
 	
 	active_state=NB_STATE_NOTHING;
+	update_cursor=false;
 	
 	/* create tags for style aspects that the syntax highlighter doesn't handle */
 	tag_extra_space = sbuffer->create_tag();
@@ -63,11 +64,17 @@ CNotebook::CNotebook()
 	
 	set_wrap_mode(Gtk::WRAP_WORD_CHAR);}
 
+void CNotebook::SetCursor(Glib::RefPtr<Gdk::Cursor> c)
+{
+	if(auto w=get_window(Gtk::TEXT_WINDOW_TEXT)) w->set_cursor(c);
+}
+
 void CNotebook::on_action(std::string name,int type,int param)
 {
 	switch(type) {
 	case NB_ACTION_CMODE:
 		devicemodes[last_device]=param;
+		update_cursor=true;
 		break;
 	case NB_ACTION_STROKE:
 		stroke_width=param;
