@@ -614,6 +614,7 @@ void CBoundDrawing::RecalculateSize()
 			if(str.ycoords[i]+str.pcoords[i]>newh) newh=str.ycoords[i]+str.pcoords[i];
 		}
 	}
+	neww+=1; newh+=1; // margin to account for rounding error
 	
 	UpdateSize(neww, newh);
 }
@@ -638,7 +639,7 @@ void CBoundDrawing::AddStroke(CStroke &s, float dx, float dy)
 		int newx, newy, newp;
 		newx=(strokes.back().xcoords[i]+=dx);
 		newy=(strokes.back().ycoords[i]+=dy);
-		newp=strokes.back().pcoords[i];
+		newp=strokes.back().pcoords[i]+1; // add 1 as safety margin
 		if(newx+newp>neww) neww=newx+newp;
 		if(newy+newp>newh) newh=newy+newp;
 		/* add to stroke cache */
