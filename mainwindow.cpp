@@ -252,8 +252,26 @@ void CMainWindow::OpenDocument(std::string filename)
 	sview.set_can_focus(true);
 	
 	char *buf; gsize length;
-	Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(nav_model.base + "/" + filename);
-	file->load_contents(buf, length);
+	try {
+		Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(nav_model.base + "/" + filename);
+		file->load_contents(buf, length);
+	} catch(Gio::Error &e) {
+		sview.set_editable(false);
+		sview.set_can_focus(false);
+		
+		fprintf(stderr,"Error: Failed to load document %s!\n",filename.c_str());
+		active_document="";
+		hbar.set_subtitle("");
+		config["active_document"]="";
+		
+		sbuffer->begin_not_undoable_action();
+		char error_msg[512];
+		sprintf(error_msg,"( Failed to open %s. Please create or open a file. ) ",filename.c_str());
+		sbuffer->set_text(error_msg);
+		sbuffer->end_not_undoable_action();
+		
+		return;
+	}
 	
 	sbuffer->begin_not_undoable_action();
 	sbuffer->set_text("");
