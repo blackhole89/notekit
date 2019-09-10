@@ -356,7 +356,7 @@ void CNavigationView::ExpandDirectory(std::string path, const Gtk::TreeNodeChild
 {
 	try {
 		Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(base+path);
-		Glib::RefPtr<Gio::FileEnumerator> child_enumeration = file->enumerate_children("standard::name,standard::type,xattr::nkorder,xattr::nkexpand");
+		Glib::RefPtr<Gio::FileEnumerator> child_enumeration = file->enumerate_children("standard::name,standard::type,xattr::nkorder,xattr::nkexpand",Gio::FILE_QUERY_INFO_NONE);
 		
 		Glib::RefPtr<Gio::FileInfo> file_info;
 		std::vector<Glib::RefPtr<Gio::FileInfo> > files;
