@@ -16,7 +16,10 @@ public:
 	
 	void Reset();
 	void Append(float x, float y, float p);
-	void Render(const Cairo::RefPtr<Cairo::Context> &ctx, float basex, float basey);
+	void GetHead(float &x, float &y);
+	float GetHeadCurvatureWrt(float x, float y);
+	void Simplify();
+	void Render(const Cairo::RefPtr<Cairo::Context> &ctx, float basex, float basey, int start_index=1);
 	void GetBBox(float &x0, float &x1, float &y0, float &y1);
 };
 
@@ -106,9 +109,12 @@ public:
 	Glib::RefPtr<Gsv::Buffer> sbuffer;
 	
 	Gtk::DrawingArea overlay;
+	Cairo::RefPtr<Cairo::Surface> overlay_image;
+	Cairo::RefPtr<Cairo::Context> overlay_ctx;
 	void on_allocate(Gtk::Allocation &a);
 	bool on_redraw_overlay(const Cairo::RefPtr<Cairo::Context> &ctx);
 	
+	float attention_ewma;
     bool on_button_press(GdkEventButton* event);
     bool on_button_release(GdkEventButton* event);
     bool on_motion_notify(GdkEventMotion* event);

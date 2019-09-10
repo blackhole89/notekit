@@ -56,6 +56,7 @@ CNotebook::CNotebook()
 	
 	active_state=NB_STATE_NOTHING;
 	update_cursor=false;
+	attention_ewma=0.0;
 	
 	/* create tags for style aspects that the syntax highlighter doesn't handle */
 	tag_extra_space = sbuffer->create_tag();
@@ -89,16 +90,31 @@ void CNotebook::on_allocate(Gtk::Allocation &a)
 	if(overlay.get_window()) {
 		/* if we don't do this, some mystery subset of signals gets eaten */
 		overlay.get_window()->set_pass_through(true);
+		
+		// size changed; need to recreate Cairo surface
+		Cairo::RefPtr<Cairo::Surface> newptr = overlay.get_window()->create_similar_surface(Cairo::CONTENT_COLOR_ALPHA,a.get_width(),a.get_height());
+		overlay_ctx = Cairo::Context::create(newptr);
+		// copy old surface
+		if(overlay_image) {
+			overlay_ctx->save();
+			overlay_ctx->set_source(overlay_image,0,0);
+			overlay_ctx->rectangle(0,0,a.get_width(),a.get_height());
+			overlay_ctx->set_operator(Cairo::OPERATOR_SOURCE);
+			overlay_ctx->fill();
+			overlay_ctx->restore();
+		}
+		// replace surface
+		overlay_image = newptr;
 	}
 }
 
-void CStroke::Render(const Cairo::RefPtr<Cairo::Context> &ctx, float basex, float basey)
+void CStroke::Render(const Cairo::RefPtr<Cairo::Context> &ctx, float basex, float basey, int start_index)
 {
 	ctx->translate(-basex,-basey);
 	ctx->set_source_rgba(r,g,b,a);
 	ctx->set_line_cap(Cairo::LINE_CAP_ROUND);
-	for(int i=1;i<xcoords.size();++i) {
-		ctx->set_line_width(pcoords[i]);
+	for(int i=start_index;i<xcoords.size();++i) {
+		ctx->set_line_width(pcoords[i-1]);
 		ctx->move_to(xcoords[i-1],ycoords[i-1]);
 		ctx->line_to(xcoords[i],ycoords[i]);
 		ctx->stroke();
@@ -178,10 +194,10 @@ void CNotebook::on_insert(const Gtk::TextBuffer::iterator &iter,const Glib::ustr
 /* redraw cairo overlay: active stroke, special widgets like lines, etc. */
 bool CNotebook::on_redraw_overlay(const Cairo::RefPtr<Cairo::Context> &ctx)
 {
-	int bx, by;
-	window_to_buffer_coords(Gtk::TEXT_WINDOW_WIDGET,0,0,bx,by);
-	
-	active.Render(ctx,bx,by);
+	//active.Render(ctx,bx,by);
+	ctx->set_source(overlay_image,0,0);
+	ctx->rectangle(0,0,get_width(),get_height());
+	ctx->fill();
 	
 	/* draw horizontal rules */
 	Gdk::Rectangle rect;
@@ -258,6 +274,8 @@ bool CNotebook::on_button_press(GdkEventButton *e)
 			active.Append(x,y, stroke_width*ReadPressure(e->device));
 			
 			active_state = NB_STATE_DRAW;
+			
+			gdk_window_set_event_compression(e->window,false);
 		
 			return true;
 		}
@@ -273,9 +291,12 @@ bool CNotebook::on_button_press(GdkEventButton *e)
 
 bool CNotebook::on_button_release(GdkEventButton *e)
 {
+	gdk_window_set_event_compression(e->window,true);
+	
 	if(active_state!=NB_STATE_NOTHING) {
 		if(active_state==NB_STATE_DRAW) {
 			sbuffer->begin_not_undoable_action();
+			active.Simplify();
 			CommitStroke();
 			sbuffer->end_not_undoable_action();
 		}
@@ -290,12 +311,41 @@ bool CNotebook::on_button_release(GdkEventButton *e)
 bool CNotebook::on_motion_notify(GdkEventMotion *e)
 {
 	if(active_state==NB_STATE_DRAW) {
-		double x,y;
+		double x,y,p;
 		Widget2Doc(e->x,e->y,x,y); 
-	
-		active.Append(x,y,stroke_width*ReadPressure(e->device));
+		p = stroke_width*ReadPressure(e->device);
 		
-		overlay.queue_draw_area(e->x-32,e->y-32,64,64);
+		/* dynamically toggle event compression */
+		float xprev,yprev;
+		active.GetHead(xprev,yprev);
+		float curve = abs(active.GetHeadCurvatureWrt(x,y));
+		float delta = sqrt ( (xprev-x)*(xprev-x)+(yprev-y)*(yprev-y) );
+		
+		if(delta<0.6) {
+			/* reject if we are too close to previous head */
+			gdk_window_set_event_compression(e->window,true);
+			return false;
+		}
+		
+		attention_ewma = sqrt(curve)+(delta>4?0.2:0);
+		if(attention_ewma<0.32) {
+			//printf("compression on\n");
+			//p=1;
+			gdk_window_set_event_compression(e->window,true);
+		} else if(attention_ewma>0.32){
+			//printf("compression off\n");
+			//%%p=3;
+			gdk_window_set_event_compression(e->window,false);
+		}
+		//p=attention_ewma;
+		
+		active.Append(x,y,p);
+		
+		int bx, by;
+		window_to_buffer_coords(Gtk::TEXT_WINDOW_WIDGET,0,0,bx,by);
+		active.Render(overlay_ctx,bx,by,active.xcoords.size()-1);
+		
+		overlay.queue_draw_area(e->x-2*delta,e->y-2*delta,4*delta,4*delta);
 	} else if (active_state==NB_STATE_ERASE) {
 		double x,y;
 		Widget2Doc(e->x,e->y,x,y); 
@@ -343,8 +393,13 @@ void CNotebook::CommitStroke()
 	
 	CBoundDrawing *d = NULL;
 	
-	//printf("%f %f %f %f\n",x0,x1,y0,y1);
-	//add_child_in_window(*d,Gtk::TEXT_WINDOW_TEXT,x0,y0);
+	/* clear buffer */
+	overlay_ctx->save();
+	overlay_ctx->set_source_rgba(0,0,0,0);
+	overlay_ctx->rectangle(0,0,get_width(),get_height());
+	overlay_ctx->set_operator(Cairo::OPERATOR_SOURCE);
+	overlay_ctx->fill();
+	overlay_ctx->restore();
 	
 	/* search for preceding regions we can merge with */
 	Gtk::TextBuffer::iterator i,k;
@@ -538,6 +593,66 @@ void CStroke::Append(float x, float y, float p)
 	xcoords.push_back(x);
 	ycoords.push_back(y);
 	pcoords.push_back(p);
+}
+
+void CStroke::GetHead(float &x, float &y)
+{
+	if(!xcoords.size()) return;
+	x = xcoords.back();
+	y = ycoords.back();
+}
+
+float CStroke::GetHeadCurvatureWrt(float x, float y)
+{
+	if(xcoords.size()<2) return 0.0f;
+	
+	int n=xcoords.size()-1;
+	float dx0=xcoords[n]-xcoords[n-1], dy0=ycoords[n]-ycoords[n-1], len0=sqrt(dx0*dx0+dy0*dy0);
+	float dx1=x-xcoords[n], dy1=y-ycoords[n], len1=sqrt(dx1*dx1+dy1*dy1);
+	float cross=dx1*dy0-dy1*dx0;
+	return cross/len0/len1;
+}
+
+void CStroke::Simplify()
+{
+	if(xcoords.size()<3) return;
+	std::vector<float> nxcoords;
+	std::vector<float> nycoords;
+	std::vector<float> npcoords;
+
+	float dx0=xcoords[1]-xcoords[0], dy0=ycoords[1]-ycoords[0], p0=pcoords[0], len0=sqrt(dx0*dx0+dy0*dy0);
+	nxcoords.push_back(xcoords[0]);
+	nycoords.push_back(ycoords[0]);
+	npcoords.push_back(pcoords[0]);
+	int pos=1;
+	float curvature_acc=0, length_acc=len0;
+	while((pos+1)!=xcoords.size()) {
+		float dx1=xcoords[pos+1]-xcoords[pos], dy1=ycoords[pos+1]-ycoords[pos], p1=pcoords[pos];
+		float cross=dx1*dy0-dy1*dx0;
+		float len1=sqrt(dx1*dx1+dy1*dy1);
+		float sine=cross/len0/len1;
+		curvature_acc+=abs(sine);
+		length_acc+=len1;
+		/* all these params are tunable */
+		if(curvature_acc>0.15 || length_acc>15 || abs(p0-p1)>0.3) { 
+			curvature_acc=0;
+			length_acc=0;
+			p0=p1;
+			nxcoords.push_back(xcoords[pos]);
+			nycoords.push_back(ycoords[pos]);
+			npcoords.push_back(pcoords[pos]);
+		}
+		dx0=dx1; dy0=dy1; len0=len1;
+		++pos;
+	}
+	nxcoords.push_back(xcoords[pos]);
+	nycoords.push_back(ycoords[pos]);
+	npcoords.push_back(pcoords[pos]);
+	
+	printf("old: %d, new: %d\n",xcoords.size(), nxcoords.size());
+	xcoords.swap(nxcoords);
+	ycoords.swap(nycoords);
+	pcoords.swap(npcoords);
 }
 
 void CStroke::GetBBox(float &x0, float &x1, float &y0, float &y1)
