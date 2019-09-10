@@ -20,7 +20,7 @@ public:
 	float GetHeadCurvatureWrt(float x, float y);
 	void Simplify();
 	void Render(const Cairo::RefPtr<Cairo::Context> &ctx, float basex, float basey, int start_index=1);
-	void GetBBox(float &x0, float &x1, float &y0, float &y1);
+	void GetBBox(float &x0, float &x1, float &y0, float &y1, int start_index=0);
 };
 
 class CBoundDrawing : public Gtk::DrawingArea

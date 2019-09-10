@@ -196,7 +196,8 @@ bool CNotebook::on_redraw_overlay(const Cairo::RefPtr<Cairo::Context> &ctx)
 {
 	//active.Render(ctx,bx,by);
 	ctx->set_source(overlay_image,0,0);
-	ctx->rectangle(0,0,get_width(),get_height());
+	ctx->paint();
+	//ctx->rectangle(0,0,get_width(),get_height());
 	ctx->fill();
 	
 	/* draw horizontal rules */
@@ -276,11 +277,15 @@ bool CNotebook::on_button_press(GdkEventButton *e)
 			active_state = NB_STATE_DRAW;
 			
 			gdk_window_set_event_compression(e->window,false);
+			
+			grab_focus();
 		
 			return true;
 		}
 		case NB_MODE_ERASE: {
 			active_state = NB_STATE_ERASE;
+			
+			grab_focus();
 			
 			return true;
 		}
@@ -345,7 +350,7 @@ bool CNotebook::on_motion_notify(GdkEventMotion *e)
 		window_to_buffer_coords(Gtk::TEXT_WINDOW_WIDGET,0,0,bx,by);
 		active.Render(overlay_ctx,bx,by,active.xcoords.size()-1);
 		
-		overlay.queue_draw_area(e->x-2*delta,e->y-2*delta,4*delta,4*delta);
+		overlay.queue_draw_area(e->x-delta-p,e->y-delta-p,2*delta+4*p,2*delta+4*p);
 	} else if (active_state==NB_STATE_ERASE) {
 		double x,y;
 		Widget2Doc(e->x,e->y,x,y); 
@@ -655,10 +660,10 @@ void CStroke::Simplify()
 	pcoords.swap(npcoords);
 }
 
-void CStroke::GetBBox(float &x0, float &x1, float &y0, float &y1)
+void CStroke::GetBBox(float &x0, float &x1, float &y0, float &y1, int start_index)
 {
 	x0=xcoords[0]; x1=xcoords[0]; y0=ycoords[0]; y1=ycoords[0];
-	for(int i=0;i<xcoords.size();++i) {
+	for(int i=start_index;i<xcoords.size();++i) {
 		if(xcoords[i]-pcoords[i]<x0) x0 = xcoords[i]-pcoords[i];
 		if(xcoords[i]+pcoords[i]>x1) x1 = xcoords[i]+pcoords[i];
 		if(ycoords[i]-pcoords[i]<y0) y0 = ycoords[i]-pcoords[i];
