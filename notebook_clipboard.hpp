@@ -213,8 +213,10 @@ clipboard_rich_text_received (GtkClipboard *clipboard,
 
 		//emit_paste_done (request_data->buffer, clipboard);
 
-		if (retval)
+		if (retval) {
+			free_clipboard_request (request_data);
 			return;
+		}
 	}
 
 	/* Request the text selection instead */

@@ -868,8 +868,9 @@ bool CBoundDrawing::on_motion_notify_event(GdkEventMotion* event)
 #include "base64.h"
 #include <zlib.h>
 
-Cairo::ErrorStatus append_fn(const unsigned char* data, unsigned int length, std::vector<unsigned char> *target)
+cairo_status_t append_fn(void *closure, const unsigned char* data, unsigned int length)
 {
+	std::vector<unsigned char> *target = (std::vector<unsigned char>*)closure;
 	target->insert(target->end(),data,data+length);
 	return CAIRO_STATUS_SUCCESS;
 }
@@ -879,7 +880,8 @@ std::string CBoundDrawing::SerializePNG()
 	std::string ret;
 	ret+="![](data:image/png;base64,";
 	std::vector<unsigned char> buf; 
-	image->write_to_png_stream(sigc::bind(&append_fn, &buf));
+	cairo_surface_write_to_png_stream(image->cobj(), append_fn, (void*)&buf);
+	//image->write_to_png_stream(sigc::bind(&append_fn, &buf));
 	ret+=base64Encode(buf);
 	ret+=")";
 	return ret;
