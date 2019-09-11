@@ -115,6 +115,7 @@ void CMainWindow::CalculatePaths()
 		fprintf(stderr,"WARNING: Could not determine user's home directory! Will operate in current working directory.\n");
 		config_path="notesbase";
 		default_base_path="notesbase";
+		data_path=".";
 		return;
 	}
 	
