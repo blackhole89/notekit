@@ -2,68 +2,11 @@
 #define NOTEBOOK_H
 
 #include <set>
-#include <unordered_map>
 
 #include <gtkmm.h>
 #include <gtksourceviewmm.h>
 
-class CStroke {
-public:
-	float r,g,b,a;
-	std::vector<float> xcoords;
-	std::vector<float> ycoords;
-	std::vector<float> pcoords;
-	
-	void Reset();
-	void Append(float x, float y, float p);
-	void GetHead(float &x, float &y);
-	float GetHeadCurvatureWrt(float x, float y);
-	void Simplify();
-	void Render(const Cairo::RefPtr<Cairo::Context> &ctx, float basex, float basey, int start_index=1);
-	void GetBBox(float &x0, float &x1, float &y0, float &y1, int start_index=0);
-};
-
-class CBoundDrawing : public Gtk::DrawingArea
-{
-public:
-	CBoundDrawing(Glib::RefPtr<Gdk::Window> wnd);
-	
-	std::vector<CStroke> strokes;
-	
-	static const int BUCKET_SIZE = 16;
-	static constexpr int BUCKET(int x,int y) {
-		return ((y/BUCKET_SIZE)<<16) + (x/BUCKET_SIZE);
-	}
-	struct strokeRef { int index; int offset; };
-	std::unordered_multimap<int, strokeRef> strokefinder;
-	
-	int w,h;
-	
-	bool selected;
-	
-	Glib::RefPtr<Gdk::Window> target_window;
-	Cairo::RefPtr<Cairo::Surface> image;
-	Cairo::RefPtr<Cairo::Context> image_ctx;
-	void UpdateSize(int w, int h, int dx=0, int dy=0);
-	void Redraw();
-	void RebuildStrokefinder();
-	
-	void RecalculateSize();
-	void AddStroke(CStroke &s, float dx, float dy);
-	void EraseAt(float x, float y, float radius, bool whole_stroke);
-	
-	virtual bool on_button_press_event(GdkEventButton* event);
-	virtual bool on_button_release_event(GdkEventButton* event);
-	virtual bool on_motion_notify_event(GdkEventMotion* event);
-	virtual bool on_draw(const Cairo::RefPtr<Cairo::Context> &ctx);
-	
-	virtual void on_unrealize();
-	virtual void destroy_notify_();
-	
-	std::string Serialize();
-	std::string SerializePNG();
-	void Deserialize(std::string input);
-};
+#include "drawing.h"
 
 enum {
 	NB_ACTION_CMODE,

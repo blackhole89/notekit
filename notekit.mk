@@ -60,7 +60,7 @@ AS       := /usr/bin/as
 ## User defined environment variables
 ##
 CodeLiteDir:=/usr/share/codelite
-Objects0=$(IntermediateDirectory)/main.cpp$(ObjectSuffix) $(IntermediateDirectory)/navigation.cpp$(ObjectSuffix) $(IntermediateDirectory)/notebook.cpp$(ObjectSuffix) $(IntermediateDirectory)/mainwindow.cpp$(ObjectSuffix) 
+Objects0=$(IntermediateDirectory)/drawing.cpp$(ObjectSuffix) $(IntermediateDirectory)/main.cpp$(ObjectSuffix) $(IntermediateDirectory)/navigation.cpp$(ObjectSuffix) $(IntermediateDirectory)/notebook.cpp$(ObjectSuffix) $(IntermediateDirectory)/mainwindow.cpp$(ObjectSuffix) 
 
 
 
@@ -91,6 +91,14 @@ PreBuild:
 ##
 ## Objects
 ##
+$(IntermediateDirectory)/drawing.cpp$(ObjectSuffix): drawing.cpp $(IntermediateDirectory)/drawing.cpp$(DependSuffix)
+	$(CXX) $(IncludePCH) $(SourceSwitch) "/d0/coding/notekit/drawing.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/drawing.cpp$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/drawing.cpp$(DependSuffix): drawing.cpp
+	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/drawing.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/drawing.cpp$(DependSuffix) -MM drawing.cpp
+
+$(IntermediateDirectory)/drawing.cpp$(PreprocessSuffix): drawing.cpp
+	$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/drawing.cpp$(PreprocessSuffix) drawing.cpp
+
 $(IntermediateDirectory)/main.cpp$(ObjectSuffix): main.cpp $(IntermediateDirectory)/main.cpp$(DependSuffix)
 	$(CXX) $(IncludePCH) $(SourceSwitch) "/d0/coding/notekit/main.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/main.cpp$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/main.cpp$(DependSuffix): main.cpp

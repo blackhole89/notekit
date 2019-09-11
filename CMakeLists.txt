@@ -55,7 +55,7 @@ execute_process(COMMAND
     OUTPUT_VARIABLE
     CL_TMP_VAR
     OUTPUT_STRIP_TRAILING_WHITESPACE)
-string(STRIP "${CL_TMP_VAR}" CL_VAR_3)
+string(STRIP ${CL_TMP_VAR} CL_VAR_3)
 add_definitions(${CL_VAR_1})
 add_definitions(${CL_VAR_2})
 add_definitions(${CL_VAR_3})
@@ -99,6 +99,7 @@ set(CMAKE_LDFLAGS "${CMAKE_LDFLAGS} -L. ")
 
 # Define the CXX sources
 set ( CXX_SRCS
+    ${CMAKE_CURRENT_LIST_DIR}/drawing.cpp
     ${CMAKE_CURRENT_LIST_DIR}/main.cpp
     ${CMAKE_CURRENT_LIST_DIR}/navigation.cpp
     ${CMAKE_CURRENT_LIST_DIR}/notebook.cpp

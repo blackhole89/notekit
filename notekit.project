@@ -8,12 +8,14 @@
   <Description/>
   <Dependencies/>
   <VirtualDirectory Name="include">
+    <File Name="drawing.h"/>
     <File Name="base64.h"/>
     <File Name="notebook.h"/>
     <File Name="navigation.h"/>
     <File Name="mainwindow.h"/>
   </VirtualDirectory>
   <VirtualDirectory Name="src">
+    <File Name="drawing.cpp"/>
     <File Name="notebook_clipboard.hpp"/>
     <File Name="notebook.cpp"/>
     <File Name="navigation.cpp"/>
