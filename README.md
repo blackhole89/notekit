@@ -32,8 +32,11 @@ Required libraries:
 
 Development and testing was exclusively conducted on X11-based Linux. The one tested way of building on Windows involves [MSYS2](https://www.msys2.org/)'s mingw-w64 package family (following the `cmake` route outlined above). Since MSYS2's `coreutils` depend on its Cygwin fork, the released Windows binary packages instead include a subset of coreutils from [GnuWin32](http://gnuwin32.sourceforge.net/).
 
+## Installation notes
+* By default, configuration is saved in `$HOME/.config/notekit`, and notes are in `$HOME/.local/share/notekit`. This may depend on your `$XDG_` environmental variables, and the notes base path can be changed in the `config.json` file in the configuration folder.
+* Resources (`data/` and `sourceview/`) are searched in `/notekit/` under `$XDG_DATA_DIRS` (default: `/usr/local/share:/usr/share`), followed by the current working directory `.`. If packaging Notekit or otherwise preparing it for system-wide installation, these two folders should probably be copied into `/usr/share/notekit/data` and `/usr/share/notekit/sourceview` respectively.
+
 ## Usage notes
-* Notes are saved in `notesbase/` relative to the binary path. (This will be made configurable eventually.)
 * To create a new note, doubleclick a `+` node in the tree view and enter a name.
 * To create a new folder, doubleclick a `+` node in the tree view and enter a name ending in `/`, e.g. `new folder/`.
 * To edit the default colour palette, right-click a colour picker.

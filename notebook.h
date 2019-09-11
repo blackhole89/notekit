@@ -31,6 +31,8 @@ class CNotebook : public Gsv::View
 public:
 	CNotebook();
 	
+	void Init(std::string data_path);
+	
 	Glib::RefPtr<Gio::SimpleActionGroup> actions;
 	
 	int margin_x;

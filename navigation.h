@@ -28,9 +28,10 @@ public:
 	
 	Columns cols;
 
-	CNavigationView(std::string base_path);
+	CNavigationView();
 
 	std::string base;
+	void SetBasePath(std::string newbase);
 	
 	CMainWindow *mainwindow;
 	Gtk::TreeView *v;

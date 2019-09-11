@@ -15,11 +15,9 @@ CNavigationView::Columns::Columns() : Gtk::TreeModel::ColumnRecord()
 	add(expanded);
 }
 
-CNavigationView::CNavigationView(std::string bp)
+CNavigationView::CNavigationView()
 {
 	store=Gtk::TreeStore::create(cols);
-	
-	base=bp;
 	
 	/* set up sorting */
 	store->set_sort_func(cols.name,[this] (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b) {
@@ -33,6 +31,11 @@ CNavigationView::CNavigationView(std::string bp)
 		}
 	});
 	store->set_sort_column(cols.name,Gtk::SORT_ASCENDING);
+}
+
+void CNavigationView::SetBasePath(std::string newbase)
+{
+	base=newbase;
 }
 
 void CNavigationView::on_row_edit_start(Gtk::CellEditable* cell_editable, const Glib::ustring& path)

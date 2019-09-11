@@ -4,17 +4,21 @@
 
 CNotebook::CNotebook()
 {
+}
+
+void CNotebook::Init(std::string data_path)
+{
 	sbuffer = get_source_buffer();
 
 	/* load syntax highlighting scheme */
 	Glib::RefPtr<Gsv::StyleSchemeManager> styleman = Gsv::StyleSchemeManager::create();
-	styleman->set_search_path({"sourceview/"});
+	styleman->set_search_path({data_path+"/sourceview/"});
 	Glib::RefPtr<Gsv::StyleScheme> the_scheme;
 	the_scheme = styleman->get_scheme("classic");
 	sbuffer->set_style_scheme(the_scheme);
 	
 	Glib::RefPtr<Gsv::LanguageManager> langman = Gsv::LanguageManager::create();
-	langman->set_search_path({"sourceview/"});
+	langman->set_search_path({data_path+"/sourceview/"});
 	sbuffer->set_language(langman->get_language("markdown"));
 	
 	/* register our serialisation formats */

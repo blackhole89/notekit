@@ -2,10 +2,24 @@
 #include "navigation.h"
 #include <iostream>
 
-CMainWindow::CMainWindow() : nav_model("notesbase"), sview()
+CMainWindow::CMainWindow() : nav_model(), sview()
 {
+	// Determine paths to operate on.
+	CalculatePaths();
+	
 	// Load config.
 	LoadConfig();
+	
+	printf("== This is notekit, built at "__TIMESTAMP__". ==\n");
+	printf("Detected paths:\n");
+	printf("Config: %s\n",config_path.c_str());
+	printf("Active notes path: %s\n",config["base_path"].asString().c_str());
+	printf("Default notes path: %s\n",default_base_path.c_str());
+	printf("Resource path: %s\n",data_path.c_str());
+	printf("\n");
+	
+	sview.Init(data_path);
+	nav_model.SetBasePath(config["base_path"].asString());
 	
 	// make sure document is in place for tree expansion so we can set the selection
 	selected_document = config["active_document"].asString();
@@ -16,7 +30,7 @@ CMainWindow::CMainWindow() : nav_model("notesbase"), sview()
 	
 	/* load stylesheet */
 	Glib::RefPtr<Gtk::CssProvider> sview_css = Gtk::CssProvider::create();
-	sview_css->load_from_path("data/stylesheet.css");
+	sview_css->load_from_path(data_path+"/data/stylesheet.css");
 
 	get_style_context()->add_class("notekit");
 	override_background_color(Gdk::RGBA("rgba(0,0,0,0)"));
@@ -84,15 +98,71 @@ CMainWindow::CMainWindow() : nav_model("notesbase"), sview()
 	signal_motion_notify_event().connect(sigc::mem_fun(this,&CMainWindow::on_motion_notify),false);
 }
 
+int mkdirp(std::string dir)
+{
+	std::string cmd;
+	cmd = "mkdir -p \"";
+	cmd += dir;
+	cmd += "\"";
+	return system(cmd.c_str());
+}
+
+/* Half-baked interpretation of XDG spec */
+void CMainWindow::CalculatePaths()
+{
+	char *home = getenv("HOME");
+	if(!home || !*home) {
+		fprintf(stderr,"WARNING: Could not determine user's home directory! Will operate in current working directory.\n");
+		config_path="notesbase";
+		default_base_path="notesbase";
+		return;
+	}
+	
+	char *config_home = getenv("XDG_CONFIG_HOME");
+	if(!config_home || !*config_home) config_path=std::string(home)+"/.config/notekit";
+	else config_path=std::string(config_home)+"/notekit";
+	
+	if(mkdirp(config_path)) {
+		fprintf(stderr,"WARNING: Could not create config path '%s'. Falling back to current working directory.\n",config_path.c_str());
+		config_path="notesbase";
+	}
+	
+	char *data_home = getenv("XDG_DATA_HOME");
+	if(!data_home || !*data_home) default_base_path=std::string(home)+"/.local/share/notekit";
+	else default_base_path=std::string(data_home)+"/notekit";
+	
+	/* TODO: we might not need this if we have a manually-set base path already */
+	if(mkdirp(default_base_path)) {
+		fprintf(stderr,"WARNING: Could not create default base path '%s'. Falling back to current working directory.\n",default_base_path.c_str());
+		default_base_path="notesbase";
+	}
+	
+	char *data_dirs = getenv("XDG_DATA_DIRS");
+	if(!data_dirs || !*data_dirs) data_dirs="/usr/local/share:/usr/share";
+	data_dirs=strdup(data_dirs);
+	char *next=data_dirs;
+	strtok(data_dirs,":");
+	struct stat statbuf;
+	data_path=".";
+	do {
+		std::string putative_dir = std::string(next) + "/notekit";
+		if(!stat(putative_dir.c_str(),&statbuf)) {
+			data_path=putative_dir;
+			break;
+		}
+	} while(next=strtok(NULL,":"));
+	free(data_dirs);
+}
+
 void CMainWindow::LoadConfig()
 {
 	char *buf; gsize length;
-	Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(nav_model.base+"/config.json");
+	Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(config_path+"/config.json");
 	
 	try {
 		file->load_contents(buf, length);
 	} catch(Gio::Error &e) {
-		file = Gio::File::create_for_path(std::string("data/default_config.json"));
+		file = Gio::File::create_for_path(data_path+"/data/default_config.json");
 		
 		try {
 			file->load_contents(buf, length);
@@ -106,6 +176,10 @@ void CMainWindow::LoadConfig()
 	std::istringstream i(buf);
 	std::string errs;
 	Json::parseFromStream(rbuilder, i, &config, &errs);
+	
+	/* set default base path if none has been explicitly set */
+	if(!config["base_path"].isString() || config["base_path"].asString()=="") {
+		config["base_path"]=default_base_path;	}
 
 	g_free(buf);
 }
@@ -115,18 +189,18 @@ void CMainWindow::SaveConfig()
 	Json::StreamWriterBuilder wbuilder;
 	std::string str = Json::writeString(wbuilder, config);
 	
-	FILE *fl = fopen( (nav_model.base+"/config.json").c_str(), "wb");
+	FILE *fl = fopen( (config_path+"/config.json").c_str(), "wb");
 	fwrite(str.c_str(),str.length(),1,fl);
 	fclose(fl);
 }
 
 void CMainWindow::InitToolbar()
 {
-	toolbar_builder = Gtk::Builder::create_from_file("data/toolbar.glade");
+	toolbar_builder = Gtk::Builder::create_from_file(data_path+"/data/toolbar.glade");
 	toolbar_builder->get_widget("toolbar",toolbar);
 	
 	Glib::RefPtr<Gtk::IconTheme> thm = Gtk::IconTheme::get_default(); //get_for_screen(get_window()->get_screen());
-	thm->append_search_path("data/icons");
+	thm->append_search_path(data_path+"/data/icons");
 	
 	toolbar_style = Gtk::CssProvider::create();
 	toolbar_style->load_from_data("#color1 { -gtk-icon-palette: warning #ff00ff; }");

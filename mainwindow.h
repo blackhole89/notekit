@@ -43,6 +43,10 @@ protected:
 	//Gtk::Box filler;
 	
 	/* config */
+	std::string config_path;
+	std::string default_base_path;
+	std::string data_path;
+	void CalculatePaths();
 	Json::Value config;
 	void LoadConfig();
 	void SaveConfig();
