@@ -18,6 +18,8 @@ You can download the following binary builds:
 * [Linux x86_64](http://twilightro.kafuka.org/%7Eblackhole89/files/notekit-20190911.tar.gz) (Git version of 2019-09-11)
 * [Windows x86_64](http://twilightro.kafuka.org/%7Eblackhole89/files/notekit-20190911.zip) (Git version of 2019-09-11). The Windows version is less tested and incapable of remembering which folders are opened to mingw-w64's lack of support for xattrs.
 
+There is also a [Fedora COPR repository](https://copr.fedorainfracloud.org/coprs/lyessaadi/notekit/) (thanks to @LyesSaadi).
+
 To run the binary, you will in addition require at least the following packages: `libgtkmm-3.0-1v5 libgtksourceviewmm-3.0-0v5 libjsoncpp1 zlib1g`, where the version of `libgtkmm-3.0-1v5` is at least 3.20. (In particular, this means that Ubuntu 16.04 LTS (xenial) and derived distributions are too old.) If the binary does not work for you, it is recommended that you build from source, as described below.
 
 ## How to build
