@@ -16,7 +16,7 @@
         <property name="tooltip_text" translatable="yes">Edit text</property>
         <property name="action_name">notebook.cmode-text</property>
         <property name="use_underline">True</property>
-        <property name="stock_id">gtk-justify-left</property>
+        <property name="icon_name">text-symbolic</property>
         <property name="active">True</property>
       </object>
       <packing>
@@ -32,7 +32,7 @@
         <property name="action_name">notebook.cmode-draw</property>
         <property name="label" translatable="yes">draw</property>
         <property name="use_underline">True</property>
-        <property name="stock_id">gtk-edit</property>
+        <property name="icon_name">pen-tool-symbolic</property>
         <property name="active">True</property>
         <property name="group">text</property>
       </object>
@@ -48,7 +48,7 @@
         <property name="tooltip_text" translatable="yes">Erase strokes</property>
         <property name="action_name">notebook.cmode-erase</property>
         <property name="use_underline">True</property>
-        <property name="stock_id">gtk-clear</property>
+        <property name="icon_name">eraser-tool-symbolic</property>
         <property name="group">text</property>
       </object>
       <packing>
