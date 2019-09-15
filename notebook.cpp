@@ -56,11 +56,13 @@ void CNotebook::Init(std::string data_path)
 	k->copy_clipboard = notebook_copy_clipboard;
 	k->cut_clipboard = notebook_cut_clipboard;
 	k->paste_clipboard = notebook_paste_clipboard;
-	/* dirty hacks ahead; GtkSourceView's extend_selection method loops forever in the presence of invisible text sometimes */
+	/* dirty hacks ahead; GtkSourceView's cursor movement methods loop forever in the presence of invisible text sometimes */
 	GtkWidget *text_view = gtk_text_view_new();
 	GtkTextViewClass *plain = GTK_TEXT_VIEW_GET_CLASS(text_view);
 	k->extend_selection = plain->extend_selection;
+	k->move_cursor = plain->move_cursor;
 	gtk_widget_destroy(text_view);
+
 	
 	//printf("%08lX %08lX",k->extend_selection,GTK_TEXT_VIEW_CLASS(&k->parent_class)->extend_selection);
 	
