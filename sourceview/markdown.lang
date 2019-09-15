@@ -139,7 +139,7 @@
          2. Item
          3. Item
     -->
-    <context id="list" style-ref="list-marker">
+<!--    <context id="list" style-ref="list-marker">
       <match extended="true">
         ^[ ]{0,3}  # Maximum 3 spaces at the beginning of the line.
         (
@@ -148,16 +148,28 @@
         )
         [ \t]+     # Must be followed by at least 1 space or 1 tab.
       </match>
-    </context>
+    </context> -->
 
-<!-- WIP
-    <context id="list1" class="list1">
+    <context id="list" end-at-line-end="true" class="list">
       <start extended="true">
-        ^[ ]{0,3}
+        ^[ ]{0,3}  # Maximum 3 spaces at the beginning of the line.
+        (
+          \*|\+|-| # Asterisk, plus or hyphen for unordered list.
+          [0-9]+\. # Number followed by period for ordered list.
+        )
+        [ \t]+     # Must be followed by at least 1 space or 1 tab.
+        (
+          (&#xFFFC;?)
+          (\[[X\s]\])| # checkbox? 
+        )
       </start>
-      <end>^[^\s]$</end>
+
+      <include>
+        <context sub-pattern="1" where="start" style-ref="list-marker"/>
+        <context sub-pattern="2" where="start" class="prox checkbox"/>
+        <context sub-pattern="4" where="start" class="invisible"/>
+      </include>
     </context>
--->
     <!-- Example:
                  <em>HTML code</em> displayed <strong>literally</strong>.
     -->
@@ -358,7 +370,7 @@
          Lorem _ipsum dolor_ sit amet.
          Here's an _emphasized text containing an underscore (\_)_.
     -->
-    <context id="underscores-emphasis" style-ref="emphasis">
+    <context id="underscores-emphasis" style-ref="emphasis" class="prox">
       <match>(?&lt;!_)(_)[^_ \t].*?(?&lt;!\\|_| |\t)(_)(?!_)</match>
 
       <include>
@@ -371,7 +383,7 @@
          Lorem *ipsum dolor* sit amet.
          Here's an *emphasized text containing an asterisk (\*)*.
     -->
-    <context id="asterisks-emphasis" style-ref="emphasis">
+    <context id="asterisks-emphasis" style-ref="emphasis" class="prox">
       <match>(?&lt;!\*)(\*)[^\* \t].*?(?&lt;!\\|\*| |\t)(\*)(?!\*)</match>
 
       <include>
@@ -384,7 +396,7 @@
          Lorem __ipsum dolor__ sit amet.
          Here's a __strongly emphasized text containing an underscore (\_)__.
     -->
-    <context id="underscores-strong-emphasis" style-ref="strong-emphasis">
+    <context id="underscores-strong-emphasis" style-ref="strong-emphasis" class="prox">
       <match>(__)[^_ \t].*?(?&lt;!\\|_| |\t)(__)</match>
 
       <include>
@@ -397,7 +409,7 @@
          Lorem **ipsum dolor** sit amet.
          Here's a **strongly emphasized text containing an asterisk (\*).**
     -->
-    <context id="asterisks-strong-emphasis" style-ref="strong-emphasis">
+    <context id="asterisks-strong-emphasis" style-ref="strong-emphasis" class="prox">
       <match>(\*\*)[^\* \t].*?(?&lt;!\\|\*| |\t)(\*\*)</match>
 
       <include>

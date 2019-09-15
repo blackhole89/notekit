@@ -53,6 +53,10 @@ public:
 	
 	Glib::RefPtr<Gsv::Buffer> sbuffer;
 	
+	/* menu-related events */
+	void on_action(std::string name, int type, int param);
+	
+	/* drawing-related events */
 	Gtk::DrawingArea overlay;
 	Cairo::RefPtr<Cairo::Surface> overlay_image;
 	Cairo::RefPtr<Cairo::Context> overlay_ctx;
@@ -64,10 +68,22 @@ public:
     bool on_button_release(GdkEventButton* event);
     bool on_motion_notify(GdkEventMotion* event);
 	
-	void on_action(std::string name, int type, int param);
+	/* text-related events */
+	Glib::RefPtr<Gtk::TextTag> tag_proximity;
+	Glib::RefPtr<Gtk::TextMark> last_position;
+	void on_move_cursor();
+	
+	std::stack<Glib::RefPtr<Gtk::TextMark> > iter_stack;
+	Glib::RefPtr<Gtk::TextMark> PushIter(Gtk::TextIter i);
+	Gtk::TextIter PopIter();
+	
+	Gtk::Widget* RenderToWidget(Glib::ustring wtype, Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
+	void UnrenderWidgets(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
 	
 	Glib::RefPtr<Gtk::TextTag> tag_extra_space, tag_blockquote, tag_invisible, tag_hidden, tag_mono;
 	void on_highlight_updated(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
+	void on_leave_region(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
+	void on_enter_region(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
 	
 	int modifier_keys; // modifier keys active during most recent keypress
 	virtual bool on_key_press_event(GdkEventKey *k);

@@ -28,6 +28,8 @@ class CBoundDrawing : public Gtk::DrawingArea
 public:
 	CBoundDrawing(Glib::RefPtr<Gdk::Window> wnd);
 	
+	static CBoundDrawing *TryUpcast(Gtk::Widget *w);
+	
 	std::vector<CStroke> strokes;
 	
 	/* accelerator structure for quickly finding strokes e.g. when erasing */

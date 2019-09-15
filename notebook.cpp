@@ -50,6 +50,10 @@ void CNotebook::Init(std::string data_path)
 	signal_motion_notify_event().connect(sigc::mem_fun(this,&CNotebook::on_motion_notify),false);
 	sbuffer->signal_insert().connect(sigc::mem_fun(this,&CNotebook::on_insert),true);
 	sbuffer->signal_highlight_updated().connect(sigc::mem_fun(this,&CNotebook::on_highlight_updated),true);
+	sbuffer->property_cursor_position().signal_changed().connect(sigc::mem_fun(this,&CNotebook::on_move_cursor));
+	
+	last_position=sbuffer->create_mark("last_position", sbuffer->begin(),true);
+	tag_proximity=sbuffer->create_tag();
 	
 	/* overwrite clipboard signals with our custom impls */
 	GtkTextViewClass *k = GTK_TEXT_VIEW_GET_CLASS(gobj());
@@ -263,11 +267,11 @@ bool CNotebook::on_redraw_overlay(const Cairo::RefPtr<Cairo::Context> &ctx)
 
 void CNotebook::on_highlight_updated(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end)
 {
+	printf("relight %d %d\n",start.get_offset(),end.get_offset());
 	std::pair<Glib::ustring,Glib::RefPtr<Gtk::TextTag> > extratags[]
 		= { {"extra-space", tag_extra_space},
 			{"blockquote-text", tag_blockquote},
 			{"hline", tag_invisible},
-			{"invisible", tag_hidden},
 			{"mono", tag_mono} };
 	for(auto &[cclass,ttag] : extratags) {
 		Gtk::TextBuffer::iterator i = start;
@@ -282,6 +286,255 @@ void CNotebook::on_highlight_updated(Gtk::TextBuffer::iterator &start, Gtk::Text
 			i=next;
 		} while(i<end);
 	}
+	Gtk::TextBuffer::iterator i = start;
+	do {
+		Gtk::TextBuffer::iterator next = i;
+		if(!sbuffer->iter_forward_to_context_class_toggle(next, "prox")) next=end;
+		if(sbuffer->iter_has_context_class(i, "prox")) {
+			if(!i.has_tag(tag_proximity)) {
+				/* initialise tag by leaving if necessary */
+				Gtk::TextIter old_iter = sbuffer->get_iter_at_mark(last_position);
+				if(old_iter.compare(i)<0 || old_iter.compare(next)>0) {
+					PushIter(start);
+					PushIter(end);
+					on_leave_region(i,next);
+					end=PopIter();
+					start=PopIter();
+				}
+			}
+			sbuffer->apply_tag(tag_proximity, i, next);
+		} else {
+			/* TODO: really need to walk the whole region and release widgets in it one by one */
+			if(i.has_tag(tag_proximity)) {
+				PushIter(start);
+				PushIter(end);
+				on_enter_region(i,next);
+				end=PopIter();
+				start=PopIter();
+			}
+			sbuffer->remove_tag(tag_proximity, i, next);
+		}
+		i=next;
+	} while(i<end);
+}
+
+Glib::RefPtr<Gtk::TextMark> CNotebook::PushIter(Gtk::TextIter i)
+{
+	iter_stack.push(sbuffer->create_mark(i,true));
+	return iter_stack.top();
+}
+
+Gtk::TextIter CNotebook::PopIter()
+{
+	Glib::RefPtr<Gtk::TextMark> m = iter_stack.top();
+	iter_stack.pop();
+	Gtk::TextIter ret = sbuffer->get_iter_at_mark(m);
+	sbuffer->delete_mark(m);
+	return ret;
+}
+
+Gtk::Widget* CNotebook::RenderToWidget(Glib::ustring wtype, Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end) 
+{
+	if(wtype=="checkbox") {
+		Gtk::TextIter i=start;
+		++i;
+		if(i.get_char()=='[') ++i;
+		
+		Gtk::CheckButton *b = new Gtk::CheckButton();
+		if(i.get_char()=='X') b->set_active(true);
+		b->property_can_focus().set_value(false);
+		
+		/* create a mark to save the control's starting position */
+		Glib::RefPtr<Gtk::TextMark> mstart = sbuffer->create_mark(start,true);
+		PushIter(end);
+		
+		b->property_active().signal_changed().connect(sigc::slot<void>( [b,mstart,this]() {
+			Gtk::TextIter i = sbuffer->get_iter_at_mark(mstart);
+			++i; ++i;
+			if(b->get_active())
+				i=sbuffer->insert(i,"X");
+			else
+				i=sbuffer->insert(i," ");
+			Gtk::TextIter j=i; ++j;
+			sbuffer->erase(i,j);
+		} ));
+		
+
+		/* destroy the mark if the widget is unmapped */
+		b->signal_unmap().connect(sigc::slot<void>( [mstart,this]() {
+			/* need to defer the destruction due to mysterious interactions with signal chain */
+			auto s = Glib::IdleSource::create();
+			s->connect(sigc::slot<bool>( [mstart,this]() {
+				sbuffer->delete_mark(mstart);
+				return false;
+			})); 
+			s->attach();
+		}));
+		
+		Glib::RefPtr<Gtk::TextBuffer::ChildAnchor> anch;
+		if(!(anch=start.get_child_anchor())) {
+			/* we haven't set up a child anchor yet, so we need to queue the creation of one */
+			delete b;
+			
+			/* defer creation of anchor to prevent invalidating iters. */
+			/* once the anchor is created, syntax highlighting will recalculate, eventually
+			 * calling this function again from the start */
+			auto s = Glib::IdleSource::create();
+			s->connect(sigc::slot<bool>( [mstart,this]() {
+				Gtk::TextIter start = sbuffer->get_iter_at_mark(mstart);
+				sbuffer->delete_mark(mstart);
+				if(!start.get_child_anchor()) sbuffer->create_child_anchor(start);
+				return false;
+			})); 
+			s->attach();
+			// anch = sbuffer->create_child_anchor(start);
+		} else {
+			auto j = start; ++j;
+			sbuffer->remove_tag(tag_hidden,start,j);
+			Gtk::manage(b);
+			add_child_at_anchor(*b,anch);
+			b->show();
+		}
+		
+		end=PopIter();
+		start=sbuffer->get_iter_at_mark(mstart);
+	}
+}
+
+void CNotebook::UnrenderWidgets(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end)
+{
+	if(start.get_child_anchor()) {
+		auto ws = start.get_child_anchor()->get_widgets();
+		for(Gtk::Widget *w : ws) {
+			delete w;
+		}
+		auto j = start; ++j;
+		sbuffer->apply_tag(tag_hidden,start,j);
+		
+		/*PushIter(end);
+		Gtk::TextBuffer::iterator start_old = start;
+		++start;
+		start=sbuffer->erase(start_old,start);
+		end=PopIter();*/
+	}
+}
+
+void CNotebook::on_enter_region(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end)
+{
+	printf("enter: %d %d\n",start.get_offset(),end.get_offset());
+	
+	std::pair<Glib::ustring,Glib::RefPtr<Gtk::TextTag> > volatile_tags[]
+		= { {"invisible", tag_hidden} };
+		
+	for(auto &[cclass,ttag] : volatile_tags) {
+		sbuffer->remove_tag(ttag, start, end);
+	}
+	
+	Glib::ustring renderable_tags[]
+		= { "checkbox" };
+		
+	for(auto &s : renderable_tags) {
+		if(sbuffer->iter_has_context_class(start, s)) {
+			UnrenderWidgets(start,end);
+		}
+	}
+}
+
+void CNotebook::on_leave_region(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end)
+{
+	printf("leave: %d %d\n",start.get_offset(),end.get_offset());
+	
+	std::pair<Glib::ustring,Glib::RefPtr<Gtk::TextTag> > volatile_tags[]
+		= { {"invisible", tag_hidden} };
+	
+	for(auto &[cclass,ttag] : volatile_tags) {
+		Gtk::TextBuffer::iterator i = start;
+		do {
+			Gtk::TextBuffer::iterator next = i;
+			if(!sbuffer->iter_forward_to_context_class_toggle(next, cclass)) next=end;
+			if(sbuffer->iter_has_context_class(i, cclass)) {
+				sbuffer->apply_tag(ttag, i, next);
+			} else {
+				sbuffer->remove_tag(ttag, i, next);
+			}
+			i=next;
+		} while(i<end);
+	}
+	
+	Glib::ustring renderable_tags[]
+		= { "checkbox" };
+		
+	for(auto &s : renderable_tags) {
+		if(sbuffer->iter_has_context_class(start, s)) {
+			UnrenderWidgets(start,end); // just in case
+			RenderToWidget(s,start,end);
+		}
+	}
+}
+
+
+bool GetTagExtents(Gtk::TextIter t, Glib::RefPtr<Gtk::TextTag> tag, Gtk::TextIter &left, Gtk::TextIter &right)
+{
+	if(t.starts_tag(tag)) {
+		left=t;
+		t.forward_to_tag_toggle(tag);
+		right=t;
+		return true;
+	}
+	if(t.ends_tag(tag)) {
+		right=t;
+		t.backward_to_tag_toggle(tag);
+		left=t;
+		return true;
+	}
+	if(t.has_tag(tag)) {
+		left=t;
+		left.backward_to_tag_toggle(tag);
+		right=t;
+		right.forward_to_tag_toggle(tag);
+		return true;
+	}
+	return false;
+}
+
+void CNotebook::on_move_cursor()
+{
+	Gtk::TextIter new_iter = sbuffer->get_iter_at_mark(sbuffer->get_insert());
+	Gtk::TextIter old_iter = sbuffer->get_iter_at_mark(last_position);
+	//printf("old: %d, new: %d\n", old_iter.get_offset(), new_iter.get_offset());
+	/*auto v = new_iter.get_marks();
+	printf("%d marks here: ",v.size());
+	for(auto &m : v) printf("%s ",m->get_name().c_str());
+	printf("\n");*/
+	
+	Gtk::TextIter old_left, old_right, new_left, new_right;
+	
+	bool old_valid = GetTagExtents(old_iter,tag_proximity,old_left,old_right);
+	bool new_valid = GetTagExtents(new_iter,tag_proximity,new_left,new_right);
+	
+	if(old_valid) {
+		if(new_valid) {
+			if(new_iter.compare(old_left)<0 || new_iter.compare(old_right)>0) {
+				/* moved into a different prox region. signal both. */
+				PushIter(new_left);
+				PushIter(new_right);
+				on_leave_region(old_left,old_right);
+				new_right=PopIter();
+				new_left=PopIter();
+				on_enter_region(new_left,new_right);
+			} else if(new_iter==old_iter) {
+				/* we may have deleted right into a prox region's boundary. signal to be safe. */
+				on_enter_region(new_left,new_right);
+			}
+			/* otherwise, we stayed in the same one. no signals needed */
+		} else {
+			on_leave_region(old_left,old_right);
+		}
+	} else if(new_valid) {
+		on_enter_region(new_left,new_right);
+	}
+	
+	sbuffer->move_mark(last_position, sbuffer->get_iter_at_mark(sbuffer->get_insert()));//new_iter);
 }
 
 void CNotebook::Widget2Doc(double in_x, double in_y, double &out_x, double &out_y)
@@ -424,12 +677,13 @@ void CNotebook::EraseAtPosition(float x, float y)
 	if(i.get_child_anchor()) {
 		auto w = i.get_child_anchor()->get_widgets();
 		if(w.size()) {
-			CBoundDrawing* d = dynamic_cast<CBoundDrawing*>(w[0]);
-			/* found a region to erase from; we can adjust for its real location,
-			 * but that's relative to the text body, so need to fixup */
-			int bx, by;
-			window_to_buffer_coords(Gtk::TEXT_WINDOW_TEXT,0,0,bx,by);
-			d->EraseAt(x-(d->get_allocation().get_x())-bx,y-(d->get_allocation().get_y())-by,stroke_width,true);
+			if(CBoundDrawing* d = CBoundDrawing::TryUpcast(w[0])) {
+				/* found a region to erase from; we can adjust for its real location,
+				 * but that's relative to the text body, so need to fixup */
+				int bx, by;
+				window_to_buffer_coords(Gtk::TEXT_WINDOW_TEXT,0,0,bx,by);
+				d->EraseAt(x-(d->get_allocation().get_x())-bx,y-(d->get_allocation().get_y())-by,stroke_width,true);
+			}
 		}
 	}
 }
@@ -458,7 +712,7 @@ void CNotebook::CommitStroke()
 			auto w = i.get_child_anchor()->get_widgets();
 			if(w.size()) {
 				//printf("match?\n");
-				d = dynamic_cast<CBoundDrawing*>(w[0]);
+				d = CBoundDrawing::TryUpcast(w[0]);
 				break;
 			}
 		}
@@ -486,7 +740,7 @@ void CNotebook::CommitStroke()
 				auto w = k.get_child_anchor()->get_widgets();
 				if(w.size()) {
 					//printf("match below?\n");
-					d = dynamic_cast<CBoundDrawing*>(w[0]);
+					d = CBoundDrawing::TryUpcast(w[0]);
 					break;
 				}
 			}
@@ -525,6 +779,10 @@ void CNotebook::CommitStroke()
 			d = new CBoundDrawing(get_window(Gtk::TEXT_WINDOW_TEXT));
 			Gtk::manage(d); 
 			get_iter_at_location(i,x0,y0);
+			if(i.has_tag(tag_hidden)) {
+				i.forward_to_tag_toggle(tag_hidden);
+				++i; // TODO: Is this safe?
+			}
 			
 			/* figure out where it got anchored in the text, so we can translate the stroke correctly */
 			Gdk::Rectangle r;
@@ -565,11 +823,12 @@ guint8* CNotebook::on_serialize(const Glib::RefPtr<Gtk::TextBuffer>& content_buf
 		if(pos0!=end && pos0.get_child_anchor()) {
 			auto w = pos0.get_child_anchor()->get_widgets();
 			if(w.size()) {
-				CBoundDrawing *d = dynamic_cast<CBoundDrawing*>(w[0]);
-				if(render_images)
-					buf += d->SerializePNG();
-				else
-					buf += d->Serialize();
+				if(CBoundDrawing *d = CBoundDrawing::TryUpcast(w[0])) {
+					if(render_images)
+						buf += d->SerializePNG();
+					else
+						buf += d->Serialize();
+				}
 			}
 			++pos0; ++pos1;
 		}

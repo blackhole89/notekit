@@ -15,6 +15,12 @@ CBoundDrawing::CBoundDrawing(Glib::RefPtr<Gdk::Window> wnd) : Glib::ObjectBase("
 	//signal_configure_event().connect([] (GdkEventConfigure* e) {  printf("confevent %d %d\n",e->width,e->height); return true; } );
 }
 
+CBoundDrawing *CBoundDrawing::TryUpcast(Gtk::Widget *w)
+{
+	if(!strcmp(G_OBJECT_TYPE_NAME(w->gobj()),"gtkmm__CustomObject_CBoundDrawing")) {
+		return static_cast<CBoundDrawing*>(w);	} else return NULL;
+}
+
 
 /* Change the drawing's size, possibly resizing the internal buffer in the process */
 /* dx, dy move the top left corner; neww, newh are relative to the OLD top left corner */
