@@ -150,10 +150,18 @@
       </match>
     </context>
 
+<!-- WIP
+    <context id="list1" class="list1">
+      <start extended="true">
+        ^[ ]{0,3}
+      </start>
+      <end>^[^\s]$</end>
+    </context>
+-->
     <!-- Example:
                  <em>HTML code</em> displayed <strong>literally</strong>.
     -->
-    <context id="code-block" class="no-spell-check">
+    <context id="code-block" class="no-spell-check mono">
       <match>^( {8,}|\t{2,})([^ \t]+.*)</match>
 
       <include>
@@ -172,7 +180,7 @@
          Here's a literal HTML tag: `<p>`.
          `Here's a code span containing ``backticks``.`
     -->
-    <context id="1-backtick-code-span" class="no-spell-check" style-ref="code">
+    <context id="1-backtick-code-span" class="no-spell-check mono" style-ref="code">
       <match>(?&lt;!`)`[^`]+(`{2,}[^`]+)*`(?!`)</match>
     </context>
 
@@ -181,11 +189,11 @@
          ``The grave accent (`) is used in Markdown to indicate a code span.``
          ``Here's another code span containing ```backticks```.``
     -->
-    <context id="2-backticks-code-span" class="no-spell-check" style-ref="code">
+    <context id="2-backticks-code-span" class="no-spell-check mono" style-ref="code">
       <match>(?&lt;!`)``[^`]+((`|`{3,})[^`]+)*``(?!`)</match>
     </context>
 
-    <context id="3-backticks-code-span" class="no-spell-check" style-ref="code">
+    <context id="3-backticks-code-span" class="no-spell-check mono" style-ref="code">
       <start>^```.*$</start>
       <end>^```$</end>
     </context>
@@ -198,7 +206,7 @@
     <!-- Note: blockquote can contain block-level and inline Markdown elements,
          but the current language file only highlights inline ones (emphasis,
          link, etc.). -->
-    <context id="blockquote" end-at-line-end="true">
+    <context id="blockquote" end-at-line-end="true" class="blockquote-text">
       <start>^( {0,3}&gt;(?=.)( {0,4}&gt;)*)</start>
 
       <include>
@@ -351,7 +359,12 @@
          Here's an _emphasized text containing an underscore (\_)_.
     -->
     <context id="underscores-emphasis" style-ref="emphasis">
-      <match>(?&lt;!_)_[^_ \t].*?(?&lt;!\\|_| |\t)_(?!_)</match>
+      <match>(?&lt;!_)(_)[^_ \t].*?(?&lt;!\\|_| |\t)(_)(?!_)</match>
+
+      <include>
+        <context sub-pattern="1" class="invisible" />
+        <context sub-pattern="2" class="invisible" />
+      </include>
     </context>
 
     <!-- Examples:
@@ -359,7 +372,12 @@
          Here's an *emphasized text containing an asterisk (\*)*.
     -->
     <context id="asterisks-emphasis" style-ref="emphasis">
-      <match>(?&lt;!\*)\*[^\* \t].*?(?&lt;!\\|\*| |\t)\*(?!\*)</match>
+      <match>(?&lt;!\*)(\*)[^\* \t].*?(?&lt;!\\|\*| |\t)(\*)(?!\*)</match>
+
+      <include>
+        <context sub-pattern="1" class="invisible" />
+        <context sub-pattern="2" class="invisible" />
+      </include>
     </context>
 
     <!-- Examples:
@@ -367,7 +385,12 @@
          Here's a __strongly emphasized text containing an underscore (\_)__.
     -->
     <context id="underscores-strong-emphasis" style-ref="strong-emphasis">
-      <match>__[^_ \t].*?(?&lt;!\\|_| |\t)__</match>
+      <match>(__)[^_ \t].*?(?&lt;!\\|_| |\t)(__)</match>
+
+      <include>
+        <context sub-pattern="1" class="invisible" />
+        <context sub-pattern="2" class="invisible" />
+      </include>
     </context>
 
     <!-- Examples:
@@ -375,7 +398,12 @@
          Here's a **strongly emphasized text containing an asterisk (\*).**
     -->
     <context id="asterisks-strong-emphasis" style-ref="strong-emphasis">
-      <match>\*\*[^\* \t].*?(?&lt;!\\|\*| |\t)\*\*</match>
+      <match>(\*\*)[^\* \t].*?(?&lt;!\\|\*| |\t)(\*\*)</match>
+
+      <include>
+        <context sub-pattern="1" class="invisible" />
+        <context sub-pattern="2" class="invisible" />
+      </include>
     </context>
 
     <context id="backslash-escape" style-ref="backslash-escape">

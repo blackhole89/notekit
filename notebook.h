@@ -66,7 +66,7 @@ public:
 	
 	void on_action(std::string name, int type, int param);
 	
-	Glib::RefPtr<Gtk::TextTag> tag_extra_space;
+	Glib::RefPtr<Gtk::TextTag> tag_extra_space, tag_blockquote, tag_invisible, tag_hidden, tag_mono;
 	void on_highlight_updated(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
 	
 	int modifier_keys; // modifier keys active during most recent keypress

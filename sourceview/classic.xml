@@ -34,7 +34,7 @@
   <color name="blue"       value="#0000FF"/>
   <color name="magenta"    value="#FF00FF"/>
   <color name="violet"     value="#6A5ACD"/>
-  <color name="cyan"       value="#008A8C"/>
+  <color name="cyan"       value="#3678BC"/>
   <color name="gray"       value="#BEBEBE"/>
   <color name="green"      value="#2E8B57"/>
   <color name="bordeaux"   value="#A52A2A"/>
@@ -71,7 +71,7 @@
   <style name="def:identifier"              foreground="cyan"/>
 
   <!-- Statements -->
-  <style name="def:statement"               foreground="bordeaux" bold="true"/>
+  <style name="def:statement"               bold="true"/> <!-- foreground="bordeaux" --> 
 
   <!-- Types -->
   <style name="def:type"                    foreground="green" bold="true"/>

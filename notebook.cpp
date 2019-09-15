@@ -56,6 +56,15 @@ void CNotebook::Init(std::string data_path)
 	k->copy_clipboard = notebook_copy_clipboard;
 	k->cut_clipboard = notebook_cut_clipboard;
 	k->paste_clipboard = notebook_paste_clipboard;
+	/* dirty hacks ahead; GtkSourceView's extend_selection method loops forever in the presence of invisible text sometimes */
+	GtkWidget *text_view = gtk_text_view_new();
+	GtkTextViewClass *plain = GTK_TEXT_VIEW_GET_CLASS(text_view);
+	k->extend_selection = plain->extend_selection;
+	gtk_widget_destroy(text_view);
+	
+	//printf("%08lX %08lX",k->extend_selection,GTK_TEXT_VIEW_CLASS(&k->parent_class)->extend_selection);
+	
+	//k->extend_selection = GTK_TEXT_VIEW_CLASS(&k->parent_class)->extend_selection;
 	//g_signal_connect(gobj(),"copy-clipboard",G_CALLBACK(notebook_copy_clipboard),NULL);
 	
 	active_state=NB_STATE_NOTHING;
@@ -66,6 +75,26 @@ void CNotebook::Init(std::string data_path)
 	tag_extra_space = sbuffer->create_tag();
 	tag_extra_space->property_pixels_below_lines().set_value(8);
 	tag_extra_space->property_pixels_above_lines().set_value(8);
+	
+	tag_blockquote = sbuffer->create_tag();
+	tag_blockquote->property_left_margin().set_value(16);
+	tag_blockquote->property_indent().set_value(-16);
+	tag_blockquote->property_accumulative_margin().set_value(true);
+	Gdk::RGBA fg = get_style_context()->get_color();
+	fg.set_alpha(0.75);
+	tag_blockquote->property_foreground_rgba().set_value(fg);
+	
+	tag_invisible = sbuffer->create_tag();
+	tag_invisible->property_foreground_rgba().set_value(Gdk::RGBA("rgba(0,0,0,0)"));
+	
+	tag_hidden = sbuffer->create_tag();
+	tag_hidden->property_invisible().set_value(true);
+	
+	tag_mono = sbuffer->create_tag();
+	tag_mono->property_family().set_value("monospace");
+	tag_mono->property_scale().set_value(0.8);
+	/*tag_extra_space->property_left_margin().set_value(32);
+	tag_extra_space->property_indent().set_value(-32);*/
 	
 	set_wrap_mode(Gtk::WRAP_WORD_CHAR);}
 
@@ -232,17 +261,25 @@ bool CNotebook::on_redraw_overlay(const Cairo::RefPtr<Cairo::Context> &ctx)
 
 void CNotebook::on_highlight_updated(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end)
 {
-	Gtk::TextBuffer::iterator i = start;
-	do {
-		Gtk::TextBuffer::iterator next = i;
-		if(!sbuffer->iter_forward_to_context_class_toggle(next, "extra-space")) next=end;
-		if(sbuffer->iter_has_context_class(i, "extra-space")) {
-			sbuffer->apply_tag(tag_extra_space, i, next);
-		} else {
-			sbuffer->remove_tag(tag_extra_space, i, next);
-		}
-		i=next;
-	} while(i<end);
+	std::pair<Glib::ustring,Glib::RefPtr<Gtk::TextTag> > extratags[]
+		= { {"extra-space", tag_extra_space},
+			{"blockquote-text", tag_blockquote},
+			{"hline", tag_invisible},
+			{"invisible", tag_hidden},
+			{"mono", tag_mono} };
+	for(auto &[cclass,ttag] : extratags) {
+		Gtk::TextBuffer::iterator i = start;
+		do {
+			Gtk::TextBuffer::iterator next = i;
+			if(!sbuffer->iter_forward_to_context_class_toggle(next, cclass)) next=end;
+			if(sbuffer->iter_has_context_class(i, cclass)) {
+				sbuffer->apply_tag(ttag, i, next);
+			} else {
+				sbuffer->remove_tag(ttag, i, next);
+			}
+			i=next;
+		} while(i<end);
+	}
 }
 
 void CNotebook::Widget2Doc(double in_x, double in_y, double &out_x, double &out_y)
