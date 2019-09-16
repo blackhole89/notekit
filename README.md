@@ -2,7 +2,9 @@
 This program is a structured notetaking application based on GTK+ 3. Write your notes in instantly-formatted Markdown, organise them in a tree of folders that can be instantly navigated from within the program, and add hand-drawn notes by mouse, touchscreen or digitiser.
 
 ![Screenshot](/screenshots/notekit-example.png?raw=true)
+
 ## Why?
+
 I figured it would be nice to have a free-software, platform-independent OneNote. While there is a remarkable number of free (speech or beer) notetaking applications out there, to my best knowledge, none of them simultaneously check the following boxes:
 
 * note organisation
@@ -27,10 +29,17 @@ Either invoke `cmake .` followed by `make` (which will build a binary at `cmake-
 
 Required libraries:
 
+* `cmake`.
 * `libgtkmm-3.0-dev`>=3.20 (UI stuff)
 * `libgtksourceviewmm-3.0-dev`>=3.18 (more UI stuff)
 * `libjsoncpp-dev` ~ 1.7.4 (config files; older versions may work)
 * `zlib1g-dev`
+
+If you want to enable LaTeX math rendering support, you moreover need:
+
+* Set the CMAKE variable `HAVE_LASEM` to ON.
+* Have checked out and compiled [lasem](https://github.com/GNOME/lasem) from git in the CMAKE variable `LASEM_PATH` (default: `./lasem`). (Remember to build it; just checking out is not enough.)
+* `libxml2-dev` ~ 2.9 (older versions may work)
 
 Development and testing was exclusively conducted on X11-based Linux. The one tested way of building on Windows involves [MSYS2](https://www.msys2.org/)'s mingw-w64 package family (following the `cmake` route outlined above). Since MSYS2's `coreutils` depend on its Cygwin fork, the released Windows binary packages instead include a subset of coreutils from [GnuWin32](http://gnuwin32.sourceforge.net/).
 
@@ -47,6 +56,7 @@ Development and testing was exclusively conducted on X11-based Linux. The one te
 * The document formatting is mostly based on standard `GtkSourceView` language and style files. If you want to change colours or syntax highlighting rules, you can edit them in the `sourceview/` subfolder.
 * The program loads a custom Gtk+ stylesheet found in `data/stylesheet.css`. Clear it if parts of the UI look wonky.
 * When copypasting text into other applications, drawings will be automatically converted into data URL PNGs.
+* Some markdown will be hidden ("rendered") unless your cursor is next to it.
 
 ## Project status
 Late alpha. Creating and editing notes and drawing works well enough, but many basic quality-of-life features (such as resizing/moving drawings) are still missing.
@@ -54,5 +64,5 @@ Late alpha. Creating and editing notes and drawing works well enough, but many b
 ## Planned features
 * Selecting strokes, moving and transforming selections, etc.
 * Floating figures (so drawings can exist on top of text rather than as blocks that text floats around).
-* LaTeX math using `lasem`.
-* More Markdown rendering, e.g. actually formatting links, and turning `- [ ]` syntax into real checkboxes.
+* More Markdown rendering, e.g. actually formatting links.
+
