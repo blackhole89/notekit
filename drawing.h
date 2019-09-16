@@ -1,6 +1,8 @@
 #ifndef DRAWING_H
 #define DRAWING_H
 
+#include "config.h"
+
 #include <gtkmm.h>
 
 #include <set>

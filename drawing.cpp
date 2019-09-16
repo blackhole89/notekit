@@ -98,7 +98,7 @@ void CBoundDrawing::AddStroke(CStroke &s, float dx, float dy)
 		if(newx+newp>neww) neww=newx+newp;
 		if(newy+newp>newh) newh=newy+newp;
 		/* add to stroke cache */
-		strokefinder.insert( { BUCKET(newx,newy), { strokes.size()-1, i } } );
+		strokefinder.insert( { BUCKET(newx,newy), { (int)strokes.size()-1, i } } );
 	}
 	
 	UpdateSize(neww, newh);
@@ -302,12 +302,12 @@ void CBoundDrawing::Deserialize(std::string input)
 
 void CBoundDrawing::on_unrealize()
 {
-	printf("unrealize event on %08X\n", this);
+	printf("unrealize event on %08lX\n", this);
 	//get_parent()->remove(*this);
 }
 
 void CBoundDrawing::destroy_notify_()
 {
-	printf("destroy event on %08X\n", this);
+	printf("destroy event on %08lX\n", this);
 	strokes.~vector<CStroke>();
 }

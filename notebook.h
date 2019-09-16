@@ -1,6 +1,8 @@
 #ifndef NOTEBOOK_H
 #define NOTEBOOK_H
 
+#include "config.h"
+
 #include <set>
 
 #include <gtkmm.h>
@@ -77,8 +79,9 @@ public:
 	Glib::RefPtr<Gtk::TextMark> PushIter(Gtk::TextIter i);
 	Gtk::TextIter PopIter();
 	
-	Gtk::Widget* RenderToWidget(Glib::ustring wtype, Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
+	void RenderToWidget(Glib::ustring wtype, Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
 	void UnrenderWidgets(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
+	void CleanUpSpan(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
 	
 	Glib::RefPtr<Gtk::TextTag> tag_extra_space, tag_blockquote, tag_invisible, tag_hidden, tag_mono;
 	void on_highlight_updated(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
@@ -86,8 +89,10 @@ public:
 	void on_enter_region(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
 	
 	int modifier_keys; // modifier keys active during most recent keypress
+	int latest_keyval; // most recent keypress
 	virtual bool on_key_press_event(GdkEventKey *k);
 	void on_insert(const Gtk::TextBuffer::iterator &,const Glib::ustring& str,int len);
+	virtual bool on_event(GdkEvent *ev);
 	
 	guint8* on_serialize(const Glib::RefPtr<Gtk::TextBuffer>& content_buffer, const Gtk::TextBuffer::iterator& start, const Gtk::TextBuffer::iterator& end, gsize& length, bool render_images);
 	bool on_deserialize(const Glib::RefPtr<Gtk::TextBuffer>& content_buffer, Gtk::TextBuffer::iterator& iter, const guint8* data, gsize length, bool create_tags); 

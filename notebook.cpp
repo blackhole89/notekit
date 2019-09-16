@@ -1,11 +1,28 @@
 #include "notebook.h"
 
 #include "notebook_clipboard.hpp"
+#include "imagewidgets.h"
 
 CNotebook::CNotebook()
 {
 }
 
+/* DIRTY HACK: If the layout changes a lot, sometimes GtkTextView will
+ * get events without it being valid (event race?). This can lead
+ * to crashes. Therefore, we'll manually check for layout validity
+ * at the beginning of events. */
+extern "C" bool gtk_text_layout_is_valid(void*);
+
+bool CNotebook::on_event(GdkEvent*)
+{
+	if(!gtk_text_layout_is_valid(*(void**)GTK_TEXT_VIEW(gobj())->priv)) {
+		//printf("event blocked\n");
+		return true;
+	}
+	return false;
+}
+
+/* Initialise notebook widget, loading style files etc. from data_path. */
 void CNotebook::Init(std::string data_path)
 {
 	sbuffer = get_source_buffer();
@@ -54,13 +71,15 @@ void CNotebook::Init(std::string data_path)
 	
 	last_position=sbuffer->create_mark("last_position", sbuffer->begin(),true);
 	tag_proximity=sbuffer->create_tag();
+	//use for debug
+	//tag_proximity->property_background_rgba().set_value(Gdk::RGBA("rgb(255,128,128)"));
 	
 	/* overwrite clipboard signals with our custom impls */
 	GtkTextViewClass *k = GTK_TEXT_VIEW_GET_CLASS(gobj());
 	k->copy_clipboard = notebook_copy_clipboard;
 	k->cut_clipboard = notebook_cut_clipboard;
 	k->paste_clipboard = notebook_paste_clipboard;
-	/* dirty hacks ahead; GtkSourceView's cursor movement methods loop forever in the presence of invisible text sometimes */
+	/* DIRTY HACK: GtkSourceView's cursor movement methods loop forever in the presence of invisible text sometimes */
 	GtkWidget *text_view = gtk_text_view_new();
 	GtkTextViewClass *plain = GTK_TEXT_VIEW_GET_CLASS(text_view);
 	k->extend_selection = plain->extend_selection;
@@ -167,6 +186,7 @@ void CStroke::Render(const Cairo::RefPtr<Cairo::Context> &ctx, float basex, floa
 bool CNotebook::on_key_press_event(GdkEventKey *k)
 {
 	modifier_keys = k->state & (GDK_MODIFIER_MASK);
+	latest_keyval = k->keyval;
 	return Gsv::View::on_key_press_event(k);
 }
 
@@ -267,7 +287,7 @@ bool CNotebook::on_redraw_overlay(const Cairo::RefPtr<Cairo::Context> &ctx)
 
 void CNotebook::on_highlight_updated(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end)
 {
-	printf("relight %d %d\n",start.get_offset(),end.get_offset());
+	//printf("relight %d %d\n",start.get_offset(),end.get_offset());
 	std::pair<Glib::ustring,Glib::RefPtr<Gtk::TextTag> > extratags[]
 		= { {"extra-space", tag_extra_space},
 			{"blockquote-text", tag_blockquote},
@@ -286,10 +306,26 @@ void CNotebook::on_highlight_updated(Gtk::TextBuffer::iterator &start, Gtk::Text
 			i=next;
 		} while(i<end);
 	}
+	
+	/* TODO: this makes some widgets flicker when they shouldn't. */
+	/* We really shouldn't clean up a span unless it changed, 
+	 * but need to solve the *asdf*ghjk* middle * being part of
+	 * both prox tags problem */
+	/* probably:
+	 * (1) walk the whole region, clear prox tags that no longer
+	 *     are overlapped by an exactly matching prox context;
+	 * (2) walk the whole region, instantiate all prox contexts
+	 *     that are not already overlapped by an exactly matching
+	 *     prox tag. 
+	 * This ignores the case that a prox region has been 
+	 * EXACTLY replaced by an incompatible one, but whatevs. */
+	CleanUpSpan(start,end);
+	
 	Gtk::TextBuffer::iterator i = start;
 	do {
 		Gtk::TextBuffer::iterator next = i;
 		if(!sbuffer->iter_forward_to_context_class_toggle(next, "prox")) next=end;
+		
 		if(sbuffer->iter_has_context_class(i, "prox")) {
 			if(!i.has_tag(tag_proximity)) {
 				/* initialise tag by leaving if necessary */
@@ -304,15 +340,7 @@ void CNotebook::on_highlight_updated(Gtk::TextBuffer::iterator &start, Gtk::Text
 			}
 			sbuffer->apply_tag(tag_proximity, i, next);
 		} else {
-			/* TODO: really need to walk the whole region and release widgets in it one by one */
-			if(i.has_tag(tag_proximity)) {
-				PushIter(start);
-				PushIter(end);
-				on_enter_region(i,next);
-				end=PopIter();
-				start=PopIter();
-			}
-			sbuffer->remove_tag(tag_proximity, i, next);
+			/* nothing to do \o/ */
 		}
 		i=next;
 	} while(i<end);
@@ -333,48 +361,22 @@ Gtk::TextIter CNotebook::PopIter()
 	return ret;
 }
 
-Gtk::Widget* CNotebook::RenderToWidget(Glib::ustring wtype, Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end) 
+void CNotebook::RenderToWidget(Glib::ustring wtype, Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end) 
 {
 	if(wtype=="checkbox") {
 		Gtk::TextIter i=start;
 		++i;
 		if(i.get_char()=='[') ++i;
 		
-		Gtk::CheckButton *b = new Gtk::CheckButton();
-		if(i.get_char()=='X') b->set_active(true);
-		b->property_can_focus().set_value(false);
+		bool is_checked = (i.get_char()=='X');
 		
 		/* create a mark to save the control's starting position */
 		Glib::RefPtr<Gtk::TextMark> mstart = sbuffer->create_mark(start,true);
 		PushIter(end);
 		
-		b->property_active().signal_changed().connect(sigc::slot<void>( [b,mstart,this]() {
-			Gtk::TextIter i = sbuffer->get_iter_at_mark(mstart);
-			++i; ++i;
-			if(b->get_active())
-				i=sbuffer->insert(i,"X");
-			else
-				i=sbuffer->insert(i," ");
-			Gtk::TextIter j=i; ++j;
-			sbuffer->erase(i,j);
-		} ));
-		
-
-		/* destroy the mark if the widget is unmapped */
-		b->signal_unmap().connect(sigc::slot<void>( [mstart,this]() {
-			/* need to defer the destruction due to mysterious interactions with signal chain */
-			auto s = Glib::IdleSource::create();
-			s->connect(sigc::slot<bool>( [mstart,this]() {
-				sbuffer->delete_mark(mstart);
-				return false;
-			})); 
-			s->attach();
-		}));
-		
 		Glib::RefPtr<Gtk::TextBuffer::ChildAnchor> anch;
 		if(!(anch=start.get_child_anchor())) {
 			/* we haven't set up a child anchor yet, so we need to queue the creation of one */
-			delete b;
 			
 			/* defer creation of anchor to prevent invalidating iters. */
 			/* once the anchor is created, syntax highlighting will recalculate, eventually
@@ -383,7 +385,10 @@ Gtk::Widget* CNotebook::RenderToWidget(Glib::ustring wtype, Gtk::TextBuffer::ite
 			s->connect(sigc::slot<bool>( [mstart,this]() {
 				Gtk::TextIter start = sbuffer->get_iter_at_mark(mstart);
 				sbuffer->delete_mark(mstart);
-				if(!start.get_child_anchor()) sbuffer->create_child_anchor(start);
+				
+				if(!start.get_child_anchor()) {
+					sbuffer->create_child_anchor(start);
+				}
 				return false;
 			})); 
 			s->attach();
@@ -391,6 +396,33 @@ Gtk::Widget* CNotebook::RenderToWidget(Glib::ustring wtype, Gtk::TextBuffer::ite
 		} else {
 			auto j = start; ++j;
 			sbuffer->remove_tag(tag_hidden,start,j);
+			
+			Gtk::CheckButton *b = new Gtk::CheckButton();
+			if(is_checked) b->set_active(true);
+			b->property_can_focus().set_value(false);
+			
+			b->property_active().signal_changed().connect(sigc::slot<void>( [b,mstart,this]() {
+				Gtk::TextIter i = sbuffer->get_iter_at_mark(mstart);
+				++i; ++i;
+				if(b->get_active())
+					i=sbuffer->insert(i,"X");
+				else
+					i=sbuffer->insert(i," ");
+				Gtk::TextIter j=i; ++j;
+				sbuffer->erase(i,j);
+			} ));
+			
+			/* destroy the mark if the widget is unmapped */
+			b->signal_unmap().connect(sigc::slot<void>( [mstart,this]() {
+				/* need to defer the destruction due to mysterious interactions with signal chain */
+				auto s = Glib::IdleSource::create();
+				s->connect(sigc::slot<bool>( [mstart,this]() {
+					sbuffer->delete_mark(mstart);
+					return false;
+				})); 
+				s->attach();
+			}));
+			
 			Gtk::manage(b);
 			add_child_at_anchor(*b,anch);
 			b->show();
@@ -399,6 +431,41 @@ Gtk::Widget* CNotebook::RenderToWidget(Glib::ustring wtype, Gtk::TextBuffer::ite
 		end=PopIter();
 		start=sbuffer->get_iter_at_mark(mstart);
 	}
+#ifdef HAVE_LASEM
+	else if(wtype=="latex") {
+		
+		Glib::RefPtr<Gtk::TextBuffer::ChildAnchor> anch;
+		
+		if(!(anch=start.get_child_anchor())) {
+			/* we haven't set up a child anchor yet, so we need to queue the creation of one */
+			/* defer creation of anchor to prevent invalidating iters. */
+			/* once the anchor is created, syntax highlighting will recalculate, eventually
+			 * calling this function again from the start */
+			Glib::RefPtr<Gtk::TextMark> mstart = sbuffer->create_mark(start,true);
+			auto s = Glib::IdleSource::create();
+			s->connect( [mstart,this]() {
+				Gtk::TextIter start = sbuffer->get_iter_at_mark(mstart);
+				sbuffer->delete_mark(mstart);
+				
+				if(!start.get_child_anchor()) {
+					sbuffer->create_child_anchor(start);
+				}
+				return false;
+			}); 
+			s->attach();
+			// anch = sbuffer->create_child_anchor(start);
+		} else {
+			auto j = start; ++j;
+			sbuffer->remove_tag(tag_hidden,start,j);
+			
+			CLatexWidget *d = new CLatexWidget(get_window(Gtk::TEXT_WINDOW_TEXT),sbuffer->get_text(start,end,true));
+			Gtk::manage(d); 
+			add_child_at_anchor(*d,anch);
+			d->show();
+		}
+		
+	}
+#endif
 }
 
 void CNotebook::UnrenderWidgets(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end)
@@ -419,9 +486,48 @@ void CNotebook::UnrenderWidgets(Gtk::TextBuffer::iterator &start, Gtk::TextBuffe
 	}
 }
 
+/* Remove widget child anchors in span. */
+void CNotebook::CleanUpSpan(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end)
+{
+	PushIter(start);
+	Gtk::TextBuffer::iterator i = start;
+	
+	do {
+		Gtk::TextBuffer::iterator next = i;
+		if(!next.forward_to_tag_toggle(tag_proximity) || next>end) next=end;
+		
+		Gtk::TextIter ic=next, nextc=i;
+		sbuffer->iter_backward_to_context_class_toggle(ic,"prox");
+		sbuffer->iter_forward_to_context_class_toggle(nextc,"prox");
+		
+		if(i.has_tag(tag_proximity) && (ic!=i || nextc!=next)) {
+			//printf("clean %d %d\n",i.get_offset(),next.get_offset());
+			std::pair<Glib::ustring,Glib::RefPtr<Gtk::TextTag> > volatile_tags[]
+				= { {"invisible", tag_hidden} };
+				
+			for(auto &[cclass,ttag] : volatile_tags) {
+				sbuffer->remove_tag(ttag, i, next);
+			}
+			sbuffer->remove_tag(tag_proximity,i,next);
+			
+			if(i.get_child_anchor()) {
+				PushIter(end);
+				PushIter(next);
+				next=i;
+				++next;
+				start=sbuffer->erase(i,next);
+				next=PopIter();
+				end=PopIter();
+			}
+		}
+		i=next;
+	} while(i<end);
+	start=PopIter();
+}
+
 void CNotebook::on_enter_region(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end)
 {
-	printf("enter: %d %d\n",start.get_offset(),end.get_offset());
+	//printf("enter: %d %d\n",start.get_offset(),end.get_offset());
 	
 	std::pair<Glib::ustring,Glib::RefPtr<Gtk::TextTag> > volatile_tags[]
 		= { {"invisible", tag_hidden} };
@@ -431,7 +537,11 @@ void CNotebook::on_enter_region(Gtk::TextBuffer::iterator &start, Gtk::TextBuffe
 	}
 	
 	Glib::ustring renderable_tags[]
-		= { "checkbox" };
+		= { "checkbox", 
+#ifdef HAVE_LASEM
+		"latex"
+#endif
+		};
 		
 	for(auto &s : renderable_tags) {
 		if(sbuffer->iter_has_context_class(start, s)) {
@@ -442,7 +552,7 @@ void CNotebook::on_enter_region(Gtk::TextBuffer::iterator &start, Gtk::TextBuffe
 
 void CNotebook::on_leave_region(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end)
 {
-	printf("leave: %d %d\n",start.get_offset(),end.get_offset());
+	//printf("leave: %d %d\n",start.get_offset(),end.get_offset());
 	
 	std::pair<Glib::ustring,Glib::RefPtr<Gtk::TextTag> > volatile_tags[]
 		= { {"invisible", tag_hidden} };
@@ -462,7 +572,11 @@ void CNotebook::on_leave_region(Gtk::TextBuffer::iterator &start, Gtk::TextBuffe
 	}
 	
 	Glib::ustring renderable_tags[]
-		= { "checkbox" };
+		= { "checkbox", 
+#ifdef HAVE_LASEM
+		"latex"
+#endif
+		};
 		
 	for(auto &s : renderable_tags) {
 		if(sbuffer->iter_has_context_class(start, s)) {
@@ -499,42 +613,85 @@ bool GetTagExtents(Gtk::TextIter t, Glib::RefPtr<Gtk::TextTag> tag, Gtk::TextIte
 
 void CNotebook::on_move_cursor()
 {
-	Gtk::TextIter new_iter = sbuffer->get_iter_at_mark(sbuffer->get_insert());
-	Gtk::TextIter old_iter = sbuffer->get_iter_at_mark(last_position);
-	//printf("old: %d, new: %d\n", old_iter.get_offset(), new_iter.get_offset());
-	/*auto v = new_iter.get_marks();
-	printf("%d marks here: ",v.size());
-	for(auto &m : v) printf("%s ",m->get_name().c_str());
-	printf("\n");*/
-	
-	Gtk::TextIter old_left, old_right, new_left, new_right;
-	
-	bool old_valid = GetTagExtents(old_iter,tag_proximity,old_left,old_right);
-	bool new_valid = GetTagExtents(new_iter,tag_proximity,new_left,new_right);
-	
-	if(old_valid) {
-		if(new_valid) {
-			if(new_iter.compare(old_left)<0 || new_iter.compare(old_right)>0) {
-				/* moved into a different prox region. signal both. */
-				PushIter(new_left);
-				PushIter(new_right);
+	auto s = Glib::IdleSource::create();
+	s->connect(sigc::slot<bool>( [this]() { 
+		Gtk::TextIter new_iter = sbuffer->get_iter_at_mark(sbuffer->get_insert());
+		Gtk::TextIter old_iter = sbuffer->get_iter_at_mark(last_position);
+		//printf("old: %d, new: %d\n", old_iter.get_offset(), new_iter.get_offset());
+		/*auto v = new_iter.get_marks();
+		printf("%d marks here: ",v.size());
+		for(auto &m : v) printf("%s ",m->get_name().c_str());
+		printf("\n");*/
+		
+		Gtk::TextIter old_left, old_right, new_left, new_right;
+		
+		bool old_valid = GetTagExtents(old_iter,tag_proximity,old_left,old_right);
+		bool new_valid = GetTagExtents(new_iter,tag_proximity,new_left,new_right);
+		bool from_right = new_valid && new_iter.compare(new_left)>0//old_iter.compare(new_iter)>0
+				&& (!latest_keyval || latest_keyval == GDK_KEY_Left ||
+					latest_keyval == GDK_KEY_Up || latest_keyval == GDK_KEY_Down);
+		Glib::RefPtr<Gtk::TextMark> move_to;
+		
+		if(old_valid) {
+			if(new_valid) {
+				if(new_iter.compare(old_left)<0 || new_iter.compare(old_right)>0) {
+					if(from_right) {
+						if(new_iter.has_tag(tag_hidden)) {
+							new_iter.forward_to_tag_toggle(tag_hidden);
+							move_to = sbuffer->create_mark(new_iter,false);
+						}
+					}
+					/* moved into a different prox region. signal both. */
+					PushIter(new_left);
+					PushIter(new_right);
+					on_leave_region(old_left,old_right);
+					new_right=PopIter();
+					new_left=PopIter();
+					on_enter_region(new_left,new_right);
+				} else if(new_iter==old_iter) {
+					/* we may have deleted right into a prox region's boundary. signal to be safe. */
+					on_enter_region(new_left,new_right);
+				}
+				/* otherwise, we stayed in the same one. no signals needed */
+			} else {
 				on_leave_region(old_left,old_right);
-				new_right=PopIter();
-				new_left=PopIter();
-				on_enter_region(new_left,new_right);
-			} else if(new_iter==old_iter) {
-				/* we may have deleted right into a prox region's boundary. signal to be safe. */
-				on_enter_region(new_left,new_right);
 			}
-			/* otherwise, we stayed in the same one. no signals needed */
-		} else {
-			on_leave_region(old_left,old_right);
+		} else if(new_valid) {
+			if(from_right) {
+				if(new_iter.has_tag(tag_hidden)) {
+					new_iter.forward_to_tag_toggle(tag_hidden);
+					move_to = sbuffer->create_mark(new_iter,false);
+				}
+			}
+			on_enter_region(new_left,new_right);
 		}
-	} else if(new_valid) {
-		on_enter_region(new_left,new_right);
-	}
-	
-	sbuffer->move_mark(last_position, sbuffer->get_iter_at_mark(sbuffer->get_insert()));//new_iter);
+
+		if(move_to) {
+			//printf("move right: %d\n",latest_keyval);
+			Gtk::TextIter t = sbuffer->get_iter_at_mark(move_to);
+			Gtk::TextIter ins = sbuffer->get_iter_at_mark(sbuffer->get_insert());
+			Gtk::TextIter sb = sbuffer->get_iter_at_mark(sbuffer->get_mark("selection_bound"));
+			sbuffer->move_mark_by_name("insert",t);
+			if(sb==ins) sbuffer->move_mark_by_name("selection_bound",t);
+			sbuffer->delete_mark(move_to);
+			/*auto s = Glib::IdleSource::create();
+			s->connect(sigc::slot<bool>( [move_to,this]() {
+				Gtk::TextIter t = sbuffer->get_iter_at_mark(move_to);
+				Gtk::TextIter ins = sbuffer->get_iter_at_mark(sbuffer->get_insert());
+				Gtk::TextIter sb = sbuffer->get_iter_at_mark(sbuffer->get_mark("selection_bound"));
+				sbuffer->move_mark_by_name("insert",t);
+				if(sb==ins) sbuffer->move_mark_by_name("selection_bound",t);
+				sbuffer->delete_mark(move_to);
+				return false;
+			})); 
+			s->attach();*/
+		} 
+		
+		sbuffer->move_mark(last_position, sbuffer->get_iter_at_mark(sbuffer->get_insert()));//new_iter);
+		
+		return false;
+	}));
+	s->attach();
 }
 
 void CNotebook::Widget2Doc(double in_x, double in_y, double &out_x, double &out_y)
@@ -548,6 +705,8 @@ void CNotebook::Widget2Doc(double in_x, double in_y, double &out_x, double &out_
 
 bool CNotebook::on_button_press(GdkEventButton *e)
 {
+	latest_keyval=0;
+	
 	GdkDevice *d = gdk_event_get_source_device((GdkEvent*)e);
 	if(!devicemodes.count(d)) {
 		if(gdk_device_get_n_axes(d)>4) {

@@ -10,7 +10,7 @@ CMainWindow::CMainWindow() : nav_model(), sview()
 	// Load config.
 	LoadConfig();
 	
-	printf("== This is notekit, built at "__TIMESTAMP__". ==\n");
+	printf("== This is notekit, built at " __TIMESTAMP__ ". ==\n");
 	printf("Detected paths:\n");
 	printf("Config: %s\n",config_path.c_str());
 	printf("Active notes path: %s\n",config["base_path"].asString().c_str());

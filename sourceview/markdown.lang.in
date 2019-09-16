@@ -182,9 +182,9 @@
         <context ref="asterisks-strong-emphasis"/>
         <context ref="backslash-escape"/>
         <context ref="line-break"/>
-<!--
+${LATEX_COMMENT_START}
         <context ref="latex"/>
--->
+${LATEX_COMMENT_END}
       </include>
     </context>
 
@@ -261,9 +261,9 @@
         <context ref="asterisks-strong-emphasis"/>
         <context ref="backslash-escape"/>
         <context ref="line-break"/>
-<!--
+${LATEX_COMMENT_START}
         <context ref="latex"/>
--->
+${LATEX_COMMENT_END}
       </include>
     </context>
 
@@ -486,9 +486,9 @@
         <context ref="asterisks-strong-emphasis"/>
         <context ref="backslash-escape"/>
         <context ref="line-break"/>
-<!--
+${LATEX_COMMENT_START}
         <context ref="latex"/>
--->
+${LATEX_COMMENT_END}
       </include>
     </context>
 

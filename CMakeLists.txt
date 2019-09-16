@@ -27,7 +27,27 @@ set(WORKSPACE_PATH "${CMAKE_CURRENT_LIST_DIR}/")
 
 
 #{{{{ User Code 1
-# Place your code here
+option (HAVE_LASEM "Use lasem-0.6 library to render LaTeX math" OFF)
+set (LASEM_PATH "${CMAKE_CURRENT_LIST_DIR}/lasem/" CACHE STRING "Base path for lasem-0.6")
+
+set (LATEX_COMMENT_START "<!--")
+set (LATEX_COMMENT_END "-->")
+
+if (HAVE_LASEM)
+	include_directories("${LASEM_PATH}/src/")
+	set (LATEX_COMMENT_START "")
+	set (LATEX_COMMENT_END "")
+endif (HAVE_LASEM)
+
+configure_file (
+  "${CMAKE_CURRENT_LIST_DIR}/config.h.in"
+  "${CMAKE_CURRENT_LIST_DIR}/config.h"
+  )
+  
+configure_file (
+  "${CMAKE_CURRENT_LIST_DIR}/sourceview/markdown.lang.in"
+  "${CMAKE_CURRENT_LIST_DIR}/sourceview/markdown.lang"
+  )
 #}}}}
 
 include_directories(
@@ -99,6 +119,7 @@ set(CMAKE_LDFLAGS "${CMAKE_LDFLAGS} -L. ")
 
 # Define the CXX sources
 set ( CXX_SRCS
+    ${CMAKE_CURRENT_LIST_DIR}/imagewidgets.cpp
     ${CMAKE_CURRENT_LIST_DIR}/drawing.cpp
     ${CMAKE_CURRENT_LIST_DIR}/main.cpp
     ${CMAKE_CURRENT_LIST_DIR}/navigation.cpp
@@ -119,7 +140,9 @@ endif(WIN32)
 
 
 #{{{{ User Code 2
-# Place your code here
+if (HAVE_LASEM)
+	set(LINK_OPTIONS ${LINK_OPTIONS} -L${LASEM_PATH}/src/.libs/ -l:liblasem-0.6.a)
+endif (HAVE_LASEM)
 #}}}}
 
 add_executable(notekit ${RC_SRCS} ${CXX_SRCS} ${C_SRCS})
@@ -132,6 +155,8 @@ target_link_libraries(notekit
 
 
 #{{{{ User Code 3
-# Place your code here
+if (HAVE_LASEM)
+	target_link_libraries(notekit xml2)
+endif (HAVE_LASEM)
 #}}}}
 
