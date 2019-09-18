@@ -74,6 +74,7 @@ CLatexWidget::CLatexWidget(Glib::RefPtr<Gdk::Window> wnd, Glib::ustring text) : 
 		lsm_dom_view_render(view, image_ctx->cobj(), 0, 0);
 		
 		g_object_unref(view);
+		g_object_unref(doc);
 	} else {
 		SetSize(128,16);
 		image_ctx->set_source_rgb(1,0,0);
@@ -83,8 +84,6 @@ CLatexWidget::CLatexWidget(Glib::RefPtr<Gdk::Window> wnd, Glib::ustring text) : 
 		image_ctx->fill(); //paint();
 		g_error_free(err);
 	}
-	
-	g_object_unref(doc);
 }
 
 CLatexWidget::~CLatexWidget()
