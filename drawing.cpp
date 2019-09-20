@@ -83,6 +83,7 @@ void CBoundDrawing::RebuildStrokefinder()
 void CBoundDrawing::AddStroke(CStroke &s, float dx, float dy)
 {
 	int neww=w, newh=h;
+	int size;
 	strokes.push_back(s);
 	for(int i=0;i<s.xcoords.size();++i) {
 		int newx, newy, newp;
@@ -92,7 +93,8 @@ void CBoundDrawing::AddStroke(CStroke &s, float dx, float dy)
 		if(newx+newp>neww) neww=newx+newp;
 		if(newy+newp>newh) newh=newy+newp;
 		/* add to stroke cache */
-		strokefinder.insert( { BUCKET(newx,newy), { strokes.size()-1, i } } );
+		size = strokes.size()-1;
+		strokefinder.insert( { BUCKET(newx,newy), { size, i } } );
 	}
 	
 	UpdateSize(neww, newh);
