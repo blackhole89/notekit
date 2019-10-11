@@ -17,7 +17,7 @@ I figured it would be nice to have a free-software, platform-independent OneNote
 
 You can download the following binary builds:
 
-* [Linux x86_64](http://twilightro.kafuka.org/%7Eblackhole89/files/notekit-20190911.tar.gz) (Git version of 2019-09-11)
+* [Linux x86_64](http://twilightro.kafuka.org/%7Eblackhole89/files/notekit-20191011.tar.gz) (Git version of 2019-10-11)
 * [Windows x86_64](http://twilightro.kafuka.org/%7Eblackhole89/files/notekit-20190911.zip) (Git version of 2019-09-11). The Windows version is less tested and incapable of remembering which folders are opened to mingw-w64's lack of support for xattrs.
 
 There is also a [Fedora COPR repository](https://copr.fedorainfracloud.org/coprs/lyessaadi/notekit/) (thanks to @LyesSaadi).
