@@ -22,7 +22,7 @@ You can download the following binary builds:
 
 There is also a [Fedora COPR repository](https://copr.fedorainfracloud.org/coprs/lyessaadi/notekit/) (thanks to @LyesSaadi).
 
-To run the binary, you will in addition require at least the following packages: `libgtkmm-3.0-1v5 libgtksourceviewmm-3.0-0v5 libjsoncpp1 zlib1g`, where the version of `libgtkmm-3.0-1v5` is at least 3.20. (In particular, this means that Ubuntu 16.04 LTS (xenial) and derived distributions are too old.) If the binary does not work for you, it is recommended that you build from source, as described below.
+To run the binary, you will in addition require at least the following packages: `libgtkmm-3.0-1v5 libgtksourceviewmm-3.0-0v5 libjsoncpp1 zlib1g libxml2`, where the version of `libgtkmm-3.0-1v5` is at least 3.20. (In particular, this means that Ubuntu 16.04 LTS (xenial) and derived distributions are too old.) If the binary does not work for you, it is recommended that you build from source, as described below.
 
 ## How to build
 Either invoke `cmake .` followed by `make` (which will build a binary at `cmake-build-Release/output/notekit`), or get [CodeLite](https://codelite.org/), open and build the workspace.
@@ -33,7 +33,6 @@ Required libraries:
 * `libgtkmm-3.0-dev`>=3.20 (UI stuff)
 * `libgtksourceviewmm-3.0-dev`>=3.18 (more UI stuff)
 * `libjsoncpp-dev` ~ 1.7.4 (config files; older versions may work)
-* `libxml2` ~ 2.9 (lasem dependency)
 * `zlib1g-dev`
 
 If you want to enable LaTeX math rendering support, you moreover need:
