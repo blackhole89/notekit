@@ -33,6 +33,7 @@ Required libraries:
 * `libgtkmm-3.0-dev`>=3.20 (UI stuff)
 * `libgtksourceviewmm-3.0-dev`>=3.18 (more UI stuff)
 * `libjsoncpp-dev` ~ 1.7.4 (config files; older versions may work)
+* `libxml2` ~ 2.9 (lasem dependency)
 * `zlib1g-dev`
 
 If you want to enable LaTeX math rendering support, you moreover need:
