@@ -17,7 +17,7 @@ I figured it would be nice to have a free-software, platform-independent OneNote
 
 You can download the following binary builds:
 
-* [Linux x86_64](http://twilightro.kafuka.org/%7Eblackhole89/files/notekit-20191011.tar.gz) (Git version of 2019-10-11)
+* [Linux x86_64](http://twilightro.kafuka.org/%7Eblackhole89/files/notekit-20191026.tar.gz) (Git version of 2019-10-26)
 * [Windows x86_64](http://twilightro.kafuka.org/%7Eblackhole89/files/notekit-20190911.zip) (Git version of 2019-09-11). The Windows version is less tested and incapable of remembering which folders are opened to mingw-w64's lack of support for xattrs.
 
 There is also a [Fedora COPR repository](https://copr.fedorainfracloud.org/coprs/lyessaadi/notekit/) (thanks to @LyesSaadi).
@@ -49,7 +49,7 @@ Development and testing was exclusively conducted on X11-based Linux. The one te
 
 ## Usage notes
 * To create a new note, doubleclick a `+` node in the tree view and enter a name.
-* To create a new folder, doubleclick a `+` node in the tree view and enter a name ending in `/`, e.g. `new folder/`.
+* To create a new **folder**, doubleclick a `+` node in the tree view and enter a name ending in `/`, e.g. `new folder/`.
 * To edit the default colour palette, right-click a colour picker.
 * Drawings can currently only be deleted whole. (This will be fixed eventually.)
 * Files are saved automatically when the window is closed, or when a different file is opened.
