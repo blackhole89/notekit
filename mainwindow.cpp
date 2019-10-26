@@ -329,7 +329,7 @@ void CMainWindow::OpenDocument(std::string filename)
 	char *buf; gsize length;
 	try {
 		Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(nav_model.base + "/" + filename);
-		file->load_contents(buf, length);
+		file->load_contents(buf, length); 
 	} catch(Gio::Error &e) {
 		sview.set_editable(false);
 		sview.set_can_focus(false);

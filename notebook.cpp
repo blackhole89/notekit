@@ -253,6 +253,11 @@ void CNotebook::on_insert(const Gtk::TextBuffer::iterator &iter,const Glib::ustr
 /* redraw cairo overlay: active stroke, special widgets like lines, etc. */
 bool CNotebook::on_redraw_overlay(const Cairo::RefPtr<Cairo::Context> &ctx)
 {
+	/* it seems that this can theoretically be called before the first on_allocate; 
+	 * since we don't know our document view's size yet, we have no choice but to bail */
+	if(!overlay_image) {
+		return true;
+	}
 	//active.Render(ctx,bx,by);
 	ctx->set_source(overlay_image,0,0);
 	ctx->paint();
