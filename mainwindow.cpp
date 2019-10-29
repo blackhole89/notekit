@@ -314,9 +314,7 @@ void CMainWindow::OpenDocument(std::string filename)
 		sview.set_editable(false);
 		sview.set_can_focus(false);
 		
-		active_document="";
-		hbar.set_subtitle("");
-		config["active_document"]="";
+		SetActiveFilename("");
 		
 		sbuffer->begin_not_undoable_action();
 		sbuffer->set_text("( Nothing opened. Please create or open a file. ) ");
@@ -335,9 +333,7 @@ void CMainWindow::OpenDocument(std::string filename)
 		sview.set_can_focus(false);
 		
 		fprintf(stderr,"Error: Failed to load document %s!\n",filename.c_str());
-		active_document="";
-		hbar.set_subtitle("");
-		config["active_document"]="";
+		SetActiveFilename("");
 		
 		sbuffer->begin_not_undoable_action();
 		char error_msg[512];
@@ -355,16 +351,21 @@ void CMainWindow::OpenDocument(std::string filename)
 	//sbuffer->set_text(buf);
 	sbuffer->end_not_undoable_action();
 	
-	
-	active_document = filename;
-	hbar.set_subtitle(active_document);
-	config["active_document"]=filename;
+	SetActiveFilename(filename);
 	
 	/*Glib::RefPtr<Gtk::TextBuffer::ChildAnchor> anch = sbuffer->create_child_anchor(sbuffer->begin());
 	testbutton.set_text("hello world");
 	sview.add_child_at_anchor(testbutton,anch);
 	testbutton.show();*/
 	g_free(buf);
+}
+
+/* set apparent opened document filename without actually loading/unload anything */
+void CMainWindow::SetActiveFilename(std::string filename)
+{
+	active_document = filename;
+	hbar.set_subtitle(active_document);
+	config["active_document"]=filename;
 }
 
 CMainWindow::~CMainWindow()

@@ -329,7 +329,7 @@ void CNavigationView::HandleRename(std::string oldname, std::string newname)
 {
 	//printf("handlerename %s->%s: %s\n",oldname.c_str(),newname.c_str(),mainwindow->active_document.c_str() );
 	if(mainwindow->active_document == oldname)
-		mainwindow->active_document = newname;
+		mainwindow->SetActiveFilename(newname);
 }
 
 void CNavigationView::FixPaths(std::string path, const Gtk::TreeNodeChildren *node)

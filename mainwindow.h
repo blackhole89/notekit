@@ -29,6 +29,7 @@ public:
 	void HardClose();
 	void FetchAndSave();
 	void OpenDocument(std::string filename);
+	void SetActiveFilename(std::string filename);
 	
 	void FocusDocument();
 	
