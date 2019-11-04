@@ -90,8 +90,10 @@ public:
 	
 	int modifier_keys; // modifier keys active during most recent keypress
 	int latest_keyval; // most recent keypress
+	gint64 last_modified; // time of last modification or 0 if no modification since last save
 	virtual bool on_key_press_event(GdkEventKey *k);
 	void on_insert(const Gtk::TextBuffer::iterator &,const Glib::ustring& str,int len);
+	void on_changed();
 	virtual bool on_event(GdkEvent *ev);
 	
 	guint8* on_serialize(const Glib::RefPtr<Gtk::TextBuffer>& content_buffer, const Gtk::TextBuffer::iterator& start, const Gtk::TextBuffer::iterator& end, gsize& length, bool render_images);

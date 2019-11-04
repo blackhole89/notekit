@@ -66,6 +66,7 @@ void CNotebook::Init(std::string data_path)
 	signal_button_release_event().connect(sigc::mem_fun(this,&CNotebook::on_button_release),false);
 	signal_motion_notify_event().connect(sigc::mem_fun(this,&CNotebook::on_motion_notify),false);
 	sbuffer->signal_insert().connect(sigc::mem_fun(this,&CNotebook::on_insert),true);
+	sbuffer->signal_changed().connect(sigc::mem_fun(this,&CNotebook::on_changed),true);
 	sbuffer->signal_highlight_updated().connect(sigc::mem_fun(this,&CNotebook::on_highlight_updated),true);
 	sbuffer->property_cursor_position().signal_changed().connect(sigc::mem_fun(this,&CNotebook::on_move_cursor));
 	
@@ -189,6 +190,10 @@ bool CNotebook::on_key_press_event(GdkEventKey *k)
 	latest_keyval = k->keyval;
 	return Gsv::View::on_key_press_event(k);
 }
+
+void CNotebook::on_changed()
+{
+	last_modified = g_get_real_time();}
 
 void CNotebook::on_insert(const Gtk::TextBuffer::iterator &iter,const Glib::ustring& str,int len)
 {	
@@ -847,6 +852,8 @@ void CNotebook::EraseAtPosition(float x, float y)
 				int bx, by;
 				window_to_buffer_coords(Gtk::TEXT_WINDOW_TEXT,0,0,bx,by);
 				d->EraseAt(x-(d->get_allocation().get_x())-bx,y-(d->get_allocation().get_y())-by,stroke_width,true);
+				
+				on_changed();
 			}
 		}
 	}
@@ -974,6 +981,8 @@ void CNotebook::CommitStroke()
 	floats.insert(d);
 	
 	active.Reset();
+	
+	on_changed(); // update changed flag
 }
 
 guint8* CNotebook::on_serialize(const Glib::RefPtr<Gtk::TextBuffer>& content_buffer, const Gtk::TextBuffer::iterator& start, const Gtk::TextBuffer::iterator& end, gsize& length, bool render_images)

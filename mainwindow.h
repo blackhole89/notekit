@@ -41,6 +41,9 @@ protected:
 	void on_action(std::string name,int type, int param);
 	bool on_click_color(GdkEventButton *btn, int num);
 	bool on_motion_notify(GdkEventMotion* event);
+	
+	sigc::connection idle_timer;
+	bool on_idle();
 
 	Gtk::HBox split;
 	//Gtk::Box filler;

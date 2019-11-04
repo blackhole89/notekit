@@ -96,6 +96,8 @@ CMainWindow::CMainWindow() : nav_model(), sview()
 	close_handler = this->signal_delete_event().connect( sigc::mem_fun(this, &CMainWindow::on_close) );
 	
 	signal_motion_notify_event().connect(sigc::mem_fun(this,&CMainWindow::on_motion_notify),false);
+	
+	idle_timer = Glib::signal_timeout().connect(sigc::mem_fun(this,&CMainWindow::on_idle),5000,Glib::PRIORITY_LOW);
 }
 
 int mkdirp(std::string dir)
@@ -283,6 +285,8 @@ void CMainWindow::FocusDocument()
 
 void CMainWindow::FetchAndSave()
 {
+	sview.last_modified=0;
+	
 	if(active_document=="") return;
 	
 	gsize len;
@@ -392,6 +396,17 @@ void CMainWindow::on_action(std::string name, int type, int param)
 		sview.active.a=1;
 		break;
 	}
+}
+
+bool CMainWindow::on_idle()
+{
+	// autosave if document has been modified and nothing has been typed for 5 seconds
+	if(sview.last_modified > 0 && g_get_real_time()-sview.last_modified > 5000000LL) {
+		printf("autosave\n");
+		FetchAndSave();
+	}
+	
+	return true;
 }
 
 bool CMainWindow::on_click_color(GdkEventButton* e, int number)
