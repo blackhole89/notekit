@@ -441,7 +441,7 @@ void CNotebook::RenderToWidget(Glib::ustring wtype, Gtk::TextBuffer::iterator &s
 		end=PopIter();
 		start=sbuffer->get_iter_at_mark(mstart);
 	}
-#ifdef HAVE_LASEM
+#if defined (HAVE_LASEM) || defined (HAVE_CLATEXMATH)
 	else if(wtype=="latex") {
 		
 		Glib::RefPtr<Gtk::TextBuffer::ChildAnchor> anch;
@@ -470,12 +470,23 @@ void CNotebook::RenderToWidget(Glib::ustring wtype, Gtk::TextBuffer::iterator &s
 			
 			CLatexWidget *d = new CLatexWidget(get_window(Gtk::TEXT_WINDOW_TEXT),sbuffer->get_text(start,end,true));
 			Gtk::manage(d); 
+			sbuffer->apply_tag(GetBaselineTag(d->GetBaseline()),start,j);
 			add_child_at_anchor(*d,anch);
 			d->show();
 		}
 		
 	}
 #endif
+}
+
+Glib::RefPtr<Gtk::TextTag> CNotebook::GetBaselineTag(int baseline)
+{
+	if(!baseline_tags.count(baseline)) {
+		auto t = sbuffer->create_tag();
+		t->property_rise().set_value(-PANGO_SCALE*baseline);
+		baseline_tags[baseline]=t;
+	}
+	return baseline_tags[baseline];
 }
 
 void CNotebook::UnrenderWidgets(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end)
@@ -548,7 +559,7 @@ void CNotebook::on_enter_region(Gtk::TextBuffer::iterator &start, Gtk::TextBuffe
 	
 	Glib::ustring renderable_tags[]
 		= { "checkbox", 
-#ifdef HAVE_LASEM
+#if defined (HAVE_LASEM) || defined (HAVE_CLATEXMATH)
 		"latex"
 #endif
 		};
@@ -583,7 +594,7 @@ void CNotebook::on_leave_region(Gtk::TextBuffer::iterator &start, Gtk::TextBuffe
 	
 	Glib::ustring renderable_tags[]
 		= { "checkbox", 
-#ifdef HAVE_LASEM
+#if defined (HAVE_LASEM) || defined (HAVE_CLATEXMATH)
 		"latex"
 #endif
 		};

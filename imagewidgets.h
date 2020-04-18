@@ -21,6 +21,8 @@ public:
 	void SetSize(int x, int y);
 	
 	virtual void Redraw();
+	
+	virtual int GetBaseline();
 
 	virtual bool on_draw(const Cairo::RefPtr<Cairo::Context> &ctx);
 	
@@ -28,7 +30,7 @@ public:
 	virtual void destroy_notify_();
 };
 
-#ifdef HAVE_LASEM
+#if defined (HAVE_LASEM) || defined (HAVE_CLATEXMATH)
 
 class CLatexWidget : public CImageWidget
 {
@@ -39,6 +41,9 @@ public:
 	Glib::ustring source;
 	
 	virtual void Redraw();
+	
+	int baseline;
+	virtual int GetBaseline();
 };
 
 #endif

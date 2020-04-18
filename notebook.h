@@ -75,6 +75,9 @@ public:
 	Glib::RefPtr<Gtk::TextMark> last_position;
 	void on_move_cursor();
 	
+	std::map<int, Glib::RefPtr<Gtk::TextTag> > baseline_tags;
+	Glib::RefPtr<Gtk::TextTag> GetBaselineTag(int baseline);
+	
 	std::stack<Glib::RefPtr<Gtk::TextMark> > iter_stack;
 	Glib::RefPtr<Gtk::TextMark> PushIter(Gtk::TextIter i);
 	Gtk::TextIter PopIter();

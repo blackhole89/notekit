@@ -1,3 +1,4 @@
 // global config
 
 #cmakedefine HAVE_LASEM
+#cmakedefine HAVE_CLATEXMATH

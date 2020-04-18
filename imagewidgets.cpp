@@ -36,6 +36,11 @@ void CImageWidget::Redraw()
 	
 }
 
+int CImageWidget::GetBaseline()
+{
+	return 0;
+}
+
 bool CImageWidget::on_draw(const Cairo::RefPtr<Cairo::Context> &ctx)
 {
 	if(!image) Redraw();
@@ -69,7 +74,7 @@ CLatexWidget::CLatexWidget(Glib::RefPtr<Gdk::Window> wnd, Glib::ustring text) : 
 		view = lsm_dom_document_create_view (doc);
 		lsm_dom_view_set_resolution (view, target_window->get_screen()->get_resolution());
 		
-		lsm_dom_view_get_size_pixels (view, (unsigned int*)&w, (unsigned int*)&h, NULL);
+		lsm_dom_view_get_size_pixels (view, (unsigned int*)&w, (unsigned int*)&h, (unsigned int*)&baseline);
 		SetSize(w,h);
 		lsm_dom_view_render(view, image_ctx->cobj(), 0, 0);
 		
@@ -93,6 +98,63 @@ CLatexWidget::~CLatexWidget()
 void CLatexWidget::Redraw()
 {
 	
+}
+
+int CLatexWidget::GetBaseline()
+{
+	return baseline;
+}
+
+#endif
+
+#ifdef HAVE_CLATEXMATH
+
+#define __OS_Linux__
+
+#include "latex.h"
+#include "platform/cairo/graphic_cairo.h"
+
+using namespace tex;
+
+CLatexWidget::CLatexWidget(Glib::RefPtr<Gdk::Window> wnd, Glib::ustring text) : CImageWidget(wnd)
+{
+	static int latex_initialised=0;
+	if(!latex_initialised) {
+		LaTeX::init("data/latex");
+		latex_initialised=1;
+	}
+	
+	source=text;
+
+	TeXRender *r;
+	r = LaTeX::parse(utf82wide(text.c_str()),
+        500,
+        18,
+        18 / 3.f,
+        0xff424242);
+		
+	SetSize(r->getWidth()+4,r->getHeight()+2);
+	
+	baseline=(int)(round(1.5+(r->getHeight())*(1.0-r->getBaseline())));
+	
+	Graphics2D_cairo g2(image_ctx);
+	r->draw(g2,2,1);
+	
+	if(r) delete r;
+}
+
+CLatexWidget::~CLatexWidget()
+{
+}
+
+void CLatexWidget::Redraw()
+{
+	
+}
+
+int CLatexWidget::GetBaseline()
+{
+	return baseline;
 }
 
 #endif

@@ -30,6 +30,9 @@ set(WORKSPACE_PATH "${CMAKE_CURRENT_LIST_DIR}/")
 option (HAVE_LASEM "Use lasem-0.6 library to render LaTeX math" OFF)
 set (LASEM_PATH "${CMAKE_CURRENT_LIST_DIR}/lasem/" CACHE STRING "Base path for lasem-0.6")
 
+option (HAVE_CLATEXMATH "Use cLaTeXMath to render LaTeX math" OFF)
+set (CLATEXMATH_PATH "${CMAKE_CURRENT_LIST_DIR}/cLaTeXMath/" CACHE STRING "Base path for cLaTeXMath")
+
 set (LATEX_COMMENT_START "<!--")
 set (LATEX_COMMENT_END "-->")
 
@@ -38,6 +41,12 @@ if (HAVE_LASEM)
 	set (LATEX_COMMENT_START "")
 	set (LATEX_COMMENT_END "")
 endif (HAVE_LASEM)
+
+if (HAVE_CLATEXMATH) 
+    include_directories("${CLATEXMATH_PATH}/src/")
+ 	set (LATEX_COMMENT_START "")
+	set (LATEX_COMMENT_END "") 
+endif (HAVE_CLATEXMATH)
 
 configure_file (
   "${CMAKE_CURRENT_LIST_DIR}/config.h.in"
@@ -119,12 +128,12 @@ set(CMAKE_LDFLAGS "${CMAKE_LDFLAGS} -L. ")
 
 # Define the CXX sources
 set ( CXX_SRCS
-    ${CMAKE_CURRENT_LIST_DIR}/imagewidgets.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/drawing.cpp
     ${CMAKE_CURRENT_LIST_DIR}/main.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/navigation.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/notebook.cpp
     ${CMAKE_CURRENT_LIST_DIR}/mainwindow.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/navigation.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/imagewidgets.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/notebook.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/drawing.cpp
 )
 
 set_source_files_properties(
@@ -143,6 +152,10 @@ endif(WIN32)
 if (HAVE_LASEM)
 	set(LINK_OPTIONS ${LINK_OPTIONS} -L${LASEM_PATH}/src/.libs/ -l:liblasem-0.6.a)
 endif (HAVE_LASEM)
+
+if (HAVE_CLATEXMATH)
+	set(LINK_OPTIONS ${LINK_OPTIONS} -L${CLATEXMATH_PATH}/ -l:libclatexmath.a)
+endif (HAVE_CLATEXMATH)
 #}}}}
 
 add_executable(notekit ${RC_SRCS} ${CXX_SRCS} ${C_SRCS})
@@ -158,5 +171,9 @@ target_link_libraries(notekit
 if (HAVE_LASEM)
 	target_link_libraries(notekit xml2)
 endif (HAVE_LASEM)
+
+if (HAVE_CLATEXMATH)
+    target_link_libraries(notekit fontconfig)
+endif (HAVE_CLATEXMATH)
 #}}}}
 
