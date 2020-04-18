@@ -61,7 +61,7 @@ CImageWidget::~CImageWidget()
 #include <lsm.h>
 #include <lsmmathml.h>
 
-CLatexWidget::CLatexWidget(Glib::RefPtr<Gdk::Window> wnd, Glib::ustring text) : CImageWidget(wnd)
+CLatexWidget::CLatexWidget(Glib::RefPtr<Gdk::Window> wnd, Glib::ustring text, Gdk::RGBA fg) : CImageWidget(wnd)
 {
 	source=text;
 	
@@ -116,7 +116,7 @@ int CLatexWidget::GetBaseline()
 
 using namespace tex;
 
-CLatexWidget::CLatexWidget(Glib::RefPtr<Gdk::Window> wnd, Glib::ustring text) : CImageWidget(wnd)
+CLatexWidget::CLatexWidget(Glib::RefPtr<Gdk::Window> wnd, Glib::ustring text, Gdk::RGBA fg) : CImageWidget(wnd)
 {
 	static int latex_initialised=0;
 	if(!latex_initialised) {
@@ -126,12 +126,16 @@ CLatexWidget::CLatexWidget(Glib::RefPtr<Gdk::Window> wnd, Glib::ustring text) : 
 	
 	source=text;
 
+	unsigned int clr;
+	clr=0xff000000|int(fg.get_red()*255)<<16|int(fg.get_green()*255)<<8|int(fg.get_blue()*255);
+
 	TeXRender *r;
 	r = LaTeX::parse(utf82wide(text.c_str()),
         500,
         18,
         18 / 3.f,
-        0xff424242);
+        clr);
+		
 		
 	SetSize(r->getWidth()+4,r->getHeight()+2);
 	

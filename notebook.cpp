@@ -468,7 +468,7 @@ void CNotebook::RenderToWidget(Glib::ustring wtype, Gtk::TextBuffer::iterator &s
 			auto j = start; ++j;
 			sbuffer->remove_tag(tag_hidden,start,j);
 			
-			CLatexWidget *d = new CLatexWidget(get_window(Gtk::TEXT_WINDOW_TEXT),sbuffer->get_text(start,end,true));
+			CLatexWidget *d = new CLatexWidget(get_window(Gtk::TEXT_WINDOW_TEXT),sbuffer->get_text(start,end,true),get_style_context()->get_color());
 			Gtk::manage(d); 
 			sbuffer->apply_tag(GetBaselineTag(d->GetBaseline()),start,j);
 			add_child_at_anchor(*d,anch);

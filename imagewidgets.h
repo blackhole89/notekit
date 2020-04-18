@@ -35,7 +35,7 @@ public:
 class CLatexWidget : public CImageWidget
 {
 public:
-	CLatexWidget(Glib::RefPtr<Gdk::Window> wnd, Glib::ustring source);
+	CLatexWidget(Glib::RefPtr<Gdk::Window> wnd, Glib::ustring source, Gdk::RGBA fg);
 	virtual ~CLatexWidget();
 	
 	Glib::ustring source;
