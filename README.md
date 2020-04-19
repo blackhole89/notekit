@@ -17,7 +17,7 @@ I figured it would be nice to have a free-software, platform-independent OneNote
 
 You can download the following binary builds:
 
-* [Linux x86_64](http://twilightro.kafuka.org/%7Eblackhole89/files/notekit-20191026.tar.gz) (Git version of 2019-10-26)
+* [Linux x86_64](http://twilightro.kafuka.org/%7Eblackhole89/files/notekit-20200418.tar.gz) (Git version of 2020-04-18)
 * [Windows x86_64](http://twilightro.kafuka.org/%7Eblackhole89/files/notekit-20190911.zip) (Git version of 2019-09-11). The Windows version is less tested and incapable of remembering which folders are opened to mingw-w64's lack of support for xattrs.
 
 There is also a [Fedora COPR repository](https://copr.fedorainfracloud.org/coprs/lyessaadi/notekit/) (thanks to @LyesSaadi).
@@ -36,6 +36,12 @@ Required libraries:
 * `zlib1g-dev`
 
 If you want to enable LaTeX math rendering support, you moreover need:
+
+* Set the CMAKE variable `HAVE_CLATEXMATH` to ON.
+* Run `install-clatexmath.sh` to clone [cLaTeXMath](https://github.com/NanoMichael/cLaTeXMath) into a subfolder and build it as a static library.
+* If you observe linker errors, make sure your `gcc` is sufficiently new.
+
+For older LaTeX math support using [lasem](https://github.com/GNOME/lasem), you can proceed as follows:
 
 * Set the CMAKE variable `HAVE_LASEM` to ON.
 * Have checked out and compiled [lasem](https://github.com/GNOME/lasem) from git in the CMAKE variable `LASEM_PATH` (default: `./lasem`). (Remember to build it; just checking out is not enough.)
