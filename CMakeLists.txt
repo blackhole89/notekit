@@ -175,5 +175,9 @@ endif (HAVE_LASEM)
 if (HAVE_CLATEXMATH)
     target_link_libraries(notekit fontconfig)
 endif (HAVE_CLATEXMATH)
+
+install(TARGETS notekit DESTINATION bin)
+install(DIRECTORY data DESTINATION share/notekit)
+install(DIRECTORY sourceview DESTINATION share/notekit)
 #}}}}
 
