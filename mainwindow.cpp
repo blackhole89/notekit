@@ -2,6 +2,11 @@
 #include "navigation.h"
 #include <iostream>
 
+#ifdef HAVE_CLATEXMATH
+#define __OS_Linux__
+#include "latex.h"
+#endif
+
 CMainWindow::CMainWindow() : nav_model(), sview()
 {
 	// Determine paths to operate on.
@@ -17,6 +22,10 @@ CMainWindow::CMainWindow() : nav_model(), sview()
 	printf("Default notes path: %s\n",default_base_path.c_str());
 	printf("Resource path: %s\n",data_path.c_str());
 	printf("\n");
+	
+	#ifdef HAVE_CLATEXMATH
+	LaTeX::init((data_path+"/data/latex").c_str());
+	#endif
 	
 	sview.Init(data_path);
 	nav_model.SetBasePath(config["base_path"].asString());

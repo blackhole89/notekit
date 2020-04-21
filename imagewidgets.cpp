@@ -117,13 +117,7 @@ int CLatexWidget::GetBaseline()
 using namespace tex;
 
 CLatexWidget::CLatexWidget(Glib::RefPtr<Gdk::Window> wnd, Glib::ustring text, Gdk::RGBA fg) : CImageWidget(wnd)
-{
-	static int latex_initialised=0;
-	if(!latex_initialised) {
-		LaTeX::init("data/latex");
-		latex_initialised=1;
-	}
-	
+{	
 	source=text;
 
 	unsigned int clr;
