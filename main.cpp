@@ -10,6 +10,9 @@ int main (int argc, char *argv[])
 	Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv, "test.notekit");
 
 	mainwindow = new CMainWindow();
+	
+	app->set_accel_for_action("notebook.next-note", "<Primary>Tab");
+	app->set_accel_for_action("notebook.prev-note", "<Primary><Shift>Tab");
 
 	//Shows the window and returns when it is closed.
 	return app->run(*mainwindow);

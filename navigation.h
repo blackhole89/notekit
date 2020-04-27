@@ -14,6 +14,16 @@ enum {
 
 class CMainWindow;
 
+class CNavigationTreeStore : public Gtk::TreeStore {
+protected: 
+	CNavigationTreeStore();
+
+	bool row_draggable_vfunc(const Gtk::TreeModel::Path& path) const override;
+	bool row_drop_possible_vfunc(const Gtk::TreeModel::Path& dest, const Gtk::SelectionData& selection_data) const override;
+	
+	static Glib::RefPtr<CNavigationTreeStore> create();
+};
+
 class CNavigationView {
 public:
 	class Columns : public Gtk::TreeModel::ColumnRecord {
@@ -47,6 +57,9 @@ public:
 
 	void AttachView(CMainWindow *w, Gtk::TreeView *v);
 	void ExpandDirectory(std::string path, const Gtk::TreeNodeChildren *node);
+	
+	void NextDoc();
+	void PrevDoc();
 	
 	void HandleRename(std::string oldname, std::string newname);
 	void FixPaths(std::string path, const Gtk::TreeNodeChildren *node);

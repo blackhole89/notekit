@@ -147,6 +147,49 @@ void CNavigationView::on_row_activated(const Gtk::TreeModel::Path &path, const G
 	mainwindow->OpenDocument(fname);
 }
 
+void CNavigationView::NextDoc()
+{
+	Gtk::TreeModel::Path p,pold; Gtk::TreeViewColumn* c;
+	v->get_cursor(p,c);
+	pold=p;
+	if(v->row_expanded(p)) p.down();
+	else do {
+		p=pold;
+		p.next();
+		pold.up(); // todo: check logic (what if pold is already top level?)
+	} while(!store->get_iter(p) && pold);
+	
+	if(store->get_iter(p)) {
+		v->set_cursor(p);
+		v->row_activated(p,*c);
+	}
+}
+
+void CNavigationView::PrevDoc()
+{
+	Gtk::TreeModel::Path p,pold; Gtk::TreeViewColumn* c;
+	v->get_cursor(p,c);
+	pold=p;
+	p.prev();
+	if(p==pold) {
+		// couldn't move to prev, so try moving up
+		if(p.size()>1) p.up();
+	} else if(store->get_iter(p)) {
+		// moved one prev; might have been expanded, so move
+		// to the bottom of subtree we may have leapfrogged
+		while(v->row_expanded(p)) {
+			p.down();
+			while(store->get_iter(p)) p.next();
+			p.prev();
+		}
+	}
+	
+	if(store->get_iter(p)) {
+		v->set_cursor(p);
+		v->row_activated(p,*c);
+	}
+}
+
 #ifdef XATTRS
 #include <sys/xattr.h>
 #endif
@@ -219,6 +262,9 @@ void CNavigationView::AttachView(CMainWindow *w, Gtk::TreeView *view)
 	v->set_enable_tree_lines(true);
 	v->set_model(store);
 	v->set_activate_on_single_click(true);
+	
+	v->enable_model_drag_source();
+	v->enable_model_drag_dest();
 	
 	//conns[0] = store->signal_row_changed().connect(sigc::mem_fun(*this,&CNavigationView::on_row_edit));
 	

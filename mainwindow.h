@@ -11,7 +11,9 @@
 #include "navigation.h"
 
 enum {
-	WND_ACTION_COLOR
+	WND_ACTION_COLOR,
+	WND_ACTION_NEXT_NOTE,
+	WND_ACTION_PREV_NOTE
 };
 
 class CMainWindow : public Gtk::Window

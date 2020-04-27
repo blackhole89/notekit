@@ -86,9 +86,13 @@ CMainWindow::CMainWindow() : nav_model(), sview()
 	InitToolbar();
 	// some actions need data from the main window and therefore need to live here
 	insert_action_group("notebook",sview.actions);
-	UpdateToolbarColors();
+	UpdateToolbarColors(); 
 	split.pack_start(*toolbar,Gtk::PACK_SHRINK);
 	on_action("color1",WND_ACTION_COLOR,1);
+	
+	#define ACTION(name,param1,param2) sview.actions->add_action(name, sigc::bind( sigc::mem_fun(this,&CMainWindow::on_action), std::string(name), param1, param2 ) )
+	ACTION("next-note",WND_ACTION_NEXT_NOTE,1);
+	ACTION("prev-note",WND_ACTION_PREV_NOTE,1);
 	
 	/* add the overall vbox */
 	add(split);
@@ -403,6 +407,12 @@ void CMainWindow::on_action(std::string name, int type, int param)
 	case WND_ACTION_COLOR:
 		GetColor(param, sview.active.r,sview.active.g, sview.active.b);
 		sview.active.a=1;
+		break;
+	case WND_ACTION_NEXT_NOTE:
+		nav_model.NextDoc();
+		break;
+	case WND_ACTION_PREV_NOTE:
+		nav_model.PrevDoc();
 		break;
 	}
 }
