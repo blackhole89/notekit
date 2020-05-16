@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "navigation.h"
 #include <iostream>
+#include <fontconfig/fontconfig.h>
 
 #ifdef HAVE_CLATEXMATH
 #define __OS_Linux__
@@ -36,6 +37,9 @@ CMainWindow::CMainWindow() : nav_model(), sview()
 	// set up window
 	set_border_width(0);
 	set_size_request(900,600);
+	
+	// load additional fonts
+	FcConfigAppFontAddDir(NULL, (FcChar8*)(data_path+"/data/fonts").c_str());
 	
 	/* load stylesheet */
 	Glib::RefPtr<Gtk::CssProvider> sview_css = Gtk::CssProvider::create();

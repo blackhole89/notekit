@@ -34,6 +34,7 @@ Required libraries:
 * `libgtksourceviewmm-3.0-dev`>=3.18 (more UI stuff)
 * `libjsoncpp-dev` ~ 1.7.4 (config files; older versions may work)
 * `zlib1g-dev`
+* `libfontconfig1-dev` ~ 2.13 (to use custom fonts)
 
 If you want to enable LaTeX math rendering support, you moreover need:
 

@@ -85,9 +85,16 @@ execute_process(COMMAND
     CL_TMP_VAR
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 string(STRIP ${CL_TMP_VAR} CL_VAR_3)
+execute_process(COMMAND 
+    pkg-config --cflags fontconfig
+    OUTPUT_VARIABLE
+    CL_TMP_VAR
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+string(STRIP ${CL_TMP_VAR} CL_VAR_4)
 add_definitions(${CL_VAR_1})
 add_definitions(${CL_VAR_2})
 add_definitions(${CL_VAR_3})
+add_definitions(${CL_VAR_4})
 add_definitions(-O2)
 add_definitions(-Wall)
 add_definitions(
@@ -101,22 +108,22 @@ execute_process(COMMAND
     OUTPUT_VARIABLE
     CL_TMP_VAR
     OUTPUT_STRIP_TRAILING_WHITESPACE)
-string(STRIP ${CL_TMP_VAR} CL_VAR_4)
+string(STRIP ${CL_TMP_VAR} CL_VAR_5)
 execute_process(COMMAND 
     pkg-config --libs gtksourceviewmm-3.0
     OUTPUT_VARIABLE
     CL_TMP_VAR
     OUTPUT_STRIP_TRAILING_WHITESPACE)
-string(STRIP ${CL_TMP_VAR} CL_VAR_5)
+string(STRIP ${CL_TMP_VAR} CL_VAR_6)
 execute_process(COMMAND 
     pkg-config --libs jsoncpp
     OUTPUT_VARIABLE
     CL_TMP_VAR
     OUTPUT_STRIP_TRAILING_WHITESPACE)
-string(STRIP ${CL_TMP_VAR} CL_VAR_6)
-set(LINK_OPTIONS ${CL_VAR_4})
-set(LINK_OPTIONS ${LINK_OPTIONS} ${CL_VAR_5})
+string(STRIP ${CL_TMP_VAR} CL_VAR_7)
+set(LINK_OPTIONS ${CL_VAR_5})
 set(LINK_OPTIONS ${LINK_OPTIONS} ${CL_VAR_6})
+set(LINK_OPTIONS ${LINK_OPTIONS} ${CL_VAR_7})
 
 
 if(WIN32)
@@ -163,6 +170,7 @@ target_link_libraries(notekit ${LINK_OPTIONS})
 
 target_link_libraries(notekit
     z
+    fontconfig
 )
 
 

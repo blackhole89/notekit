@@ -27,12 +27,13 @@
   </VirtualDirectory>
   <Settings Type="Executable">
     <GlobalSettings>
-      <Compiler Options="$(shell pkg-config --cflags gtkmm-3.0);$(shell pkg-config --cflags gtksourceviewmm-3.0);$(shell pkg-config --cflags jsoncpp)" C_Options="" Assembler="">
+      <Compiler Options="$(shell pkg-config --cflags gtkmm-3.0);$(shell pkg-config --cflags gtksourceviewmm-3.0);$(shell pkg-config --cflags jsoncpp);$(shell pkg-config --cflags fontconfig)" C_Options="" Assembler="">
         <IncludePath Value="."/>
       </Compiler>
       <Linker Options="$(shell pkg-config --libs gtkmm-3.0);$(shell pkg-config --libs gtksourceviewmm-3.0);$(shell pkg-config --libs jsoncpp)">
         <LibraryPath Value="."/>
         <Library Value="z"/>
+        <Library Value="fontconfig"/>
       </Linker>
       <ResourceCompiler Options=""/>
     </GlobalSettings>
