@@ -1,0 +1,29 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ !master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: setting the dependencies up
+      run: sudo apt install libfontconfig1-dev zlib1g-dev libjsoncpp-dev libgtksourceviewmm-3.0-dev libgtkmm-3.0-dev cmake ninja-build
+    - name: configure
+      run: cmake -G "Ninja" .
+    - name: ninja
+      run: ninja
+    - name: compress header files
+      run: 7z a -r linux-latest.zip .
+        
+    - uses: actions/upload-artifact@v1
+      if: failure()
+      with:
+        name: build-artifact-ubuntu-latest
+        path: .
