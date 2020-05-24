@@ -1,5 +1,5 @@
 name: notekit
-base: core18 # the base snap is the execution environment for this snap
+base: core20 # the base snap is the execution environment for this snap
 version: '0.1'
 summary: Structured notetaking application
 description: |
@@ -55,7 +55,7 @@ parts:
         - libgtksourceview-3.0-1
         - libgtksourceviewmm-3.0-0v5
         - libharfbuzz0b
-        - libicu60
+        - libicu-dev
         - libjsoncpp1
         - libpango-1.0-0
         - libpangocairo-1.0-0
@@ -86,16 +86,15 @@ parts:
         - libxrandr2
         - libxrender1
 
-    stage:
-        - usr/share/notekit
-
 
 apps:
   notekit:
     environment: 
-        XDG_DATA_DIRS: "/snap/notekit/current/usr/share/notekit/:/snap/notekit/current/usr/share:/usr/local/share:/usr/share"
-        LD_LIBRARY_PATH: "$LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu"
-    extensions: [gnome-3-28]
+        XDG_DATA_DIRS: "/snap/notekit/current/usr/share:$XDG_DATA_DIRS"
+        LD_LIBRARY_PATH: "/lib:/usr/lib:/usr/local/lib"
+        XDG_CONFIG_HOME: "$SNAP_USER_DATA"
+        XDG_DATA_HOME: "$SNAP_USER_DATA"
+    #extensions: [gnome-3-28]
     plugs:
         - gsettings
         - home
@@ -103,4 +102,4 @@ apps:
         - desktop-legacy
         - wayland
         - x11
-    command: share/notekit/notekit
+    command: usr/share/notekit/notekit
