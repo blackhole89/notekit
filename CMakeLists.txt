@@ -135,12 +135,12 @@ set(CMAKE_LDFLAGS "${CMAKE_LDFLAGS} -L. ")
 
 # Define the CXX sources
 set ( CXX_SRCS
-    ${CMAKE_CURRENT_LIST_DIR}/main.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/mainwindow.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/navigation.cpp
     ${CMAKE_CURRENT_LIST_DIR}/imagewidgets.cpp
     ${CMAKE_CURRENT_LIST_DIR}/notebook.cpp
     ${CMAKE_CURRENT_LIST_DIR}/drawing.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/main.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/navigation.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/mainwindow.cpp
 )
 
 set_source_files_properties(
@@ -157,11 +157,11 @@ endif(WIN32)
 
 #{{{{ User Code 2
 if (HAVE_LASEM)
-	set(LINK_OPTIONS ${LINK_OPTIONS} -L${LASEM_PATH}/src/.libs/ -l:liblasem-0.6.a)
+	set(LINK_OPTIONS -L${LASEM_PATH}/src/.libs/ -l:liblasem-0.6.a ${LINK_OPTIONS})
 endif (HAVE_LASEM)
 
 if (HAVE_CLATEXMATH)
-	set(LINK_OPTIONS ${LINK_OPTIONS} -L${CLATEXMATH_PATH}/ -l:libclatexmath.a)
+	set(LINK_OPTIONS -L${CLATEXMATH_PATH}/ -l:libclatexmath.a ${LINK_OPTIONS})
 endif (HAVE_CLATEXMATH)
 #}}}}
 
