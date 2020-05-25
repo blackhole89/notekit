@@ -5,6 +5,7 @@
 
 CNotebook::CNotebook()
 {
+	last_device=NULL;
 }
 
 /* DIRTY HACK: If the layout changes a lot, sometimes GtkTextView will
