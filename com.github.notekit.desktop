@@ -1,0 +1,26 @@
+[Desktop Entry]
+Type=Application
+
+Name=notekit
+Comment=Take handwritten notes
+Keywords=Tablet;Wacom;Pen Input;PDF Annotation;Markup
+Name[fr]=notekit
+Comment[fr]=Prise de notes manuscrites
+Name[ca]=notekit
+Comment[ca]=Preneu notes a mà
+Name[cs]=notekit
+Comment[cs]=Dělejte si rukou psané poznámky
+Name[de]=notekit
+Comment[de]=Handnotizen erstellen
+Name[pl]=notekit
+Comment[pl]=Notatki odręczne
+Name[zh_CN]=notekit
+Comment[zh_CN]=手写注释工具，可为PDF文件添加各种元素的注释标记
+Name[ru]=notekit
+Comment[ru]=Делайте рукописные заметки
+
+Exec=notekit
+Terminal=false
+StartupNotify=true
+Icon=com.github.notekit.notekit
+Categories=Office;GNOME;GTK;
