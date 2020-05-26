@@ -145,7 +145,7 @@ set ( CXX_SRCS
 
 set_source_files_properties(
     ${CXX_SRCS} PROPERTIES COMPILE_FLAGS 
-    " -pthread -pthread -O2 -Wall")
+    " -pthread -pthread -O2 -Wall -std=c++17")
 
 if(WIN32)
     enable_language(RC)
