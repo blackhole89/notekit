@@ -223,6 +223,35 @@ std::string CBoundDrawing::SerializePNG()
 	return ret;
 }
 
+std::string CBoundDrawing::SerializeSVG()
+{
+	std::string ret;
+	ret+="![](data:image/svg+xml;base64,";
+	std::vector<unsigned char> buf; 
+	
+	Cairo::RefPtr<Cairo::SvgSurface> svg = Cairo::SvgSurface::create(append_fn,(void*)&buf,w,h);
+	Cairo::RefPtr<Cairo::Context> svg_ctx = Cairo::Context::create(svg);
+	
+	for(auto &str : strokes) {
+		str.Render(svg_ctx,0,0);
+	}
+	
+	svg_ctx.clear();
+	svg.clear();
+	
+	/*std::vector<unsigned char> compressed;
+	compressed.resize(buf.size());
+	uLongf len = buf.size();
+	
+	compress2(&compressed[0],&len,(unsigned char*)&buf[0],buf.size(),9);
+	compressed.resize(len);*/
+	
+	ret+=base64Encode(buf);
+	ret+=")";
+	return ret;
+}
+
+
 std::string CBoundDrawing::Serialize()
 {
 	std::string ret;
