@@ -18,7 +18,8 @@ CBoundDrawing::CBoundDrawing(Glib::RefPtr<Gdk::Window> wnd) : Glib::ObjectBase("
 CBoundDrawing *CBoundDrawing::TryUpcast(Gtk::Widget *w)
 {
 	if(!strcmp(G_OBJECT_TYPE_NAME(w->gobj()),"gtkmm__CustomObject_CBoundDrawing")) {
-		return static_cast<CBoundDrawing*>(w);	} else return NULL;
+		return static_cast<CBoundDrawing*>(w);
+	} else return NULL;
 }
 
 
@@ -31,7 +32,7 @@ void CBoundDrawing::UpdateSize(int neww, int newh, int dx, int dy)
 	if(dx!=0 || dy!=0) {
 		// origin changed; need to move strokes
 		for(auto &str : strokes) {
-			for(int i=0;i<str.xcoords.size();++i) {
+			for(unsigned int i=0;i<str.xcoords.size();++i) {
 				str.xcoords[i]-=dx;
 				str.ycoords[i]-=dy;
 			}
@@ -64,7 +65,7 @@ void CBoundDrawing::RecalculateSize()
 {
 	int neww=1, newh=1;
 	for(auto &str : strokes) {
-		for(int i=0;i<str.xcoords.size();++i) {
+		for(unsigned int i=0;i<str.xcoords.size();++i) {
 			if(str.xcoords[i]+str.pcoords[i]>neww) neww=str.xcoords[i]+str.pcoords[i];
 			if(str.ycoords[i]+str.pcoords[i]>newh) newh=str.ycoords[i]+str.pcoords[i];
 		}
@@ -78,9 +79,9 @@ void CBoundDrawing::RebuildStrokefinder()
 {
 	strokefinder.clear();
 	
-	for(int j=0;j<strokes.size();++j) {
-		for(int i=0;i<strokes[j].xcoords.size();++i) {
-			strokefinder.insert( { BUCKET(strokes[j].xcoords[i],strokes[j].ycoords[i]), { j, i } } );
+	for(unsigned int j=0;j<strokes.size();++j) {
+		for(unsigned int i=0;i<strokes[j].xcoords.size();++i) {
+			strokefinder.insert( { BUCKET(strokes[j].xcoords[i],strokes[j].ycoords[i]), { (int) j, (int) i } } );
 		}
 	}
 }
@@ -90,7 +91,7 @@ void CBoundDrawing::AddStroke(CStroke &s, float dx, float dy)
 {
 	int neww=w, newh=h;
 	strokes.push_back(s);
-	for(int i=0;i<s.xcoords.size();++i) {
+	for(unsigned int i=0;i<s.xcoords.size();++i) {
 		int newx, newy, newp;
 		newx=(strokes.back().xcoords[i]+=dx);
 		newy=(strokes.back().ycoords[i]+=dy);
@@ -98,7 +99,7 @@ void CBoundDrawing::AddStroke(CStroke &s, float dx, float dy)
 		if(newx+newp>neww) neww=newx+newp;
 		if(newy+newp>newh) newh=newy+newp;
 		/* add to stroke cache */
-		strokefinder.insert( { BUCKET(newx,newy), { (int)strokes.size()-1, i } } );
+		strokefinder.insert( { BUCKET(newx,newy), { (int)strokes.size()-1, (int)i } } );
 	}
 	
 	UpdateSize(neww, newh);
@@ -282,7 +283,7 @@ std::string CBoundDrawing::Serialize()
 	compressed.resize(len);
 	
 	char buf[20];
-	sprintf(buf,"%d,",4*raw_data.size());
+	sprintf(buf,"%d,",(int) (4*raw_data.size()) );
 	
 	ret+=buf;
 	ret+=base64Encode(compressed);
@@ -309,7 +310,7 @@ void CBoundDrawing::Deserialize(std::string input)
 	int neww = raw_data[0];
 	int newh = raw_data[1];
 	int pos=3;
-	for(int nstrokes = 0; nstrokes<raw_data[2]; ++nstrokes) {
+	for(unsigned int nstrokes = 0; nstrokes<raw_data[2]; ++nstrokes) {
 		strokes.push_back(CStroke());
 		strokes.back().r = *(float*)&raw_data[pos  ];
 		strokes.back().g = *(float*)&raw_data[pos+1];
@@ -331,12 +332,12 @@ void CBoundDrawing::Deserialize(std::string input)
 
 void CBoundDrawing::on_unrealize()
 {
-	printf("unrealize event on %08lX\n", this);
+	printf("unrealize event on %08lX\n", (unsigned long) this);
 	//get_parent()->remove(*this);
 }
 
 void CBoundDrawing::destroy_notify_()
 {
-	printf("destroy event on %08lX\n", this);
+	printf("destroy event on %08lX\n", (unsigned long) this);
 	strokes.~vector<CStroke>();
 }
