@@ -15,5 +15,11 @@ int main (int argc, char *argv[])
 	app->set_accel_for_action("notebook.prev-note", "<Primary><Shift>Tab");
 
 	//Shows the window and returns when it is closed.
-	return app->run(*mainwindow);
+	auto ret = app->run(*mainwindow);
+
+	if(mainwindow != nullptr){
+		delete mainwindow;
+	}
+
+	return ret;
 }
