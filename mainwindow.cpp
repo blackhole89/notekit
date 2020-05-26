@@ -158,8 +158,11 @@ void CMainWindow::CalculatePaths()
 	}
 	
 	char *data_dirs = getenv("XDG_DATA_DIRS");
-	if(!data_dirs || !*data_dirs) data_dirs="/usr/local/share:/usr/share";
-	data_dirs=strdup(data_dirs);
+	if(!data_dirs || !*data_dirs)
+		data_dirs=strdup("/usr/local/share:/usr/share");
+	else
+	    data_dirs=strdup(data_dirs);
+	
 	char *next=data_dirs;
 	strtok(data_dirs,":");
 	struct stat statbuf;
@@ -170,7 +173,7 @@ void CMainWindow::CalculatePaths()
 			data_path=putative_dir;
 			break;
 		}
-	} while(next=strtok(NULL,":"));
+	} while( (next = strtok(NULL,":")) );
 	free(data_dirs);
 }
 
@@ -199,7 +202,8 @@ void CMainWindow::LoadConfig()
 	
 	/* set default base path if none has been explicitly set */
 	if(!config["base_path"].isString() || config["base_path"].asString()=="") {
-		config["base_path"]=default_base_path;	}
+		config["base_path"]=default_base_path;
+	}
 
 	g_free(buf);
 }
@@ -226,18 +230,18 @@ void CMainWindow::InitToolbar()
 	toolbar_style->load_from_data("#color1 { -gtk-icon-palette: warning #ff00ff; }");
 	
 	/* generate colour buttons */
-	Gtk::RadioToolButton *b0;
-	for(int i=1;i<=config["colors"].size();++i) {
+	Gtk::RadioToolButton *b0 = nullptr;
+	for(unsigned int i=1;i<=config["colors"].size();++i) {
 		char buf[255];
-		Gtk::Widget *sdfg;
+		//Gtk::Widget *sdfg;
 		
 		sprintf(buf,"color%d",i);
 		
 		#define ACTION(name,param1,param2) sview.actions->add_action(name, sigc::bind( sigc::mem_fun(this,&CMainWindow::on_action), std::string(name), param1, param2 ) )
 		ACTION(buf,WND_ACTION_COLOR,i);
 		
-		Gtk::RadioToolButton *b;
-		if(i==1) {
+		Gtk::RadioToolButton *b = nullptr;
+		if(i == 1) {
 			b = b0 = new Gtk::RadioToolButton(buf);
 		} else {
 			Gtk::RadioToolButton::Group g = b0->get_group(); // because for some reason, the group argument is &
@@ -284,7 +288,8 @@ void CMainWindow::UpdateToolbarColors()
 	for(auto a : config["colors"]) {
 		sprintf(buf,"#color%d { -gtk-icon-palette: warning rgb(%d,%d,%d); }\n", i, (int)(255*a["r"].asDouble()), (int)(255*a["g"].asDouble()), (int)(255*a["b"].asDouble()) );
 		colorcss += buf;
-		++i;	}
+		++i;
+	}
 	
 	toolbar_style->load_from_data(colorcss);
 }
@@ -473,7 +478,7 @@ bool CMainWindow::on_motion_notify(GdkEventMotion *e)
 		sview.last_device = d;
 		device_switched=true;
 		
-		Gtk::RadioToolButton *b;
+		Gtk::RadioToolButton *b = nullptr;
 		
 		if(!sview.devicemodes.count(d)) {
 			if(gdk_device_get_n_axes(d)>4) {

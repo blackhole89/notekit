@@ -123,7 +123,8 @@ void CNotebook::Init(std::string data_path)
 	/*tag_extra_space->property_left_margin().set_value(32);
 	tag_extra_space->property_indent().set_value(-32);*/
 	
-	set_wrap_mode(Gtk::WRAP_WORD_CHAR);}
+	set_wrap_mode(Gtk::WRAP_WORD_CHAR);
+}
 
 void CNotebook::SetCursor(Glib::RefPtr<Gdk::Cursor> c)
 {
@@ -173,7 +174,7 @@ void CStroke::Render(const Cairo::RefPtr<Cairo::Context> &ctx, float basex, floa
 	ctx->translate(-basex,-basey);
 	ctx->set_source_rgba(r,g,b,a);
 	ctx->set_line_cap(Cairo::LINE_CAP_ROUND);
-	for(int i=start_index;i<xcoords.size();++i) {
+	for(unsigned int i=start_index;i<xcoords.size();++i) {
 		ctx->set_line_width(pcoords[i-1]);
 		ctx->move_to(xcoords[i-1],ycoords[i-1]);
 		ctx->line_to(xcoords[i],ycoords[i]);
@@ -194,7 +195,8 @@ bool CNotebook::on_key_press_event(GdkEventKey *k)
 
 void CNotebook::on_changed()
 {
-	last_modified = g_get_real_time();}
+	last_modified = g_get_real_time();
+}
 
 void CNotebook::on_insert(const Gtk::TextBuffer::iterator &iter,const Glib::ustring& str,int len)
 {	
@@ -211,7 +213,7 @@ void CNotebook::on_insert(const Gtk::TextBuffer::iterator &iter,const Glib::ustr
 		Glib::ustring str = sbuffer->get_text(start,end,true);
 		end.forward_char();
 		
-		int num=0,pad=0,len=0;
+		unsigned int num=0,pad=0,len=0;
 		//printf("word: %s\n",str.c_str());
 		
 		/* get initial indentation */
@@ -527,8 +529,8 @@ void CNotebook::CleanUpSpan(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::i
 			std::pair<Glib::ustring,Glib::RefPtr<Gtk::TextTag> > volatile_tags[]
 				= { {"invisible", tag_hidden} };
 				
-			for(auto &[cclass,ttag] : volatile_tags) {
-				sbuffer->remove_tag(ttag, i, next);
+			for(auto &pair : volatile_tags) {
+				sbuffer->remove_tag(pair.second, i, next);
 			}
 			sbuffer->remove_tag(tag_proximity,i,next);
 			
@@ -554,8 +556,8 @@ void CNotebook::on_enter_region(Gtk::TextBuffer::iterator &start, Gtk::TextBuffe
 	std::pair<Glib::ustring,Glib::RefPtr<Gtk::TextTag> > volatile_tags[]
 		= { {"invisible", tag_hidden} };
 		
-	for(auto &[cclass,ttag] : volatile_tags) {
-		sbuffer->remove_tag(ttag, start, end);
+	for(auto &tag : volatile_tags) {
+		sbuffer->remove_tag(tag.second, start, end);
 	}
 	
 	Glib::ustring renderable_tags[]
@@ -798,7 +800,8 @@ bool CNotebook::on_motion_notify(GdkEventMotion *e)
 		p = stroke_width*ReadPressure(e->device);
 		
 		/* dynamically toggle event compression */
-		float xprev,yprev;
+		float xprev = 0.0f;
+		float yprev = 0.0f;
 		active.GetHead(xprev,yprev);
 		float curve = abs(active.GetHeadCurvatureWrt(x,y));
 		float delta = sqrt ( (xprev-x)*(xprev-x)+(yprev-y)*(yprev-y) );
@@ -1029,7 +1032,7 @@ bool CNotebook::on_deserialize(const Glib::RefPtr<Gtk::TextBuffer>& content_buff
 {
 	std::string str((const char*)data,length);
 	
-	int pos=0,pos0=0;
+	unsigned int pos=0,pos0=0;
 	bool drawing=false;
 	while(pos!=str.length()) {
 		if(!drawing) {
@@ -1116,7 +1119,7 @@ void CStroke::Simplify()
 	nxcoords.push_back(xcoords[0]);
 	nycoords.push_back(ycoords[0]);
 	npcoords.push_back(pcoords[0]);
-	int pos=1;
+	unsigned int pos=1;
 	float curvature_acc=0, length_acc=len0;
 	while((pos+1)!=xcoords.size()) {
 		float dx1=xcoords[pos+1]-xcoords[pos], dy1=ycoords[pos+1]-ycoords[pos], p1=pcoords[pos];
@@ -1141,7 +1144,7 @@ void CStroke::Simplify()
 	nycoords.push_back(ycoords[pos]);
 	npcoords.push_back(pcoords[pos]);
 	
-	printf("old: %d, new: %d\n",xcoords.size(), nxcoords.size());
+	printf("old: %d, new: %d\n",(int) xcoords.size(), (int) nxcoords.size());
 	xcoords.swap(nxcoords);
 	ycoords.swap(nycoords);
 	pcoords.swap(npcoords);
@@ -1150,7 +1153,7 @@ void CStroke::Simplify()
 void CStroke::GetBBox(float &x0, float &x1, float &y0, float &y1, int start_index)
 {
 	x0=xcoords[0]; x1=xcoords[0]; y0=ycoords[0]; y1=ycoords[0];
-	for(int i=start_index;i<xcoords.size();++i) {
+	for(unsigned int i=start_index;i<xcoords.size();++i) {
 		if(xcoords[i]-pcoords[i]<x0) x0 = xcoords[i]-pcoords[i];
 		if(xcoords[i]+pcoords[i]>x1) x1 = xcoords[i]+pcoords[i];
 		if(ycoords[i]-pcoords[i]<y0) y0 = ycoords[i]-pcoords[i];
