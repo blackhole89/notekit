@@ -213,7 +213,7 @@ void CNotebook::on_insert(const Gtk::TextBuffer::iterator &iter,const Glib::ustr
 		Glib::ustring str = sbuffer->get_text(start,end,true);
 		end.forward_char();
 		
-		unsigned int num=0,pad=0,len=0;
+		int num=0,pad=0,len=0;
 		//printf("word: %s\n",str.c_str());
 		
 		/* get initial indentation */
@@ -1032,7 +1032,7 @@ bool CNotebook::on_deserialize(const Glib::RefPtr<Gtk::TextBuffer>& content_buff
 {
 	std::string str((const char*)data,length);
 	
-	unsigned int pos=0,pos0=0;
+	int pos=0,pos0=0;
 	bool drawing=false;
 	while(pos!=str.length()) {
 		if(!drawing) {
