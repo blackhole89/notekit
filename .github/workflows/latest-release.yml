@@ -13,8 +13,10 @@ jobs:
     - uses: actions/checkout@v2
     - name: setting the dependencies up
       run: sudo apt install libfontconfig1-dev zlib1g-dev libjsoncpp-dev libgtksourceviewmm-3.0-dev libgtkmm-3.0-dev cmake ninja-build
+    - name: installing cLaTeXMath
+      run: ./install-clatexmath.sh
     - name: configure
-      run: cmake -G "Ninja" .
+      run: cmake -G "Ninja" -DHAVE_CLATEXMATH=ON .
     - name: ninja
       run: ninja
     - name: compress header files
