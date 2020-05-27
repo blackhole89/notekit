@@ -67,6 +67,7 @@ public:
 	
 	std::string Serialize();
 	std::string SerializePNG();
+	std::string SerializeSVG();
 	void Deserialize(std::string input);
 };
 
