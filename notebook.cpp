@@ -270,7 +270,7 @@ bool CNotebook::on_redraw_overlay(const Cairo::RefPtr<Cairo::Context> &ctx)
 	ctx->set_source(overlay_image,0,0);
 	ctx->paint();
 	//ctx->rectangle(0,0,get_width(),get_height());
-	ctx->fill();
+	//ctx->fill();
 	
 	/* draw horizontal rules */
 	Gdk::Rectangle rect;

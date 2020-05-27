@@ -318,18 +318,21 @@ void CMainWindow::FetchAndSave()
 	g_free(buf);
 	//Glib::ustring str = sbuffer->get_text(true);
 	
+	std::string filename;
+	filename = nav_model.base;
+	filename += "/";
+	filename += active_document;
+	std::string tmp_filename;
+	tmp_filename = filename;
+	tmp_filename += ".tmp";
+	
 	/* TODO: this kills the xattrs */
-	FILE *fl = fopen("temp.txt", "wb");
+	FILE *fl = fopen(tmp_filename.c_str(), "wb");
 	fwrite(str.c_str(),str.length(),1,fl);
 	fclose(fl);
 	
-	std::string cmd;
-	cmd = "mv temp.txt \"";
-	cmd += nav_model.base;
-	cmd += "/";
-	cmd += active_document;
-	cmd += "\"";
-	system(cmd.c_str());
+	/* atomic replace */
+	rename(tmp_filename.c_str(), filename.c_str());
 }
 
 void CMainWindow::OpenDocument(std::string filename)
