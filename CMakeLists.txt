@@ -33,6 +33,8 @@ set (LASEM_PATH "${CMAKE_CURRENT_LIST_DIR}/lasem/" CACHE STRING "Base path for l
 option (HAVE_CLATEXMATH "Use cLaTeXMath to render LaTeX math" OFF)
 set (CLATEXMATH_PATH "${CMAKE_CURRENT_LIST_DIR}/cLaTeXMath/" CACHE STRING "Base path for cLaTeXMath")
 
+option (DEBUG_BUILD "Build notekit with -O0 and -g instead of -O2 to allow debugging" OFF)
+
 set (LATEX_COMMENT_START "<!--")
 set (LATEX_COMMENT_END "-->")
 
@@ -95,11 +97,19 @@ add_definitions(${CL_VAR_1})
 add_definitions(${CL_VAR_2})
 add_definitions(${CL_VAR_3})
 add_definitions(${CL_VAR_4})
-add_definitions(-O2)
 add_definitions(-Wall)
 add_definitions(
     -DNDEBUG
 )
+
+if (DEBUG_BUILD)
+    add_definitions(-O0)
+    add_definitions(-g)
+    set (COMPILE_FLAGS " ${COMPILE_FLAGS} -g -O0 ")
+else (DEBUG_BUILD)
+    add_definitions(-O2)
+    set (COMPILE_FLAGS " ${COMPILE_FLAGS} -O2 ")
+endif (DEBUG_BUILD)
 
 
 # Linker options
@@ -145,7 +155,7 @@ set ( CXX_SRCS
 
 set_source_files_properties(
     ${CXX_SRCS} PROPERTIES COMPILE_FLAGS 
-    " -pthread -pthread -O2 -Wall -std=c++17")
+    " -pthread -pthread -Wall -std=c++17")
 
 if(WIN32)
     enable_language(RC)
