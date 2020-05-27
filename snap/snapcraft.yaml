@@ -5,9 +5,9 @@ summary: Structured notetaking application
 description: |
   This program is a structured notetaking application based on GTK+ 3. 
   Write your notes in instantly-formatted Markdown, organise them in a tree of folders that can be instantly navigated from within the program, and add hand-drawn notes by mouse, touchscreen or digitiser.
-
+license: GPL-3.0
 grade: devel 
-confinement: devmode # use 'strict' once you have the right plugs and slots
+confinement: strict # use 'strict' once you have the right plugs and slots
 architectures:
   - build-on: amd64
 
@@ -29,6 +29,14 @@ parts:
          cp -r data ../install/usr/share/notekit/
          cp -r sourceview ../install/usr/share/notekit/ 
          cp com.github.notekit.desktop ../install/usr/share/notekit/
+         sed -i 's|Icon=com.github.notekit.notekit|Icon=${SNAP}/usr/share/notekit/data/icons/notekit_icon.svg|' ${SNAPCRAFT_PART_INSTALL}/usr/share/notekit/com.github.notekit.desktop
+    stage:
+         # removing dangling symlinks
+         - -usr/share/texlive/texmf-dist/ls-R
+         - -usr/share/texlive/texmf-dist/tex/generic/config/language.dat.lua
+         - -usr/share/texlive/texmf-dist/tex/generic/config/language.def
+         - -usr/share/texlive/texmf-dist/tex/generic/config/language.dat
+         - -usr/share/texmf/ls-R
     override-stage: |
          snapcraftctl stage
          update-mime-database usr/share/mime
