@@ -2,7 +2,11 @@
 
 set -x
 
-cd /snap/notekit/current/usr/share/notekit
+cd "$SNAP/usr/share/notekit"
+
+export XDG_DATA_DIRS="$SNAP/usr/share:$XDG_DATA_DIRS"
+export XDG_CONFIG_HOME="$SNAP_USER_DATA"
+export XDG_DATA_HOME="$SNAP_USER_DATA"
 
 if [ ! -f $SNAP_USER_DATA/.config/notekit/config.json ]
 then

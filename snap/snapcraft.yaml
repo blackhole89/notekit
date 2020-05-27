@@ -139,10 +139,6 @@ parts:
 
 apps:
   notekit:
-    environment: 
-        XDG_DATA_DIRS: "$SNAP/usr/share:$XDG_DATA_DIRS"
-        XDG_CONFIG_HOME: "$SNAP_USER_DATA"
-        XDG_DATA_HOME: "$SNAP_USER_DATA"
     extensions: [gnome-3-28]
     desktop: usr/share/notekit/com.github.notekit.desktop
     plugs:

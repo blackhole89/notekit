@@ -1,4 +1,4 @@
-# NoteKit
+# NoteKit ![automated build](https://github.com/blackhole89/notekit/workflows/automated%20build/badge.svg)
 This program is a structured notetaking application based on GTK+ 3. Write your notes in instantly-formatted Markdown, organise them in a tree of folders that can be instantly navigated from within the program, and add hand-drawn notes by mouse, touchscreen or digitiser.
 
 ![Screenshot](/screenshots/notekit-example.png?raw=true)
@@ -13,7 +13,7 @@ I figured it would be nice to have a free-software, platform-independent OneNote
 * simple, standard on-disk format
 * tablet input
 
-## How to install
+## How to install [![Get it from the Snap Store](https://snapcraft.io/static/images/badges/en/snap-store-black.svg)](https://snapcraft.io/notekit)
 
 You can download the following binary builds:
 
