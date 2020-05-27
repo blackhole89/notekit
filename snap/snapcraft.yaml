@@ -1,5 +1,5 @@
 name: notekit
-base: core20 # the base snap is the execution environment for this snap
+base: core18 # the base snap is the execution environment for this snap
 version: '0.1'
 summary: Structured notetaking application
 description: |
@@ -8,23 +8,34 @@ description: |
 
 grade: devel 
 confinement: devmode # use 'strict' once you have the right plugs and slots
+architectures:
+  - build-on: amd64
 
 parts:
   notekit:
     # See 'snapcraft plugins'
     source-type: git
-    source: https://github.com/blackhole89/notekit
-    plugin: nil
-    override-build: "
-         cmake -G \"Ninja\" . ;
+    source: https://github.com/noah1510/notekit
+    plugin: dump      
+    override-build: |
+         git checkout snap
+         cmake -G "Ninja" . 
          ninja ;
-         mkdir ../install/usr/share/notekit ;
-         mkdir ../install/usr/share/notekit/sourceview ;
-         mkdir ../install/usr/share/notekit/data ;
-         cp cmake-build-Release/output/notekit ../install/usr/share/notekit/notekit ;
-         cp -r data ../install/usr/share/notekit/;
-         cp -r sourceview ../install/usr/share/notekit/ ;
-    "
+         mkdir -p ../install/usr/share/notekit 
+         mkdir -p ../install/usr/share/notekit/sourceview 
+         mkdir -p ../install/usr/share/notekit/data 
+         cp cmake-build-Release/output/notekit ../install/usr/share/notekit/notekit 
+         cp snap_launch_notekit.sh ../install/usr/share/notekit/snap_launch_notekit.sh 
+         cp -r data ../install/usr/share/notekit/
+         cp -r sourceview ../install/usr/share/notekit/ 
+         cp com.github.notekit.desktop ../install/usr/share/notekit/
+    override-stage: |
+         snapcraftctl stage
+         update-mime-database usr/share/mime
+         
+         gtk-update-icon-cache
+         gdk-pixbuf-query-loaders --update-cache
+        
     build-packages:
         - cmake
         - g++
@@ -35,6 +46,16 @@ parts:
         - zlib1g-dev
         - libfontconfig1-dev
         - libgdk-pixbuf2.0-dev
+        - git
+
+        - appstream-util
+        - libgtk-3-dev
+        - libpoppler-glib-dev
+        - libxml2-dev
+        - libsndfile-dev
+        - liblua5.3-dev
+        - libzip-dev
+        - dvipng
     stage-packages:
         - libatk-bridge2.0-0
         - libatk1.0-0
@@ -47,7 +68,7 @@ parts:
         - libepoxy0
         - libfontconfig1
         - libfreetype6
-        - libgdk-pixbuf2.0-0
+        - libgdk-pixbuf2.0-dev
         - libglibmm-2.4-1v5
         - libgraphite2-3
         - libgtk-3-0
@@ -86,15 +107,36 @@ parts:
         - libxrandr2
         - libxrender1
 
+        - adwaita-icon-theme
+        - faenza-icon-theme
+        - gnome-icon-theme
+        - libpng++-dev
+
+        - libzip-dev
+        - libtiff5
+
+        - libjpeg-turbo8
+        - liblcms2-2
+        - libnspr4
+        - libnss3
+        - libpoppler73
+        - libpoppler-glib8
+        - binutils
+
+        - shared-mime-info
+        
+        - texlive-latex-base
+        - texlive-binaries
+        - texlive-latex-extra
 
 apps:
   notekit:
     environment: 
-        XDG_DATA_DIRS: "/snap/notekit/current/usr/share:$XDG_DATA_DIRS"
-        LD_LIBRARY_PATH: "/lib:/usr/lib:/usr/local/lib"
+        XDG_DATA_DIRS: "$SNAP/usr/share:$XDG_DATA_DIRS"
         XDG_CONFIG_HOME: "$SNAP_USER_DATA"
         XDG_DATA_HOME: "$SNAP_USER_DATA"
-    #extensions: [gnome-3-28]
+    extensions: [gnome-3-28]
+    desktop: usr/share/notekit/com.github.notekit.desktop
     plugs:
         - gsettings
         - home
@@ -102,4 +144,4 @@ apps:
         - desktop-legacy
         - wayland
         - x11
-    command: usr/share/notekit/notekit
+    command: usr/share/notekit/snap_launch_notekit.sh
