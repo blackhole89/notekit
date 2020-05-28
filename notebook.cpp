@@ -48,7 +48,7 @@ void CNotebook::Init(std::string data_path)
 	Glib::RefPtr<Gtk::TargetList> l = sbuffer->get_copy_target_list();
 	
 	/* create drawing overlay */
-	//add_child_in_window(overlay,Gtk::TEXT_WINDOW_WIDGET,0,0);
+	add_child_in_window(overlay,Gtk::TEXT_WINDOW_WIDGET,0,0);
 	
 	/* define actions that the toolbar will hook up to */
 	actions = Gio::SimpleActionGroup::create();
