@@ -15,10 +15,9 @@ parts:
   notekit:
     # See 'snapcraft plugins'
     source-type: git
-    source: https://github.com/noah1510/notekit
+    source: https://github.com/blackhole89/notekit
     plugin: dump      
     override-build: |
-         git checkout snap
          cmake -G "Ninja" . 
          ninja ;
          mkdir -p ../install/usr/share/notekit 
