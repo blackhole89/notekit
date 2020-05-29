@@ -18,7 +18,9 @@ parts:
     source: https://github.com/blackhole89/notekit
     plugin: dump      
     override-build: |
-         cmake -G "Ninja" . 
+         pip3 install cmake
+         ./install-clatexmath.sh
+         cmake -G "Ninja" -DHAVE_CLATEXMATH=ON . 
          ninja ;
          mkdir -p ../install/usr/share/notekit 
          mkdir -p ../install/usr/share/notekit/sourceview 
@@ -44,7 +46,8 @@ parts:
          gdk-pixbuf-query-loaders --update-cache
         
     build-packages:
-        - cmake
+        - python3
+        - python3-pip
         - g++
         - ninja-build
         - libgtkmm-3.0-dev
