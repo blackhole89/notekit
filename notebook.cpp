@@ -381,7 +381,7 @@ void CNotebook::RenderToWidget(Glib::ustring wtype, Gtk::TextBuffer::iterator &s
 		++i;
 		if(i.get_char()=='[') ++i;
 		
-		bool is_checked = (i.get_char()=='X');
+		bool is_checked = (i.get_char()=='x'||i.get_char()=='X');
 		
 		/* create a mark to save the control's starting position */
 		Glib::RefPtr<Gtk::TextMark> mstart = sbuffer->create_mark(start,true);
@@ -418,7 +418,7 @@ void CNotebook::RenderToWidget(Glib::ustring wtype, Gtk::TextBuffer::iterator &s
 				Gtk::TextIter i = sbuffer->get_iter_at_mark(mstart);
 				++i; ++i;
 				if(b->get_active())
-					i=sbuffer->insert(i,"X");
+					i=sbuffer->insert(i,"x");
 				else
 					i=sbuffer->insert(i," ");
 				Gtk::TextIter j=i; ++j;

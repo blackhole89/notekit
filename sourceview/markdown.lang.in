@@ -160,7 +160,7 @@
         [ \t]+     # Must be followed by at least 1 space or 1 tab.
         (
           (&#xFFFC;?)
-          (\[[X\s]\])| # checkbox? 
+          (\[[x|X\s]\])| # checkbox? 
         )
       </start>
 
