@@ -30,7 +30,7 @@ jobs:
         files: linux-latest.zip
         
     - uses: actions/upload-artifact@v1
-      if: failure()
+      if: always()
       with:
         name: build-artifact-ubuntu-latest
         path: .
