@@ -131,10 +131,14 @@ CLatexWidget::CLatexWidget(Glib::RefPtr<Gdk::Window> wnd, Glib::ustring text, Gd
         18 / 3.f,
         clr);
 		
+	float h = r->getHeight(), w = r->getWidth();
 		
-	SetSize(r->getWidth()+4,r->getHeight()+2);
+	SetSize(w+4,h+2);
 	
-	baseline=(int)(round(1.5+(r->getHeight())*(1.0-r->getBaseline())));
+	baseline=(int)(round((2.5+(h)*(1.0f-r->getBaseline()))));
+	
+	// workaround for not entirely correct baseline arithmetic
+	if(h<12) baseline-=1;
 	
 	Graphics2D_cairo g2(image_ctx);
 	r->draw(g2,2,1);
