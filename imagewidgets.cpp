@@ -110,6 +110,7 @@ int CLatexWidget::GetBaseline()
 #ifdef HAVE_CLATEXMATH
 
 #define __OS_Linux__
+#define BUILD_GTK
 
 #include "latex.h"
 #include "platform/cairo/graphic_cairo.h"
