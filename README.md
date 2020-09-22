@@ -1,5 +1,3 @@
-![automated build](https://github.com/blackhole89/notekit/workflows/automated%20build/badge.svg)
-
 # NoteKit
 This program is a structured notetaking application based on GTK+ 3. Write your notes in instantly-formatted Markdown, organise them in a tree of folders that can be instantly navigated from within the program, and add hand-drawn notes by mouse, touchscreen or digitiser.
 
@@ -16,6 +14,8 @@ I figured it would be nice to have a free-software, platform-independent OneNote
 * tablet input
 
 ## How to install
+
+![automated build](https://github.com/blackhole89/notekit/workflows/automated%20build/badge.svg)
 
 You can download the following binary builds:
 
@@ -57,15 +57,32 @@ Development and testing was exclusively conducted on X11-based Linux. The one te
 * Resources (`data/` and `sourceview/`) are searched in `/notekit/` under `$XDG_DATA_DIRS` (default: `/usr/local/share:/usr/share`), followed by the current working directory `.`. If packaging Notekit or otherwise preparing it for system-wide installation, these two folders should probably be copied into `/usr/share/notekit/data` and `/usr/share/notekit/sourceview` respectively.
 
 ## Usage notes
+
+### Note management
+
 * To create a new note, doubleclick a `+` node in the tree view and enter a name.
 * To create a new **folder**, doubleclick a `+` node in the tree view and enter a name ending in `/`, e.g. `new folder/`.
-* To edit the default colour palette, right-click a colour picker.
-* Drawings can currently only be deleted whole. (This will be fixed eventually.)
-* Files are saved automatically when the window is closed, or when a different file is opened.
-* The document formatting is mostly based on standard `GtkSourceView` language and style files. If you want to change colours or syntax highlighting rules, you can edit them in the `sourceview/` subfolder.
-* The program loads a custom Gtk+ stylesheet found in `data/stylesheet.css`. Clear it if parts of the UI look wonky.
-* When copypasting text into other applications, drawings will be automatically converted into data URL PNGs.
+* Notes will be sorted alphabetically. 
+* You can move notes and whole folders between folders by dragging and dropping.
+* Files are saved automatically when the window is closed, when a different file is opened, and after a timeout when no user action is performed.
+
+### Markdown
+
+* Some markdown features are unsupported as a stylistic choice or because of parser limitations. If you are feeling adventurous, you can adjust the markdown parser by editing the GtkSourceView language definition in `sourceview/markdown.lang`.
+* Add LaTeX math using single `$` signs, e.g. `$\int x dx$`.
 * Some markdown will be hidden ("rendered") unless your cursor is next to it.
+
+### Pen input
+
+* Drawings can currently only be deleted whole. (This will be fixed eventually.)
+* To edit the default colour palette, right-click any of the colour buttons on the right-hand toolbar.
+* Due to present limitations, drawing clears the undo stack.
+* When copypasting text into other applications, drawings will be automatically converted into data URL PNGs.
+
+### Misc
+
+* The program loads a custom Gtk+ stylesheet found in `data/stylesheet.css`. Clear it if parts of the UI look wonky.
+* If something unexpected happens, it is often useful to run the program from a terminal and look at stdout.
 
 ## Project status
 Late alpha. Creating and editing notes and drawing works well enough, but many basic quality-of-life features (such as resizing/moving drawings) are still missing.
