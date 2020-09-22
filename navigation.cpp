@@ -295,7 +295,7 @@ void CNavigationView::on_collapse_row(const Gtk::TreeModel::iterator& iter, cons
 	setxattr((base+Row2Path(iter)).c_str(),"user.nkexpand",&attr,0,0);
 #else
 	Glib::RefPtr<Gio::File> f = Gio::File::create_for_path(base+Row2Path(iter));
-	printf("%d\n",f->set_attribute_string("xattr::nkexpand","",Gio::FILE_QUERY_INFO_NONE));
+	f->set_attribute_string("xattr::nkexpand","",Gio::FILE_QUERY_INFO_NONE);
 #endif
 	(*iter)[cols.expanded]=0;
 }
