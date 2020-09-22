@@ -1,3 +1,5 @@
+![automated build](https://github.com/blackhole89/notekit/workflows/automated%20build/badge.svg)
+
 # NoteKit
 This program is a structured notetaking application based on GTK+ 3. Write your notes in instantly-formatted Markdown, organise them in a tree of folders that can be instantly navigated from within the program, and add hand-drawn notes by mouse, touchscreen or digitiser.
 
@@ -17,7 +19,7 @@ I figured it would be nice to have a free-software, platform-independent OneNote
 
 You can download the following binary builds:
 
-* [Linux x86_64](http://twilightro.kafuka.org/%7Eblackhole89/files/notekit-20200922.tar.gz) (Git version of 2020-09-22), or download the possibly unstable [automated build](https://github.com/blackhole89/notekit/releases) (![automated build](https://github.com/blackhole89/notekit/workflows/automated%20build/badge.svg)).
+* [Linux x86_64](http://twilightro.kafuka.org/%7Eblackhole89/files/notekit-20200922.tar.gz) (Git version of 2020-09-22), or download the possibly unstable [automated build](https://github.com/blackhole89/notekit/releases).
 * [Windows x86_64](http://twilightro.kafuka.org/%7Eblackhole89/files/notekit-20200426.zip) (Git version of 2020-04-26). The Windows version is less tested and incapable of remembering which folders are opened to mingw-w64's lack of support for xattrs.
 
 There is also a [Fedora COPR repository](https://copr.fedorainfracloud.org/coprs/lyessaadi/notekit/) (thanks to @LyesSaadi) and an [Arch User Repository](https://aur.archlinux.org/packages/notekit-clatexmath-git/) (thanks to @sp1ritCS).
