@@ -225,6 +225,16 @@ clipboard_rich_text_received (GtkClipboard *clipboard,
 								data);
 }
 
+static void
+clipboard_image_received (GtkClipboard *clipboard,
+                         GdkPixbuf *pixbuf,
+                         gpointer data)
+{
+	ClipboardRequest *request_data = (ClipboardRequest*)data;
+	
+	free_clipboard_request (request_data);
+}
+
 void notebook_paste_clipboard (GtkTextView *text_view)
 {
 	GtkClipboard *clipboard = gtk_widget_get_clipboard (GTK_WIDGET (text_view),
@@ -253,8 +263,11 @@ void notebook_paste_clipboard (GtkTextView *text_view)
 	{
 	  /* Request rich text */
 	  gtk_clipboard_request_rich_text (clipboard,buffer,clipboard_rich_text_received,data);
-	}  else {
+	}  else if(gtk_clipboard_wait_is_text_available (clipboard)) {
 	  /* Request plain text instead */
 	  gtk_clipboard_request_text (clipboard,clipboard_text_received,data);
+	} else if(gtk_clipboard_wait_is_image_available(clipboard)) {
+	  /* Pasting image */
+	  gtk_clipboard_request_image (clipboard,clipboard_image_received,data);
 	}
 }

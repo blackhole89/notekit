@@ -5,7 +5,7 @@
 
 //extern CMainWindow *mainwindow;
 
-CNavigationView::Columns::Columns() : Gtk::TreeModel::ColumnRecord()
+CNavigationTreeStore::Columns::Columns() : Gtk::TreeModel::ColumnRecord()
 {
 	add(name);
 	add(full_path);
@@ -15,9 +15,72 @@ CNavigationView::Columns::Columns() : Gtk::TreeModel::ColumnRecord()
 	add(expanded);
 }
 
+CNavigationTreeStore::CNavigationTreeStore(const Columns &cols, CNavigationView* nv) : Gtk::TreeStore(cols)
+{
+	this->cols = &cols;
+	this->nview = nv;
+}
+
+Glib::RefPtr<CNavigationTreeStore> CNavigationTreeStore::create(const Columns &cols, CNavigationView* nview)
+{
+	return Glib::RefPtr<CNavigationTreeStore>( new CNavigationTreeStore(cols, nview) );
+}
+
+bool CNavigationTreeStore::row_draggable_vfunc(const Gtk::TreeModel::Path& path) const
+{
+	// const_cast due to gtkmm lack of get_const_iter. okay since we never write
+	const_iterator i = const_cast<CNavigationTreeStore*>(this)->get_iter(path);
+	if(i) {
+		// the adder can't be dragged
+		if((*i)[cols->type]!=CT_ADDER) return true;
+	}
+	return false;
+}
+
+bool CNavigationTreeStore::row_drop_possible_vfunc(const Gtk::TreeModel::Path& dest, const Gtk::SelectionData& selection_data) const
+{
+	// need to make sure we are not dragging below an adder node
+	Gtk::TreeModel::Path pred = dest;
+	if(pred.prev()) {
+		const_iterator i = const_cast<CNavigationTreeStore*>(this)->get_iter(pred);
+		if(i && (*i)[cols->type]==CT_ADDER) {
+			return false;
+		}
+	}
+	// need to make sure dest is a child of a folder, and not a file
+	Gtk::TreeModel::Path parent = dest;
+	if(!parent.up() || parent.empty()) {
+		// top level
+		return true;
+	}
+	const_iterator i = const_cast<CNavigationTreeStore*>(this)->get_iter(parent);
+	if(i) {
+		if((*i)[cols->type]==CT_DIR_LOADED || (*i)[cols->type]==CT_DIR_UNLOADED)
+			return true;
+	}
+	return false;
+}
+
+bool CNavigationTreeStore::drag_data_received_vfunc (const Gtk::TreeModel::Path& dest, const Gtk::SelectionData& selection_data)
+{	
+	Glib::RefPtr<Gtk::TreeModel> refThis = Glib::RefPtr<CNavigationTreeStore>(this); // wtf, gtkmm
+	refThis->reference(); // I suppose this prevents us from deallocating ourselves
+	
+	Gtk::TreeModel::Path src;
+	Gtk::TreeModel::Path::get_from_selection_data(selection_data,refThis,src);
+	
+	printf("drag data received: %s\n",src.to_string().c_str());
+	
+	if(nview->TryMove(src,dest)) {
+		return false; //Gtk::TreeStore::drag_data_received_vfunc(dest,selection_data);
+	} else {
+		return false;
+	}
+}
+
 CNavigationView::CNavigationView()
 {
-	store=Gtk::TreeStore::create(cols);
+	store=CNavigationTreeStore::create(cols, this);
 	
 	/* set up sorting */
 	store->set_sort_func(cols.name,[this] (const Gtk::TreeModel::iterator& a, const Gtk::TreeModel::iterator& b) {
@@ -266,13 +329,16 @@ void CNavigationView::AttachView(CMainWindow *w, Gtk::TreeView *view)
 	v->enable_model_drag_source();
 	v->enable_model_drag_dest();
 	
+	v->set_reorderable();
+	
 	//conns[0] = store->signal_row_changed().connect(sigc::mem_fun(*this,&CNavigationView::on_row_edit));
 	
+	/* set up the sole column of the treeview */
 	v->append_column("Name",cols.name);
-	
-	/* set up editing */
 	Gtk::CellRendererText *cr = (Gtk::CellRendererText*)v->get_column_cell_renderer(0);
-	cr->property_editable() = true;
+	v->get_column(0)->set_cell_data_func(*cr, sigc::mem_fun(this,&CNavigationView::on_render_cell));
+
+	/* connect signals */
 	conns[0] = cr->signal_editing_started().connect(sigc::mem_fun(this,&CNavigationView::on_row_edit_start));
 	conns[1] = cr->signal_edited().connect(sigc::mem_fun(this,&CNavigationView::on_row_edit_commit));
 	
@@ -310,9 +376,17 @@ void CNavigationView::AttachView(CMainWindow *w, Gtk::TreeView *view)
 	popup.show_all();
 }
 
+/* Instruct the CellRenderer to render the row pointed at by iter. */
+void CNavigationView::on_render_cell(Gtk::CellRenderer *cr_, const Gtk::TreeModel::iterator &iter)
+{
+	Gtk::CellRendererText *cr = (Gtk::CellRendererText*)cr_;
+	cr->property_text()= (*iter)[cols.name];
+	/* todo: figure out good UX for editing other cells without clashing with drag-drop */
+	cr->property_editable() = true; // (*iter)[cols.type]==CT_ADDER;
+}
+
 void CNavigationView::MaybeDeleteSelected()
 {
-	
 	Gtk::TreeIter i = v->get_selection()->get_selected();
 	switch( (*i)[cols.type] ) {
 		case CT_FILE: {
@@ -371,6 +445,109 @@ void CNavigationView::MaybeDeleteSelected()
 	}
 }
 
+bool CNavigationView::TryMove(const Gtk::TreeModel::Path &src, const Gtk::TreeModel::Path &dst)
+{
+	/* identify source of drag and create a file for it */
+	Gtk::TreeModel::iterator srci = store->get_iter(src);
+	if(!srci) return false;
+
+	std::string srcn = Row2Path(srci);
+	auto srcf = Gio::File::create_for_path(srcn);
+	
+	/* calculate destination */
+	std::string dstn,dstpathn;
+	Gtk::TreeModel::Path parent = dst;
+	Gtk::TreeModel::const_iterator pari;
+	if(!parent.up() || parent.empty()) {
+		dstn="/";
+	} else {
+		pari = store->get_iter(parent);
+		if(!pari) return false;
+		
+		dstn=Row2Path(pari)+"/";
+	}
+	dstpathn=dstn; // path above destination location
+	dstn += (Glib::ustring)(*srci)[cols.name];
+	dstn += (Glib::ustring)(*srci)[cols.ext];
+	
+	printf("Move: %s -> %s\n",srcn.c_str(),dstn.c_str());
+	
+	try{
+		auto srcf = Gio::File::create_for_path(base+srcn);
+		auto dstf = Gio::File::create_for_path(base+dstn);
+		
+		srcf->move(dstf,Gio::FILE_COPY_ALL_METADATA);
+		
+		/* if we are here, the move succeeded; update the full_path records of the file/dir and everything inside it */
+		
+		(*srci)[cols.full_path] = dstpathn;
+		HandleRename(srcn,dstn);
+		
+		/*
+		if( (*srci)[cols.type] == CT_DIR_LOADED || (*srci)[cols.type] == CT_DIR_UNLOADED ) {
+			FixPaths(dstn, &srci->children() );
+		} else if( (*srci)[cols.type] == CT_FILE ) {
+			HandleRename(srcn,dstn);
+		}*/
+		
+		/* finally, create a new entry in the tree store and get rid of the old one */
+		Gtk::TreeModel::iterator dsti;
+		Gtk::TreeModel::Path pred = dst;
+		if(!pred.prev()) {
+			/* inserting at the beginning of a folder, prepend */
+			if(dstpathn=="/") {
+				dsti = store->prepend();
+			} else {
+				/* pari is valid */
+				dsti = store->prepend(pari->children());
+			}
+		} else {
+			Gtk::TreeModel::iterator predi;
+			predi = store->get_iter(pred);
+			if(!predi) {
+				printf("Failed to get insertion point for %s! Navigation view may now be inconsistent.\n",pred.to_string().c_str());
+				return false;
+			}
+			dsti = store->insert_after(predi);
+		}
+		
+		(*dsti)[cols.name] = (Glib::ustring)(*srci)[cols.name];
+		(*dsti)[cols.full_path] = (Glib::ustring)(*srci)[cols.full_path];
+		(*dsti)[cols.ext] = (Glib::ustring)(*srci)[cols.ext];
+		(*dsti)[cols.ord] = (Glib::ustring)(*srci)[cols.ord]; // todo?
+		(*dsti)[cols.expanded]= (int)(*srci)[cols.expanded];
+		(*dsti)[cols.type]= (int)(*srci)[cols.type];
+
+		if( (*dsti)[cols.type] == CT_DIR_LOADED || (*dsti)[cols.type] == CT_DIR_UNLOADED ) {
+			/* make sure the main window's notion of the currently open document is updated */
+			FixPaths(dstn, &srci->children() );
+			
+			/* erase it so we can set the selection correctly when expanding */
+			store->erase(srci);
+			
+			(*dsti)[cols.type] = CT_DIR_UNLOADED;
+			
+			CreateAdder(dsti);
+			
+			if( (*dsti)[cols.expanded] ) {
+				v->expand_row(store->get_path(dsti),false); // better safe than sorry, though expect get_path(dsti)==dst
+			}
+		} else if( (*srci)[cols.type] == CT_FILE ) {
+			/* erase here so we can set the selection correctly */
+			store->erase(srci);
+			
+			(*dsti)[cols.type] = CT_FILE;
+			
+			v->get_selection()->select( dsti );
+		}
+	} catch(Gio::Error &e) {
+		printf("Failed to move: %s\n",e.what().c_str());
+		return false;
+	}
+	
+	return true;
+}
+
 void CNavigationView::HandleRename(std::string oldname, std::string newname)
 {
 	//printf("handlerename %s->%s: %s\n",oldname.c_str(),newname.c_str(),mainwindow->active_document.c_str() );
@@ -380,7 +557,7 @@ void CNavigationView::HandleRename(std::string oldname, std::string newname)
 
 void CNavigationView::FixPaths(std::string path, const Gtk::TreeNodeChildren *node)
 {
-	for(auto &a: *node) {
+	for(auto &a: *node) { 
 		std::string oldname = Row2Path(a);
 		
 		a[cols.full_path] = path+"/";

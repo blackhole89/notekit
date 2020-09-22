@@ -393,6 +393,7 @@ void CMainWindow::OpenDocument(std::string filename)
 void CMainWindow::SetActiveFilename(std::string filename)
 {
 	active_document = filename;
+	selected_document = filename;
 	hbar.set_subtitle(active_document);
 	config["active_document"]=filename;
 }

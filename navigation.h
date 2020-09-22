@@ -13,18 +13,9 @@ enum {
 };
 
 class CMainWindow;
+class CNavigationView;
 
 class CNavigationTreeStore : public Gtk::TreeStore {
-protected: 
-	CNavigationTreeStore();
-
-	bool row_draggable_vfunc(const Gtk::TreeModel::Path& path) const override;
-	bool row_drop_possible_vfunc(const Gtk::TreeModel::Path& dest, const Gtk::SelectionData& selection_data) const override;
-	
-	static Glib::RefPtr<CNavigationTreeStore> create();
-};
-
-class CNavigationView {
 public:
 	class Columns : public Gtk::TreeModel::ColumnRecord {
 	public:
@@ -37,8 +28,22 @@ public:
 		Gtk::TreeModelColumn<int> type;
 		Gtk::TreeModelColumn<int> expanded;
 	};
+protected: 
+	CNavigationTreeStore(const Columns &, CNavigationView*);
 	
-	Columns cols;
+	const Columns *cols; // annoyingly, we need to keep a pointer or else do heavy refactoring
+	CNavigationView *nview; // likewise here
+
+	virtual bool row_draggable_vfunc(const Gtk::TreeModel::Path& path) const override;
+	virtual bool row_drop_possible_vfunc(const Gtk::TreeModel::Path& dest, const Gtk::SelectionData& selection_data) const override;
+	virtual bool drag_data_received_vfunc (const Gtk::TreeModel::Path& dest, const Gtk::SelectionData& selection_data) override;
+public:
+	static Glib::RefPtr<CNavigationTreeStore> create(const Columns &cols, CNavigationView*);
+};
+
+class CNavigationView {
+public:
+	CNavigationTreeStore::Columns cols;
 
 	CNavigationView();
 
@@ -51,7 +56,7 @@ public:
 	Gtk::CellRendererPixbuf icon_renderer;
 	Gtk::TreeViewColumn name_col;*/
 	
-	Glib::RefPtr<Gtk::TreeStore> store;
+	Glib::RefPtr<CNavigationTreeStore> store;
 	
 	std::string Row2Path(Gtk::TreeModel::iterator row);
 
@@ -64,6 +69,7 @@ public:
 	void HandleRename(std::string oldname, std::string newname);
 	void FixPaths(std::string path, const Gtk::TreeNodeChildren *node);
 	void MaybeDeleteSelected();
+	bool TryMove(const Gtk::TreeModel::Path &src, const Gtk::TreeModel::Path &dst);
 	
 	void CreateAdder(Gtk::TreeModel::iterator row);
 	
@@ -73,6 +79,8 @@ public:
 	bool on_expand_row(const Gtk::TreeModel::iterator& iter, const Gtk::TreeModel::Path& path);
 	void on_postexpand_row(const Gtk::TreeModel::iterator& iter, const Gtk::TreeModel::Path& path);
 	void on_collapse_row(const Gtk::TreeModel::iterator& iter, const Gtk::TreeModel::Path& path);
+	
+	void on_render_cell(Gtk::CellRenderer *cr, const Gtk::TreeModel::iterator &iter);
 	
 	Gtk::Menu popup;
 	void on_button_press_event(GdkEventButton* event);
