@@ -123,27 +123,51 @@ CLatexWidget::CLatexWidget(Glib::RefPtr<Gdk::Window> wnd, Glib::ustring text, Gd
 
 	unsigned int clr;
 	clr=0xff000000|int(fg.get_red()*255)<<16|int(fg.get_green()*255)<<8|int(fg.get_blue()*255);
-
-	TeXRender *r;
-	r = LaTeX::parse(utf82wide(text.c_str()),
-        500,
-        18,
-        18 / 3.f,
-        clr);
+	
+	try {
+		TeXRender *r;
+		r = LaTeX::parse(utf82wide(text.c_str()),
+			500,
+			18,
+			18 / 3.f,
+			clr);
+			
+		float h = r->getHeight(), w = r->getWidth();
+			
+		SetSize(w+4,h+2);
 		
-	float h = r->getHeight(), w = r->getWidth();
+		baseline=(int)(round((2.5+(h)*(1.0f-r->getBaseline()))));
 		
-	SetSize(w+4,h+2);
-	
-	baseline=(int)(round((2.5+(h)*(1.0f-r->getBaseline()))));
-	
-	// workaround for not entirely correct baseline arithmetic
-	if(h<12) baseline-=1;
-	
-	Graphics2D_cairo g2(image_ctx);
-	r->draw(g2,2,1);
-	
-	if(r) delete r;
+		// workaround for not entirely correct baseline arithmetic
+		if(h<12) baseline-=1;
+		
+		Graphics2D_cairo g2(image_ctx);
+		r->draw(g2,2,1);
+		
+		if(r) delete r;
+	} catch(tex::ex_parse &e) {
+		printf("LaTeX parsing error: %s\n",e.what());
+		SetSize(128,16);
+		baseline=0;
+		
+		image_ctx->set_source_rgb(1,0,0);
+		image_ctx->set_font_size(10);
+		image_ctx->move_to(0,14);
+		image_ctx->show_text("LaTeX parse failed");
+		
+		image_ctx->fill();
+	} catch(tex::ex_invalid_state &e) {
+		printf("LaTeX rendering error: %s\n",e.what());
+		SetSize(128,16);
+		baseline=0;
+		
+		image_ctx->set_source_rgb(1,0,0);
+		image_ctx->set_font_size(10);
+		image_ctx->move_to(0,14);
+		image_ctx->show_text("LaTeX render failed");
+		
+		image_ctx->fill();
+	}
 }
 
 CLatexWidget::~CLatexWidget()
