@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=NoteKit
+GenericName=NoteKit
+Comment=Write your notes in instantly-formatted Markdown
+Icon=notekit
+Exec=notekit
+Terminal=false
+Type=Application
+Categories=Office;WordProcessor;
+Keywords=note;onenote;notetaking;markdown;
