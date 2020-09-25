@@ -36,7 +36,7 @@ CMainWindow::CMainWindow() : nav_model(), sview()
 	
 	// set up window
 	set_border_width(0);
-	set_size_request(900,600);
+	set_default_size(900,600);
 	
 	// load additional fonts
 	FcConfigAppFontAddDir(NULL, (FcChar8*)(data_path+"/data/fonts").c_str());
