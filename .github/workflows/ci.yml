@@ -2,9 +2,11 @@ name: C/C++ CI
 
 on:
   push:
-    branches: [ !master ]
+    branches: 
+      - '!master'
   pull_request:
-    branches: [ master ]
+    branches:
+      - 'master'
 
 jobs:
   build:
@@ -23,7 +25,7 @@ jobs:
       run: 7z a -r linux-latest.zip .
         
     - uses: actions/upload-artifact@v1
-      if: failure()
+      if: always()
       with:
         name: build-artifact-ubuntu-latest
         path: .

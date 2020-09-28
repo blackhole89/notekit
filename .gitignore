@@ -1,0 +1,8 @@
+*.snap
+CMakeFiles
+cmake-build-Release
+*ninja*
+CMakeCache.txt
+cmake_install.cmake
+build
+compile_commands.json
