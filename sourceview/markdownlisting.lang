@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--- Placeholder language definition that does not highlight any languages. -->
+
+<language id="markdownlisting" name="Markdown Code Listing" version="2.0" hidden="true">
+ <definitions>
+
+  <context id="proxy-anything" class="no-spell-check mono">
+   <start>^(```.*)$</start>
+   <end>^(```)$</end>
+   <include>
+    <context sub-pattern="1" where="start" style-ref="markdown:tag" />
+    <context sub-pattern="1" where="end" style-ref="markdown:tag" />
+   </include>
+  </context>
+
+  <context id="markdownlisting">
+   <include>
+    <context ref="proxy-anything" />
+   </include>
+  </context>
+ </definitions>
+</language>

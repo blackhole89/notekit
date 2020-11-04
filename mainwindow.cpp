@@ -28,7 +28,7 @@ CMainWindow::CMainWindow() : nav_model(), sview()
 	LaTeX::init((data_path+"/data/latex").c_str());
 	#endif
 	
-	sview.Init(data_path);
+	sview.Init(data_path, config["use_highlight_proxy"].asBool());
 	nav_model.SetBasePath(config["base_path"].asString());
 	
 	// make sure document is in place for tree expansion so we can set the selection

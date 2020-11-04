@@ -33,7 +33,8 @@ class CNotebook : public Gsv::View
 public:
 	CNotebook();
 	
-	void Init(std::string data_path);
+	void Init(std::string data_path, bool use_highlight_proxy);
+	std::string GetHighlightProxyDir();
 	
 	Glib::RefPtr<Gio::SimpleActionGroup> actions;
 	

@@ -1,6 +1,7 @@
 #include "notebook.h"
 
 #include "notebook_clipboard.hpp"
+#include "notebook_highlight.hpp"
 #include "imagewidgets.h"
 
 CNotebook::CNotebook()
@@ -24,7 +25,7 @@ bool CNotebook::on_event(GdkEvent*)
 }
 
 /* Initialise notebook widget, loading style files etc. from data_path. */
-void CNotebook::Init(std::string data_path)
+void CNotebook::Init(std::string data_path, bool use_highlight_proxy)
 {
 	sbuffer = get_source_buffer();
 
@@ -32,11 +33,18 @@ void CNotebook::Init(std::string data_path)
 	Glib::RefPtr<Gsv::StyleSchemeManager> styleman = Gsv::StyleSchemeManager::create();
 	styleman->set_search_path({data_path+"/sourceview/"});
 	Glib::RefPtr<Gsv::StyleScheme> the_scheme;
-	the_scheme = styleman->get_scheme("classic");
+	the_scheme = styleman->get_scheme("notekit");
 	sbuffer->set_style_scheme(the_scheme);
 	
 	Glib::RefPtr<Gsv::LanguageManager> langman = Gsv::LanguageManager::create();
-	langman->set_search_path({data_path+"/sourceview/"});
+	
+	/* make our custom markdown definition override the system gtksourceview defaults,
+	 * but retain access to them for other language defs */
+	std::vector<std::string> paths = langman->get_search_path();
+	paths.insert(paths.begin(),data_path+"/sourceview/");
+	if(use_highlight_proxy) paths.insert(paths.begin(),GetHighlightProxyDir());
+	langman->set_search_path(paths);
+	
 	sbuffer->set_language(langman->get_language("markdown"));
 	
 	/* register our serialisation formats */
@@ -216,13 +224,13 @@ void CNotebook::on_insert(const Gtk::TextBuffer::iterator &iter,const Glib::ustr
 		int num=0,pad=0,len=0;
 		//printf("word: %s\n",str.c_str());
 		
-		/* get initial indentation */
+		/* count indentation spaces, then eat them */
 		sscanf(str.c_str()," %n",&pad);
 		str=str.substr(pad);
 		
 		//printf("word: %s\n",str.c_str());
 		
-		/* try to parse as enumeration or the like */
+		/* try to see if we have any valid markdown enumeration we could extend */
 		sscanf(str.c_str(),"%d.%*1[ \t]%n",&num,&len);
 		char buf[512];
 		if(len==str.length() && num>0) {

@@ -46,7 +46,7 @@
     <style id="attribute-value" name="Attribute Value" map-to="def:constant"/>
     <style id="image-marker" name="Image Marker" map-to="def:shebang"/>
     <style id="emphasis" name="Emphasis" map-to="def:doc-comment-element"/>
-    <style id="strong-emphasis" name="Strong Emphasis" map-to="def:statement"/>
+    <style id="strong-emphasis" name="Strong Emphasis"/>
     <style id="backslash-escape" name="Backslash Escape" map-to="def:special-char"/>
     <style id="line-break" name="Line Break" map-to="def:note"/>
   </styles>
@@ -229,9 +229,16 @@
       <match>(?&lt;!`)``[^`]+((`|`{3,})[^`]+)*``(?!`)</match>
     </context>
 
-    <context id="3-backticks-code-span" class="no-spell-check mono" style-ref="code">
-      <start>^```.*$</start>
-      <end>^```$</end>
+    <context id="3-backticks-code-span" class="no-spell-check mono">
+      <start>^(```)$</start>
+      <end>^(```)$</end>
+      <include>
+        <context sub-pattern="1" where="start" style-ref="markdown:tag" />
+        <context sub-pattern="1" where="end" style-ref="markdown:tag" />
+      </include>
+      <!--- <include>
+        <context ref="markdownlisting:markdownlisting"/>
+      </include> -->
     </context>
 
     <!-- Example:
@@ -500,6 +507,7 @@
         <!-- Note: even if it's highlighted, Markdown syntax within HTML blocks
              (e.g., `<div>`) is not processed. -->
         <!-- <context ref="html:html"/> -->
+        <context ref="markdownlisting:markdownlisting"/>
       </include>
     </context>
   </definitions>
