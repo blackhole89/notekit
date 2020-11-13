@@ -16,6 +16,8 @@ public:
 	std::vector<float> ycoords;
 	std::vector<float> pcoords;
 	
+	std::vector<bool> selected;
+	
 	void Reset();
 	void Append(float x, float y, float p);
 	void GetHead(float &x, float &y);
@@ -23,6 +25,10 @@ public:
 	void Simplify();
 	void Render(const Cairo::RefPtr<Cairo::Context> &ctx, float basex, float basey, int start_index=1);
 	void GetBBox(float &x0, float &x1, float &y0, float &y1, int start_index=0);
+	
+	void RenderSelectionGlow(const Cairo::RefPtr<Cairo::Context> &ctx, float basex, float basey);
+	bool Select(float x0, float x1, float y0, float y1);
+	void Unselect();
 };
 
 class CBoundDrawing : public Gtk::DrawingArea
@@ -57,6 +63,9 @@ public:
 	void AddStroke(CStroke &s, float dx, float dy);
 	void EraseAt(float x, float y, float radius, bool whole_stroke);
 	
+	void Select(float x0, float x1, float y0, float y1);
+	void Unselect();
+	
 	virtual bool on_button_press_event(GdkEventButton* event);
 	virtual bool on_button_release_event(GdkEventButton* event);
 	virtual bool on_motion_notify_event(GdkEventMotion* event);
@@ -69,6 +78,7 @@ public:
 	std::string SerializePNG();
 	std::string SerializeSVG();
 	void Deserialize(std::string input);
+	void DumpForDebugging();
 };
 
 #endif

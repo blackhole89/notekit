@@ -19,13 +19,15 @@ enum {
 enum {
 	NB_MODE_TEXT,
 	NB_MODE_DRAW,
-	NB_MODE_ERASE
+	NB_MODE_ERASE,
+	NB_MODE_SELECT
 };
 
 enum {
 	NB_STATE_NOTHING=0,
 	NB_STATE_DRAW,
-	NB_STATE_ERASE
+	NB_STATE_ERASE,
+	NB_STATE_SELECT
 };
 
 class CNotebook : public Gsv::View
@@ -47,6 +49,9 @@ public:
 	float stroke_width; // width of current stroke
 	void CommitStroke();
 	void EraseAtPosition(float x, float y);
+	
+	double sel_x0, sel_y0, sel_x1, sel_y1;
+	void SelectBox(float x0, float x1, float y0, float y1);
 	
 	GdkDevice *last_device; // most recently seen device
 	bool update_cursor; // signal to main window to update cursor

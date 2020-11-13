@@ -230,7 +230,7 @@ ${LATEX_COMMENT_END}
     </context>
 
     <context id="3-backticks-code-span" class="no-spell-check mono" style-ref="code">
-      <start>^```.*$</start>
+      <start>^```$</start>
       <end>^```$</end>
     </context>
 
@@ -497,6 +497,7 @@ ${LATEX_COMMENT_END}
     <context id="markdown">
       <include>
         <context ref="markdown-syntax"/>
+        <context ref="markdownlisting:markdownlisting"/>
         <!-- Note: even if it's highlighted, Markdown syntax within HTML blocks
              (e.g., `<div>`) is not processed. -->
         <!-- <context ref="html:html"/> -->

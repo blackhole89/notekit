@@ -179,6 +179,18 @@ void CBoundDrawing::Redraw()
 	image_ctx->fill();
 	image_ctx->restore();
 	
+	if(selected) {
+		for(auto &str : strokes) {
+			str.RenderSelectionGlow(image_ctx,0,0);
+		}
+		image_ctx->save();
+		image_ctx->set_source_rgba(0,0,0,0.3);
+		image_ctx->rectangle(0,0,w,h);
+		image_ctx->set_operator(Cairo::OPERATOR_DEST_IN);
+		image_ctx->fill();
+		image_ctx->restore();
+	}
+	
 	/* redraw all strokes */
 	for(auto &str : strokes) {
 		str.Render(image_ctx,0,0);
@@ -328,6 +340,52 @@ void CBoundDrawing::Deserialize(std::string input)
 	RebuildStrokefinder();
 	UpdateSize(neww, newh);
 	Redraw();
+}
+
+void CBoundDrawing::DumpForDebugging()
+{
+	printf("Bound Drawing at %p:\n",this);
+	printf("  %d*%d\n",this->w,this->h);
+	for(int i=0;i<strokes.size();++i) {
+		printf("  Stroke %d: RGBA=%.2f %.2f %.2f %.2f\n",i,strokes[i].r,strokes[i].g,strokes[i].b,strokes[i].a);
+		for(int j=0;j<strokes[i].xcoords.size();++j) {
+			printf("    %.2f %.2f p=%.2f\n", strokes[i].xcoords[j],strokes[i].ycoords[j],strokes[i].pcoords[j]);
+		}
+	}
+}
+
+/* input coordinates are in the drawing's frame of reference */
+void CBoundDrawing::Select(float x0, float x1, float y0, float y1)
+{
+	printf("drawing %p: select %.2f,%.2f -- %.2f,%.2f\n",this,x0,y0,x1,y1);
+	if(x1<0 || y1<0 || x0>w || y0>h) {
+		Unselect();
+		return;
+	}
+	
+	bool will_select=false;
+	
+	for(auto &s : strokes)
+		if(s.Select(x0,x1,y0,y1)) will_select=true;
+		
+	if(selected || will_select) {
+		selected=will_select;
+		Redraw();
+		queue_draw();
+	}
+	
+	selected=will_select;
+}
+
+void CBoundDrawing::Unselect() {
+	for(auto &s : strokes) 
+		s.Unselect();
+		
+	if(selected) {
+		selected=false;
+		Redraw();
+		queue_draw();
+	}
 }
 
 void CBoundDrawing::on_unrealize()

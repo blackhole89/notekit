@@ -4,6 +4,8 @@
 #include "notebook_highlight.hpp"
 #include "imagewidgets.h"
 
+#include <unordered_set>
+
 CNotebook::CNotebook()
 {
 	last_device=NULL;
@@ -42,6 +44,7 @@ void CNotebook::Init(std::string data_path, bool use_highlight_proxy)
 	 * but retain access to them for other language defs */
 	std::vector<std::string> paths = langman->get_search_path();
 	paths.insert(paths.begin(),data_path+"/sourceview/");
+	paths.insert(paths.begin(),GetHighlightProxyDir());
 	if(use_highlight_proxy) paths.insert(paths.begin(),GetHighlightProxyDir());
 	langman->set_search_path(paths);
 	
@@ -64,6 +67,7 @@ void CNotebook::Init(std::string data_path, bool use_highlight_proxy)
 	ACTION("cmode-text",NB_ACTION_CMODE,NB_MODE_TEXT);
 	ACTION("cmode-draw",NB_ACTION_CMODE,NB_MODE_DRAW);
 	ACTION("cmode-erase",NB_ACTION_CMODE,NB_MODE_ERASE);
+	ACTION("cmode-select",NB_ACTION_CMODE,NB_MODE_SELECT);
 	ACTION("stroke1",NB_ACTION_STROKE,1);
 	ACTION("stroke2",NB_ACTION_STROKE,2);
 	ACTION("stroke3",NB_ACTION_STROKE,3);
@@ -183,13 +187,30 @@ void CStroke::Render(const Cairo::RefPtr<Cairo::Context> &ctx, float basex, floa
 	ctx->set_source_rgba(r,g,b,a);
 	ctx->set_line_cap(Cairo::LINE_CAP_ROUND);
 	for(unsigned int i=start_index;i<xcoords.size();++i) {
-		ctx->set_line_width(pcoords[i-1]);
 		ctx->move_to(xcoords[i-1],ycoords[i-1]);
 		ctx->line_to(xcoords[i],ycoords[i]);
+		ctx->set_line_width(pcoords[i-1]);
 		ctx->stroke();
 	}
 	ctx->translate(basex,basey);
+}
+
+void CStroke::RenderSelectionGlow(const Cairo::RefPtr<Cairo::Context> &ctx, float basex, float basey)
+{
+	if(!selected.size()) return;
 	
+	ctx->translate(-basex,-basey);
+	ctx->set_source_rgba(r,g,b,a);
+	ctx->set_line_cap(Cairo::LINE_CAP_ROUND);
+	for(unsigned int i=1;i<xcoords.size();++i) {
+		if(selected[i]) {
+			ctx->move_to(xcoords[i-1],ycoords[i-1]);
+			ctx->line_to(xcoords[i],ycoords[i]);
+			ctx->set_line_width(pcoords[i-1]+6);
+			ctx->stroke();
+		}
+	}
+	ctx->translate(basex,basey);
 }
 
 #include <gdk/gdkkeysyms.h>
@@ -302,6 +323,20 @@ bool CNotebook::on_redraw_overlay(const Cairo::RefPtr<Cairo::Context> &ctx)
 			ctx->stroke();
 		}
 	}while(sbuffer->iter_forward_to_context_class_toggle(i, "hline") && i<end);
+	
+	/* draw selection rect, if there is any */
+	if(active_state == NB_MODE_SELECT) {
+		int bx, by;
+		window_to_buffer_coords(Gtk::TEXT_WINDOW_WIDGET,0,0,bx,by);
+		
+		ctx->save();
+		ctx->set_line_width(2.0);
+		ctx->set_source_rgba(.627,.659,.75,1);
+		ctx->rectangle(sel_x0-bx,sel_y0-by,sel_x1-sel_x0,sel_y1-sel_y0);
+		ctx->set_dash(std::valarray<double>({2.0,2.0}),0.0);
+		ctx->stroke();
+		ctx->restore();
+	}
 	
 	return true;
 }
@@ -776,6 +811,19 @@ bool CNotebook::on_button_press(GdkEventButton *e)
 			
 			return true;
 		}
+		case NB_MODE_SELECT: {
+			double x,y;
+			Widget2Doc(e->x,e->y,x,y);
+			
+			active_state = NB_STATE_SELECT;
+			
+			grab_focus();
+			
+			sel_x0=x;
+			sel_y0=y;
+			
+			return true;
+		}
 		default: return false;
 	}
 	
@@ -791,6 +839,16 @@ bool CNotebook::on_button_release(GdkEventButton *e)
 			active.Simplify();
 			CommitStroke();
 			sbuffer->end_not_undoable_action();
+		} else if(active_state==NB_STATE_SELECT) {
+			double x,y;
+			Widget2Doc(e->x,e->y,x,y);
+			
+			if(sel_x0>x) std::swap(sel_x0,x);
+			if(sel_y0>y) std::swap(sel_y0,y);
+			
+			SelectBox(sel_x0,x,sel_y0,y);
+			
+			queue_draw();
 		}
 		
 		active_state=NB_STATE_NOTHING;
@@ -844,6 +902,21 @@ bool CNotebook::on_motion_notify(GdkEventMotion *e)
 		Widget2Doc(e->x,e->y,x,y); 
 		
 		EraseAtPosition(x,y);
+	} else if (active_state==NB_STATE_SELECT) {
+		double x,y;
+		Widget2Doc(e->x,e->y,x,y); 
+		
+		int bx, by;
+		window_to_buffer_coords(Gtk::TEXT_WINDOW_WIDGET,0,0,bx,by);
+		
+		int rex0 = std::min({sel_x0,sel_x1,x})-2-bx;
+		int rex1 = std::max({sel_x0,sel_x1,x})+2-bx;
+		int rey0 = std::min({sel_y0,sel_y1,y})-2-by;
+		int rey1 = std::max({sel_y0,sel_y1,y})+2-by;
+		
+		overlay.queue_draw_area(rex0,rey0,rex1-rex0,rey1-rey0);
+		
+		sel_x1=x; sel_y1=y;
 	}
 	return false;
 }
@@ -853,7 +926,7 @@ float CNotebook::ReadPressure(GdkDevice *d)
     gdouble r;
     gdouble axes[16];
     GdkWindow *w=get_window(Gtk::TEXT_WINDOW_WIDGET)->gobj();
-    gdk_device_get_state(d,w,axes,NULL);
+    gdk_device_get_state(d,w,axes,NULL); 
     if(gdk_device_get_axis(d,axes,GDK_AXIS_PRESSURE,&r))
         return r;
     else return 1.0;
@@ -877,6 +950,46 @@ void CNotebook::EraseAtPosition(float x, float y)
 				d->EraseAt(x-(d->get_allocation().get_x())-bx,y-(d->get_allocation().get_y())-by,stroke_width,true);
 				
 				on_changed();
+			}
+		}
+	}
+}
+
+/* all parameters are in buffer coordinates */
+void CNotebook::SelectBox(float x0, float x1, float y0, float y1)
+{
+	Gtk::TextBuffer::iterator i,j;
+	int trailing;
+	get_iter_at_position(i,trailing,x0,y0);
+	get_iter_at_position(j,trailing,x1,y1);
+	
+	int bx, by;
+	window_to_buffer_coords(Gtk::TEXT_WINDOW_TEXT,0,0,bx,by);
+	
+	std::unordered_set<CBoundDrawing*> seen;
+	
+	do {
+		if(i.get_child_anchor()) {
+			auto w = i.get_child_anchor()->get_widgets();
+			if(w.size()) {
+				if(CBoundDrawing* d = CBoundDrawing::TryUpcast(w[0])) {
+					float ax = -(d->get_allocation().get_x())-bx;
+					float ay = -(d->get_allocation().get_y())-by;
+					d->Select(x0+ax, x1+ax, y0+ay, y1+ay);
+					seen.insert(d);
+				}
+			}
+		}
+		
+		if(i==j) break;
+		++i;
+	} while(i!=sbuffer->end());
+	
+	for(Gtk::Widget *w : get_children()) {
+		if(CBoundDrawing *d = CBoundDrawing::TryUpcast(w)) {
+			if(!seen.count(d)) {
+				printf("unsel %p\n",d);
+				d->Unselect();
 			}
 		}
 	}
@@ -1070,6 +1183,7 @@ bool CNotebook::on_deserialize(const Glib::RefPtr<Gtk::TextBuffer>& content_buff
 			add_child_at_anchor(*d,anch);
 			
 			d->Deserialize(str.substr(pos0,pos-pos0));
+			//d->DumpForDebugging();
 			d->show();
 			
 			floats.insert(d);
@@ -1169,3 +1283,27 @@ void CStroke::GetBBox(float &x0, float &x1, float &y0, float &y1, int start_inde
 	}
 }
 
+bool CStroke::Select(float x0, float x1, float y0, float y1)
+{
+	bool will_select=false;
+	
+	selected.resize(xcoords.size());
+	for(unsigned int i=0;i<xcoords.size();++i) {
+		if(    (xcoords[i]+pcoords[i]>x0)
+			&& (xcoords[i]-pcoords[i]<x1)
+			&& (ycoords[i]+pcoords[i]>y0)
+			&& (ycoords[i]-pcoords[i]<y1)) {
+			selected[i]=true;
+			will_select=true;
+		} else {
+			selected[i]=false;
+		}
+	}
+	
+	return will_select;
+}
+
+void CStroke::Unselect()
+{
+	selected.clear();
+}
