@@ -37,22 +37,22 @@ set (LATEX_COMMENT_START "<!--")
 set (LATEX_COMMENT_END "-->")
 
 if (HAVE_LASEM)
-	include_directories("${LASEM_PATH}/src/")
-	set (LATEX_COMMENT_START "")
-	set (LATEX_COMMENT_END "")
+    include_directories("${LASEM_PATH}/src/")
+    set (LATEX_COMMENT_START "")
+    set (LATEX_COMMENT_END "")
 endif (HAVE_LASEM)
 
-if (HAVE_CLATEXMATH) 
+if (HAVE_CLATEXMATH)
     include_directories("${CLATEXMATH_PATH}/src/")
- 	set (LATEX_COMMENT_START "")
-	set (LATEX_COMMENT_END "") 
+    set (LATEX_COMMENT_START "")
+    set (LATEX_COMMENT_END "")
 endif (HAVE_CLATEXMATH)
 
 configure_file (
   "${CMAKE_CURRENT_LIST_DIR}/config.h.in"
   "${CMAKE_CURRENT_LIST_DIR}/config.h"
   )
-  
+
 configure_file (
   "${CMAKE_CURRENT_LIST_DIR}/sourceview/markdown.lang.in"
   "${CMAKE_CURRENT_LIST_DIR}/sourceview/markdown.lang"
@@ -67,25 +67,25 @@ include_directories(
 
 
 # Compiler options
-execute_process(COMMAND 
+execute_process(COMMAND
     pkg-config --cflags gtkmm-3.0
     OUTPUT_VARIABLE
     CL_TMP_VAR
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 string(STRIP ${CL_TMP_VAR} CL_VAR_1)
-execute_process(COMMAND 
+execute_process(COMMAND
     pkg-config --cflags gtksourceviewmm-3.0
     OUTPUT_VARIABLE
     CL_TMP_VAR
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 string(STRIP ${CL_TMP_VAR} CL_VAR_2)
-execute_process(COMMAND 
+execute_process(COMMAND
     pkg-config --cflags jsoncpp
     OUTPUT_VARIABLE
     CL_TMP_VAR
     OUTPUT_STRIP_TRAILING_WHITESPACE)
-string(STRIP ${CL_TMP_VAR} CL_VAR_3)
-execute_process(COMMAND 
+string(STRIP "${CL_TMP_VAR}" CL_VAR_3)
+execute_process(COMMAND
     pkg-config --cflags fontconfig
     OUTPUT_VARIABLE
     CL_TMP_VAR
@@ -103,19 +103,19 @@ add_definitions(
 
 
 # Linker options
-execute_process(COMMAND 
+execute_process(COMMAND
     pkg-config --libs gtkmm-3.0
     OUTPUT_VARIABLE
     CL_TMP_VAR
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 string(STRIP ${CL_TMP_VAR} CL_VAR_5)
-execute_process(COMMAND 
+execute_process(COMMAND
     pkg-config --libs gtksourceviewmm-3.0
     OUTPUT_VARIABLE
     CL_TMP_VAR
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 string(STRIP ${CL_TMP_VAR} CL_VAR_6)
-execute_process(COMMAND 
+execute_process(COMMAND
     pkg-config --libs jsoncpp
     OUTPUT_VARIABLE
     CL_TMP_VAR
@@ -144,7 +144,7 @@ set ( CXX_SRCS
 )
 
 set_source_files_properties(
-    ${CXX_SRCS} PROPERTIES COMPILE_FLAGS 
+    ${CXX_SRCS} PROPERTIES COMPILE_FLAGS
     " -pthread -pthread -O2 -Wall -std=c++17")
 
 if(WIN32)
@@ -157,11 +157,11 @@ endif(WIN32)
 
 #{{{{ User Code 2
 if (HAVE_LASEM)
-	set(LINK_OPTIONS -L${LASEM_PATH}/src/.libs/ -l:liblasem-0.6.a ${LINK_OPTIONS})
+    set(LINK_OPTIONS -L${LASEM_PATH}/src/.libs/ -l:liblasem-0.6.a ${LINK_OPTIONS})
 endif (HAVE_LASEM)
 
 if (HAVE_CLATEXMATH)
-	set(LINK_OPTIONS -L${CLATEXMATH_PATH}/ -l:libclatexmath.a ${LINK_OPTIONS})
+    set(LINK_OPTIONS -L${CLATEXMATH_PATH}/ -l:libclatexmath.a ${LINK_OPTIONS})
 endif (HAVE_CLATEXMATH)
 #}}}}
 
@@ -177,7 +177,7 @@ target_link_libraries(notekit
 
 #{{{{ User Code 3
 if (HAVE_LASEM)
-	target_link_libraries(notekit xml2)
+    target_link_libraries(notekit xml2)
 endif (HAVE_LASEM)
 
 if (HAVE_CLATEXMATH)
