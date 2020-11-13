@@ -49,13 +49,17 @@ CMainWindow::CMainWindow() : nav_model(), sview()
 	override_background_color(Gdk::RGBA("rgba(0,0,0,0)"));
 	
 	/* set up header bar */
-	hbar.set_show_close_button(true);
-	hbar.set_title("NoteKit");
-	appbutton.set_image_from_icon_name("accessories-text-editor", Gtk::ICON_SIZE_BUTTON, true);
-	set_icon_name("accessories-text-editor");
+	use_hbar = config["use_headerbar"].asBool();
 	
-	hbar.pack_start(appbutton);
-	set_titlebar(hbar);
+	if(use_hbar) {
+		hbar.set_show_close_button(true);
+		hbar.set_title("NoteKit");
+		appbutton.set_image_from_icon_name("accessories-text-editor", Gtk::ICON_SIZE_BUTTON, true);
+		set_icon_name("accessories-text-editor");
+	
+		hbar.pack_start(appbutton);
+		set_titlebar(hbar);
+	}
 	
 	/* install tree view */
 	nav_model.AttachView(this,&nav);
@@ -394,7 +398,11 @@ void CMainWindow::SetActiveFilename(std::string filename)
 {
 	active_document = filename;
 	selected_document = filename;
-	hbar.set_subtitle(active_document);
+	if(use_hbar) {
+		hbar.set_subtitle(active_document);
+	} else {
+		set_title(active_document + " - NoteKit");
+	}
 	config["active_document"]=filename;
 }
 

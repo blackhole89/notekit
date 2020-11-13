@@ -78,6 +78,7 @@ protected:
 	void UpdateToolbarColors();
 	
 	/* header */
+	bool use_hbar;
 	Gtk::HeaderBar hbar;
 	Gtk::Button appbutton;
 };
