@@ -13,7 +13,8 @@
 enum {
 	WND_ACTION_COLOR,
 	WND_ACTION_NEXT_NOTE,
-	WND_ACTION_PREV_NOTE
+	WND_ACTION_PREV_NOTE,
+	WND_ACTION_TOGGLE_SIDEBAR
 };
 
 class CMainWindow : public Gtk::Window
@@ -80,7 +81,15 @@ protected:
 	/* header */
 	bool use_hbar;
 	Gtk::HeaderBar hbar;
-	Gtk::Button appbutton;
+	Gtk::MenuButton appbutton;
+	
+	/* menu */
+	Gtk::Menu appmenu;
+	struct {
+		Gtk::MenuItem prefs;
+		Gtk::SeparatorMenuItem sep;
+		Gtk::CheckMenuItem hide_sidebar;
+	} am;
 };
 
 #endif // MAINWINDOW_H

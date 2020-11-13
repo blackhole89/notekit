@@ -48,6 +48,17 @@ CMainWindow::CMainWindow() : nav_model(), sview()
 	get_style_context()->add_class("notekit");
 	override_background_color(Gdk::RGBA("rgba(0,0,0,0)"));
 	
+	/* set up menu */
+	am.prefs.set_label("Preferences");
+	am.prefs.set_sensitive(false);
+	appmenu.append(am.prefs);
+	appmenu.append(am.sep);
+	am.hide_sidebar.set_label("Hide sidebar");
+	// this should probably use Gio::Menu actions instead...? documentation is an unholy mess on this
+	am.hide_sidebar.signal_activate().connect( sigc::bind( sigc::mem_fun(this,&CMainWindow::on_action), "toggle-sidebar", WND_ACTION_TOGGLE_SIDEBAR, 1)); 
+	appmenu.append(am.hide_sidebar);
+	appmenu.show_all();
+	
 	/* set up header bar */
 	use_hbar = config["use_headerbar"].asBool();
 	
@@ -55,6 +66,7 @@ CMainWindow::CMainWindow() : nav_model(), sview()
 		hbar.set_show_close_button(true);
 		hbar.set_title("NoteKit");
 		appbutton.set_image_from_icon_name("accessories-text-editor", Gtk::ICON_SIZE_BUTTON, true);
+		appbutton.set_menu(appmenu);
 		set_icon_name("accessories-text-editor");
 	
 		hbar.pack_start(appbutton);
@@ -434,6 +446,13 @@ void CMainWindow::on_action(std::string name, int type, int param)
 		break;
 	case WND_ACTION_PREV_NOTE:
 		nav_model.PrevDoc();
+		break;
+	case WND_ACTION_TOGGLE_SIDEBAR:
+		if(am.hide_sidebar.get_active()) {
+			nav_scroll.set_visible(false);
+		} else {
+			nav_scroll.set_visible(true);
+		}
 		break;
 	}
 }
