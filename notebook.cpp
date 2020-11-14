@@ -44,7 +44,6 @@ void CNotebook::Init(std::string data_path, bool use_highlight_proxy)
 	 * but retain access to them for other language defs */
 	std::vector<std::string> paths = langman->get_search_path();
 	paths.insert(paths.begin(),data_path+"/sourceview/");
-	paths.insert(paths.begin(),GetHighlightProxyDir());
 	if(use_highlight_proxy) paths.insert(paths.begin(),GetHighlightProxyDir());
 	langman->set_search_path(paths);
 	

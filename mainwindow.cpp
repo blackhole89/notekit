@@ -50,7 +50,7 @@ CMainWindow::CMainWindow() : nav_model(), sview()
 	
 	/* set up menu */
 	am.prefs.set_label("Preferences");
-	am.prefs.set_sensitive(false);
+	am.prefs.signal_activate().connect( sigc::mem_fun(this,&CMainWindow::RunConfigWindow) );
 	appmenu.append(am.prefs);
 	appmenu.append(am.sep);
 	am.hide_sidebar.set_label("Hide sidebar");
@@ -88,6 +88,7 @@ CMainWindow::CMainWindow() : nav_model(), sview()
 	pen_cursor = Gdk::Cursor::create(Gdk::Display::get_default(),"default");
 	text_cursor = Gdk::Cursor::create(Gdk::Display::get_default(),"text");
 	eraser_cursor = Gdk::Cursor::create(Gdk::Display::get_default(),"cell");
+	selection_cursor = Gdk::Cursor::create(Gdk::Display::get_default(),"cross");
 
 	/* install document view */
 	sbuffer = sview.get_source_buffer();
@@ -232,6 +233,28 @@ void CMainWindow::SaveConfig()
 	FILE *fl = fopen( (config_path+"/config.json").c_str(), "wb");
 	fwrite(str.c_str(),str.length(),1,fl);
 	fclose(fl);
+}
+
+void CMainWindow::RunConfigWindow()
+{
+	toolbar_builder = Gtk::Builder::create_from_file(data_path+"/data/preferences.glade");
+	Gtk::Dialog *dlg;
+	toolbar_builder->get_widget("preferences",dlg); 
+	Gtk::FileChooserButton *dir;
+	Gtk::CheckButton *use_headerbar, *use_highlight_proxy;
+	toolbar_builder->get_widget("base_path",dir); 
+	toolbar_builder->get_widget("use_headerbar",use_headerbar);
+	toolbar_builder->get_widget("use_highlight_proxy",use_highlight_proxy);
+	dir->set_current_folder(config["base_path"].asString());
+	use_headerbar->set_active(config["use_headerbar"].asBool());
+	use_highlight_proxy->set_active(config["use_highlight_proxy"].asBool());
+	if(dlg->run() == Gtk::RESPONSE_OK) {
+		config["base_path"]=dir->get_current_folder();
+		config["use_highlight_proxy"]=use_highlight_proxy->get_active();
+		config["use_headerbar"]=use_headerbar->get_active();
+		SaveConfig();
+	}
+	dlg->hide();
 }
 
 void CMainWindow::InitToolbar()
@@ -530,6 +553,9 @@ bool CMainWindow::on_motion_notify(GdkEventMotion *e)
 		case NB_MODE_ERASE:
 			toolbar_builder->get_widget("erase",b);
 			break;
+		case NB_MODE_SELECT:
+			toolbar_builder->get_widget("select",b);
+			break;
 		}
 		b->set_active();
 	}
@@ -546,6 +572,9 @@ bool CMainWindow::on_motion_notify(GdkEventMotion *e)
 			break;
 		case NB_MODE_ERASE:
 			sview.SetCursor(eraser_cursor);
+			break;
+		case NB_MODE_SELECT:
+			sview.SetCursor(selection_cursor);
 			break;
 		}
 	}
