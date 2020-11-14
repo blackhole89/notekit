@@ -109,7 +109,7 @@ public:
 	bool on_deserialize(const Glib::RefPtr<Gtk::TextBuffer>& content_buffer, Gtk::TextBuffer::iterator& iter, const guint8* data, gsize length, bool create_tags); 
 	
 	
-	float ReadPressure(GdkDevice *d);
+	float ReadPressure(GdkEvent *e);
 	void Widget2Doc(double in_x, double in_y, double &out_x, double &out_y);
 };
 

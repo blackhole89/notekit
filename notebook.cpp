@@ -793,7 +793,7 @@ bool CNotebook::on_button_press(GdkEventButton *e)
 		
 			active.Reset();
 			//active.r=active.g=active.b=0; active.a=1;
-			active.Append(x,y, stroke_width*ReadPressure(e->device));
+			active.Append(x,y, stroke_width*ReadPressure((GdkEvent*)e));
 			
 			active_state = NB_STATE_DRAW;
 			
@@ -862,7 +862,7 @@ bool CNotebook::on_motion_notify(GdkEventMotion *e)
 	if(active_state==NB_STATE_DRAW) {
 		double x,y,p;
 		Widget2Doc(e->x,e->y,x,y); 
-		p = stroke_width*ReadPressure(e->device);
+		p = stroke_width*ReadPressure((GdkEvent*)e);
 		
 		/* dynamically toggle event compression */
 		float xprev = 0.0f;
@@ -920,13 +920,10 @@ bool CNotebook::on_motion_notify(GdkEventMotion *e)
 	return false;
 }
 
-float CNotebook::ReadPressure(GdkDevice *d) 
+float CNotebook::ReadPressure(GdkEvent *e)
 {
     gdouble r;
-    gdouble axes[16];
-    GdkWindow *w=get_window(Gtk::TEXT_WINDOW_WIDGET)->gobj();
-    gdk_device_get_state(d,w,axes,NULL); 
-    if(gdk_device_get_axis(d,axes,GDK_AXIS_PRESSURE,&r))
+    if(gdk_event_get_axis(e,GDK_AXIS_PRESSURE,&r))
         return r;
     else return 1.0;
 }
