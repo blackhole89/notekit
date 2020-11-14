@@ -122,7 +122,7 @@ CMainWindow::CMainWindow() : nav_model(), sview()
 	
 	/* workaround */
 	Gtk::RadioToolButton *b;
-	toolbar_builder->get_widget("medium",b); b->set_active();
+	toolbar_builder->get_widget("medium",b); b->set_active(false); b->set_active(true);
 	
 	OpenDocument(selected_document);
 	
