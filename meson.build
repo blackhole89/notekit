@@ -3,15 +3,29 @@ project('notekit', 'cpp',
 	default_options : ['warning_level=3', 'cpp_std=c++14']
 )
 
-latex = option('latex', type: 'combo', choices: ['none', 'clatexmath', 'lasem'], value: 'clatexmath')
+conf_data = configuration_data()
+conf_data.set('HAVE_CLATEXMATH', true)
 
 deps = [
 	dependency('gtkmm-3.0'),
 	dependency('gtksourceviewmm-3.0'),
 	dependency('jsoncpp'),
 	dependency('zlib'),
-	dependency('fontconfig')
+	dependency('fontconfig'),
+	dependency('clatexmath')
 ]
+
+
+configure_file(input : 'config.h.in',
+	output : 'config.h',
+	configuration : conf_data
+)
+
+install_data('freedesktop/notekit.desktop', install_dir : get_option('datadir')/'applications')
+install_data('freedesktop/notekit.svg', install_dir : get_option('datadir')/'icons/hicolor/scalable/apps')
+install_data('freedesktop/notekit.png', install_dir : get_option('datadir')/'icons/hicolor/128x128/apps')
+install_subdir('data/', install_dir: get_option('datadir')/'notekit')
+install_subdir('sourceview/', install_dir: get_option('datadir')/'notekit')
 
 executable('notekit',
 	'drawing.cpp',
