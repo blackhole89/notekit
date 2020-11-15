@@ -583,9 +583,9 @@ bool CMainWindow::on_motion_notify(GdkEventMotion *e)
 }
 
 std::string CMainWindow::GetToolCursor(std::string tool, std::string fallback) {
-    if(!config["tool"][tool].isString() || config["tool"][tool].asString()=="") {
-        config["tool"][tool]=fallback;
+    if(!config["tool_cursors"][tool].isString() || config["tool_cursors"][tool].asString()=="") {
+        config["tool_cursors"][tool]=fallback;
         return fallback;
     }
-    return config["tool"][tool].asString();
+    return config["tool_cursors"][tool].asString();
 }

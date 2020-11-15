@@ -2,6 +2,12 @@
 	"active_document" : "",
     "use_headerbar" : true,
     "use_highlight_proxy" : false,
+	"tool_cursors": {
+		"pen": "default",
+		"text": "text",
+		"eraser": "cell",
+		"select": "cross"
+	},
 	"colors" : 
 	[
 		{
