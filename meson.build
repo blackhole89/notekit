@@ -16,7 +16,7 @@ deps = [
 ]
 
 
-configure_file(input : 'config.h.in',
+configure_file(input : 'config.h.meson.in',
 	output : 'config.h',
 	configuration : conf_data
 )
