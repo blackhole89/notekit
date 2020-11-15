@@ -85,10 +85,10 @@ CMainWindow::CMainWindow() : nav_model(), sview()
 	nav.get_style_context()->add_provider(sview_css,GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
 	/* load cursor types for document */
-	pen_cursor = Gdk::Cursor::create(Gdk::Display::get_default(),"default");
-	text_cursor = Gdk::Cursor::create(Gdk::Display::get_default(),"text");
-	eraser_cursor = Gdk::Cursor::create(Gdk::Display::get_default(),"cell");
-	selection_cursor = Gdk::Cursor::create(Gdk::Display::get_default(),"cross");
+	pen_cursor = Gdk::Cursor::create(Gdk::Display::get_default(),GetToolCursor("pen", "default"));
+	text_cursor = Gdk::Cursor::create(Gdk::Display::get_default(),GetToolCursor("text", "text"));
+	eraser_cursor = Gdk::Cursor::create(Gdk::Display::get_default(),GetToolCursor("eraser", "cell"));
+	selection_cursor = Gdk::Cursor::create(Gdk::Display::get_default(),GetToolCursor("select", "cross"));
 
 	/* install document view */
 	sbuffer = sview.get_source_buffer();
@@ -580,4 +580,12 @@ bool CMainWindow::on_motion_notify(GdkEventMotion *e)
 	}
 	
 	return false;
+}
+
+std::string CMainWindow::GetToolCursor(std::string tool, std::string fallback) {
+    if(!config["tool"][tool].isString() || config["tool"][tool].asString()=="") {
+        config["tool"][tool]=fallback;
+        return fallback;
+    }
+    return config["tool"][tool].asString();
 }

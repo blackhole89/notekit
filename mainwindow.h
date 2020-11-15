@@ -91,6 +91,8 @@ protected:
 		Gtk::SeparatorMenuItem sep;
 		Gtk::CheckMenuItem hide_sidebar;
 	} am;
+
+    std::string GetToolCursor(std::string tool, std::string fallback);
 };
 
 #endif // MAINWINDOW_H
