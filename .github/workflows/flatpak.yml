@@ -1,0 +1,17 @@
+on:
+  push:
+    branches: [master]
+  pull_request:
+name: Flatpak
+jobs:
+  flatpak:
+    runs-on: ubuntu-latest
+    container:
+      image: docker.io/bilelmoussaoui/flatpak-github-actions
+      options: --privileged
+    steps:
+    - uses: actions/checkout@v2
+    - uses: bilelmoussaoui/flatpak-github-actions@v2
+      with:
+        bundle: "notekit-dev.flatpak"
+        manifest-path: "com.github.blackhole89.notekit.yaml"
