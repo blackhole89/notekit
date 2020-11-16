@@ -103,6 +103,13 @@ modules:
           - type: archive
             url: https://download.gnome.org/sources/gtksourceview/3.24/gtksourceview-3.24.8.tar.xz
             sha256: 1e9bb8ff190db705deb916dd23ff681f0e8803aec407bf0fd64c7e615ac436fe
+
+  - name: cLaTeXMath
+    buildsystem: meson
+    sources:
+      - type: git
+        url: https://github.com/NanoMichael/cLaTeXMath
+        commit: b09ab26129498b7ddf787bbf86894db52b92ffb5
         
   - name: notekit
     buildsystem: cmake
