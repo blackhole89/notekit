@@ -7,7 +7,7 @@ int main (int argc, char *argv[])
 {
 	Gsv::init();
 	
-	Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv, "test.notekit");
+	Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv, "com.github.blackhole89.notekit");
 
 	mainwindow = new CMainWindow();
 	
