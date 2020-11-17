@@ -4,6 +4,7 @@
 	<metadata_license>MIT</metadata_license>
 	<project_license>MIT</project_license>
 	<name>NoteKit</name>
+	<launchable type="desktop-id">com.github.blackhole89.notekit.desktop</launchable>
 	<summary>A GTK3 hierarchical markdown notetaking application with tablet support</summary>
 	<description>
 		<p>
