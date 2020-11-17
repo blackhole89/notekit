@@ -26,7 +26,6 @@ public:
 	std::string active_document;
 	std::string selected_document;
 	
-	bool close_after_saving;
 	sigc::connection close_handler;
 
 	void HardClose();

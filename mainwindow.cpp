@@ -120,13 +120,12 @@ CMainWindow::CMainWindow() : nav_model(), sview()
 
 	show_all();
 	
-	/* workaround */
+	/* workaround to make sure the right pen width is selected at start */
 	Gtk::RadioToolButton *b;
 	toolbar_builder->get_widget("medium",b); b->set_active(false); b->set_active(true);
 	
 	OpenDocument(selected_document);
 	
-	close_after_saving=false;
 	close_handler = this->signal_delete_event().connect( sigc::mem_fun(this, &CMainWindow::on_close) );
 	
 	signal_motion_notify_event().connect(sigc::mem_fun(this,&CMainWindow::on_motion_notify),false);

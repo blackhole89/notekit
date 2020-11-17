@@ -179,6 +179,7 @@ void CBoundDrawing::Redraw()
 	image_ctx->fill();
 	image_ctx->restore();
 	
+	/* draw a halo around any selected strokes */
 	if(selected) {
 		for(auto &str : strokes) {
 			str.RenderSelectionGlow(image_ctx,0,0);
@@ -214,6 +215,7 @@ bool CBoundDrawing::on_motion_notify_event(GdkEventMotion* event)
 	return false;
 }
 
+/* (de)serializing drawings */
 #include "base64.h"
 #include <zlib.h>
 
@@ -400,7 +402,8 @@ void CBoundDrawing::destroy_notify_()
 	strokes.~vector<CStroke>();
 }
 
-/* stroke */
+/* **** single strokes inside a drawing **** */
+
 void CStroke::Reset()
 {
 	xcoords.clear();

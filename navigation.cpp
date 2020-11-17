@@ -445,6 +445,7 @@ void CNavigationView::MaybeDeleteSelected()
 	}
 }
 
+/* Try moving a node of the tree (file or dir) in response to a drag-drop */
 bool CNavigationView::TryMove(const Gtk::TreeModel::Path &src, const Gtk::TreeModel::Path &dst)
 {
 	/* identify source of drag and create a file for it */
@@ -483,13 +484,6 @@ bool CNavigationView::TryMove(const Gtk::TreeModel::Path &src, const Gtk::TreeMo
 		(*srci)[cols.full_path] = dstpathn;
 		HandleRename(srcn,dstn);
 		
-		/*
-		if( (*srci)[cols.type] == CT_DIR_LOADED || (*srci)[cols.type] == CT_DIR_UNLOADED ) {
-			FixPaths(dstn, &srci->children() );
-		} else if( (*srci)[cols.type] == CT_FILE ) {
-			HandleRename(srcn,dstn);
-		}*/
-		
 		/* finally, create a new entry in the tree store and get rid of the old one */
 		Gtk::TreeModel::iterator dsti;
 		Gtk::TreeModel::Path pred = dst;
@@ -519,7 +513,7 @@ bool CNavigationView::TryMove(const Gtk::TreeModel::Path &src, const Gtk::TreeMo
 		(*dsti)[cols.type]= (int)(*srci)[cols.type];
 
 		if( (*dsti)[cols.type] == CT_DIR_LOADED || (*dsti)[cols.type] == CT_DIR_UNLOADED ) {
-			/* make sure the main window's notion of the currently open document is updated */
+			/* we moved a directory, so the full_paths of its children may need to be updated recursively */
 			FixPaths(dstn, &srci->children() );
 			
 			/* erase it so we can set the selection correctly when expanding */
@@ -555,6 +549,9 @@ void CNavigationView::HandleRename(std::string oldname, std::string newname)
 		mainwindow->SetActiveFilename(newname);
 }
 
+/* Recursively update the full_path entries for all of a tree node's children to react to a directory having been renamed.
+ * This is ugly and brittle, and we probably should move away from having the full_path field at all, in favour
+ * of dynamically computing it from a Gtk::TreeModel::Path when required. */
 void CNavigationView::FixPaths(std::string path, const Gtk::TreeNodeChildren *node)
 {
 	for(auto &a: *node) { 
@@ -569,6 +566,7 @@ void CNavigationView::FixPaths(std::string path, const Gtk::TreeNodeChildren *no
 	}
 }
 
+/* Create the "add note/directory" row under the directory pointed at by r. */
 void CNavigationView::CreateAdder(Gtk::TreeModel::iterator r)
 {
 	Gtk::TreeModel::iterator adder;
@@ -578,6 +576,7 @@ void CNavigationView::CreateAdder(Gtk::TreeModel::iterator r)
 	(*adder)[cols.type]=CT_ADDER;
 }
 
+/* Load the contents of a previously unexpanded directory node */
 void CNavigationView::ExpandDirectory(std::string path, const Gtk::TreeNodeChildren *node)
 {
 	try {
