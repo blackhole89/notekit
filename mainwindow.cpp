@@ -85,7 +85,7 @@ CMainWindow::CMainWindow() : nav_model(), sview()
 	nav.get_style_context()->add_provider(sview_css,GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
 	/* load cursor types for document */
-	pen_cursor = Gdk::Cursor::create(Gdk::Display::get_default(),"cross");
+	pen_cursor = Gdk::Cursor::create(Gdk::Display::get_default(),"default");
 	text_cursor = Gdk::Cursor::create(Gdk::Display::get_default(),"text");
 	eraser_cursor = Gdk::Cursor::create(Gdk::Display::get_default(),"cell");
 	selection_cursor = Gdk::Cursor::create(Gdk::Display::get_default(),"cross");
