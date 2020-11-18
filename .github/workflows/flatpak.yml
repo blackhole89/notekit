@@ -14,5 +14,5 @@ jobs:
     - uses: bilelmoussaoui/flatpak-github-actions@v2
       with:
         bundle: "notekit-dev.flatpak"
-        manifest-path: "com.github.blackhole89.notekit.yaml"
+        manifest-path: "pkgs/flatpak/com.github.blackhole89.notekit.yaml"
         run-tests: "true"
