@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+	<id>com.github.blackhole89.notekit</id>
+	<metadata_license>CC0-1.0</metadata_license>
+	<project_license>GPL-3.0-or-later</project_license>
+	<name>NoteKit</name>
+	<launchable type="desktop-id">com.github.blackhole89.notekit.desktop</launchable>
+	<summary>A GTK3 hierarchical markdown notetaking application with tablet support</summary>
+	<description>
+		<p>
+			This program is a structured notetaking application based on GTK+ 3.
+			Write your notes in instantly-formatted Markdown, organise them in a
+			tree of folders that can be instantly navigated from within the
+			program, and add hand-drawn notes by mouse, touchscreen or
+			digitiser.
+		</p>
+		<p>
+			<em>Why?</em>
+		</p>
+		<p>
+			I figured it would be nice to have a free-software,
+			platform-independent OneNote. While there is a remarkable number of
+			free (speech or beer) notetaking applications out there, to my best
+			knowledge, none of them simultaneously check the following boxes:
+		</p>
+		<ul>
+			<li>note organisation</li>
+			<li>text as a first-class object</li>
+			<li>formatting</li>
+			<li>simple, standard on-disk format</li>
+			<li>tablet input</li>
+		</ul>
+		<p>
+			<em>Usage notes</em>
+		</p>
+		<p>
+			Note management
+		</p>
+		<ul>
+			<li>To create a new note, doubleclick a "+" node in the tree view
+				and enter a name.</li>
+			<li>To create a new folder, doubleclick a "+" node in the tree view
+				and enter a name ending in "/", e.g. new "folder/".</li>
+			<li>Notes will be sorted alphabetically.</li>
+			<li>You can move notes and whole folders between folders by dragging
+				and dropping.</li>
+			<li>Files are saved automatically when the window is closed, when a
+				different file is opened, and after a timeout when no user
+				action is performed.</li>
+		</ul>
+		<p>
+			Markdown
+		</p>
+		<ul>
+			<li>Some markdown features are unsupported as a stylistic choice or
+				because of parser limitations. If you are feeling adventurous,
+				you can adjust the markdown parser by editing the GtkSourceView
+				language definition in "sourceview/markdown.lang".</li>
+			<li>Add LaTeX math using single "$" signs, e.g. "$\int x dx$".</li>
+			<li>Some markdown will be hidden ("rendered") unless your cursor is
+				next to it.</li>
+		</ul>
+		<p>
+			Note management
+		</p>
+		<ul>
+			<li>Drawings can currently only be deleted whole. (This will be
+				fixed eventually.)</li>
+			<li>To edit the default colour palette, right-click any of the
+				colour buttons on the right-hand toolbar.</li>
+			<li>Due to present limitations, drawing clears the undo stack.</li>
+			<li>When copypasting text into other applications, drawings will be
+				automatically converted into data URL PNGs.</li>
+		</ul>
+		<p>
+			Note management
+		</p>
+		<ul>
+			<li>
+				The program loads a custom Gtk+ stylesheet found in
+				"data/stylesheet.css". Clear it if parts of the UI look wonky.
+			</li>
+			<li>If something unexpected happens, it is often useful to run the
+				program from a terminal and look at stdout.</li>
+		</ul>
+	</description>
+	<screenshots>
+		<screenshot type="default">
+			<image>https://raw.githubusercontent.com/blackhole89/notekit/master/screenshots/notekit-example.png</image>
+		</screenshot>
+	</screenshots>
+	<url type="homepage">https://github.com/blackhole89/notekit</url>
+	<content_rating type="oars-1.1" />
+
+<!-- Add releases here in the future (and remove these comment tags)
+	<releases>
+	</releases>
+-->
+</component>
