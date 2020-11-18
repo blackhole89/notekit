@@ -112,7 +112,7 @@ modules:
         commit: b09ab26129498b7ddf787bbf86894db52b92ffb5
         
   - name: notekit
-    buildsystem: cmake
+    buildsystem: meson
     sources: 
       - type: dir
         path: .

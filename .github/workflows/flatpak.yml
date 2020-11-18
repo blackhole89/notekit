@@ -5,7 +5,7 @@ on:
 name: Flatpak
 jobs:
   flatpak:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     container:
       image: docker.io/bilelmoussaoui/flatpak-github-actions
       options: --privileged
@@ -15,3 +15,4 @@ jobs:
       with:
         bundle: "notekit-dev.flatpak"
         manifest-path: "com.github.blackhole89.notekit.yaml"
+        run-tests: "true"
