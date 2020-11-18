@@ -26,7 +26,7 @@ install_data('freedesktop/notekit.svg', install_dir : get_option('datadir')/'ico
 install_data('freedesktop/notekit.png', install_dir : get_option('datadir')/'icons/hicolor/128x128/apps')
 install_subdir('data/', install_dir: get_option('datadir')/'notekit')
 install_subdir('sourceview/', install_dir: get_option('datadir')/'notekit')
-meson.add_install_script('symlink.sh')
+meson.add_install_script('symlink-clatexmath.sh')
 
 executable('notekit',
 	'drawing.cpp',
