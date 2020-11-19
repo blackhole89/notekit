@@ -109,7 +109,7 @@ modules:
     sources:
       - type: git
         url: https://github.com/NanoMichael/cLaTeXMath
-        commit: b09ab26129498b7ddf787bbf86894db52b92ffb5
+        commit: 44ea33777c9f3ffde8f1d2149ce30362accebe63
         
   - name: notekit
     buildsystem: meson
