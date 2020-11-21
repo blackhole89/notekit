@@ -1,29 +1,41 @@
-name: C/C++ CI
+name: NoteKit CI
 
-on:
-  push:
-    branches: [ !master ]
-  pull_request:
-    branches: [ master ]
+on: 
+  - push
+  - pull_request
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
-
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix: 
+        os: 
+          - ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: setting the dependencies up
-      run: sudo apt install libfontconfig1-dev zlib1g-dev libjsoncpp-dev libgtksourceviewmm-3.0-dev libgtkmm-3.0-dev cmake ninja-build
-    - name: configure
-      run: cmake -G "Ninja" .
-    - name: ninja
-      run: ninja
-    - name: compress header files
-      run: 7z a -r linux-latest.zip .
-        
+    - name: Downloading dependencies 📥
+      run: sudo apt-get install build-essential libfontconfig1-dev zlib1g-dev libjsoncpp-dev libgtksourceviewmm-3.0-dev libgtkmm-3.0-dev python3 python3-pip python3-setuptools
+    - name: Download the latest version of Meson 🧰
+      run: |
+        sudo pip3 install meson ninja
+    - name: Build cLaTeXMath 🖋
+      run: |
+        git clone https://github.com/NanoMichael/cLaTexMath ~/cLaTeXMath/
+        pushd ~/cLaTeXMath/
+        meson _build
+        ninja -C _build
+        sudo meson install -C _build
+        popd
+    - name: Configure 🔧
+      run: meson _build
+    - name: Compile 🎲
+      run: ninja -C _build
+    - name: Compress build artifacts 📦
+      run: |
+        pushd _build
+        tar -c * | zstd -o $GITHUB_WORKSPACE/artifacts.tar.zst
+        popd
     - uses: actions/upload-artifact@v1
-      if: failure()
       with:
-        name: build-artifact-ubuntu-latest
-        path: .
+        name: Build artifacts
+        path: artifacts.tar.zst
