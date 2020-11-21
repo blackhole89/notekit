@@ -79,6 +79,10 @@ Development and testing was exclusively conducted on X11-based Linux. The one te
 * Due to present limitations, drawing clears the undo stack.
 * When copypasting text into other applications, drawings will be automatically converted into data URL PNGs.
 
+### Syntax highlighting
+
+![Screenshot](/screenshots/syntax-highlighting.png?raw=true)
+
 ### Misc
 
 * The program loads a custom Gtk+ stylesheet found in `data/stylesheet.css`. Clear it if parts of the UI look wonky.
