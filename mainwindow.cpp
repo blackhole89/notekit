@@ -239,14 +239,16 @@ void CMainWindow::SaveConfig()
 
 void CMainWindow::RunConfigWindow()
 {
-	toolbar_builder = Gtk::Builder::create_from_file(data_path+"/data/preferences.glade");
+	Glib::RefPtr<Gtk::Builder> config_builder;
+	
+	config_builder = Gtk::Builder::create_from_file(data_path+"/data/preferences.glade");
 	Gtk::Dialog *dlg;
-	toolbar_builder->get_widget("preferences",dlg); 
+	config_builder->get_widget("preferences",dlg); 
 	Gtk::FileChooserButton *dir;
 	Gtk::CheckButton *use_headerbar, *use_highlight_proxy;
-	toolbar_builder->get_widget("base_path",dir); 
-	toolbar_builder->get_widget("use_headerbar",use_headerbar);
-	toolbar_builder->get_widget("use_highlight_proxy",use_highlight_proxy);
+	config_builder->get_widget("base_path",dir); 
+	config_builder->get_widget("use_headerbar",use_headerbar);
+	config_builder->get_widget("use_highlight_proxy",use_highlight_proxy);
 	dir->set_current_folder(config["base_path"].asString());
 	use_headerbar->set_active(config["use_headerbar"].asBool());
 	use_highlight_proxy->set_active(config["use_highlight_proxy"].asBool());
