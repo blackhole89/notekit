@@ -26,6 +26,9 @@ CMainWindow::CMainWindow() : nav_model(), sview()
 	
 	#ifdef HAVE_CLATEXMATH
 	LaTeX::init((data_path+"/data/latex").c_str());
+	/* allow \newcommand to override quietly, since we will be rerendering \newcommands unpredictably */
+	TeXRender *r = LaTeX::parse(utf82wide("\\fatalIfCmdConflict{false}"),1,1,1,0);
+	if(r) delete r;
 	#endif
 	
 	sview.Init(data_path, config["use_highlight_proxy"].asBool());

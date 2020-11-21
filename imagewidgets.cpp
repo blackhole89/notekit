@@ -127,7 +127,7 @@ CLatexWidget::CLatexWidget(Glib::RefPtr<Gdk::Window> wnd, Glib::ustring text, Gd
 	try {
 		TeXRender *r;
 		r = LaTeX::parse(utf82wide(text.c_str()),
-			500,
+			wnd->get_width()-64, 
 			18,
 			18 / 3.f,
 			clr);
