@@ -1,0 +1,118 @@
+app-id: com.github.blackhole89.notekit
+runtime: org.gnome.Platform
+runtime-version: '3.38'
+sdk: org.gnome.Sdk
+command: notekit
+finish-args:
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+modules:
+  - name: jsoncpp
+    buildsystem: meson
+    config-opts:
+      - "-Dtests=false"
+    sources:
+      - type: archive
+        url: https://github.com/open-source-parsers/jsoncpp/archive/1.9.4.tar.gz
+        sha256: 'e34a628a8142643b976c7233ef381457efad79468c67cb1ae0b83a33d7493999' 
+
+  - name: mm-common
+    buildsystem: meson
+    sources: 
+      - type: archive
+        url: https://download.gnome.org/sources/mm-common/1.0/mm-common-1.0.2.tar.xz
+        sha256: a2a99f3fa943cf662f189163ed39a2cfc19a428d906dd4f92b387d3659d1641d
+    cleanup:
+      - '*'
+
+  - name: sigc++
+    buildsystem: meson
+    config-opts:
+      - "-Dbuild-examples=false"
+    sources:
+      - type: archive
+        url: https://github.com/libsigcplusplus/libsigcplusplus/releases/download/2.10.4/libsigc++-2.10.4.tar.xz
+        sha256: '1f5874358d9a21379024a4f4edba80a8a3aeb33f0531b192a6b1c35ed7dbfa3e'
+    cleanup:
+      - '/lib/sigc++*'
+    
+  - name: glibmm
+    config-opts:
+      - "--disable-documentation"
+    sources:
+      - type: archive
+        url: https://download.gnome.org/sources/glibmm/2.64/glibmm-2.64.2.tar.xz
+        sha256: 'a75282e58d556d9b2bb44262b6f5fb76c824ac46a25a06f527108bec86b8d4ec'
+
+  - name: cairomm
+    config-opts:
+      - --disable-documentation
+    sources:
+      - type: archive
+        url: 'https://www.cairographics.org/releases/cairomm-1.12.2.tar.gz'
+        sha256: 45c47fd4d0aa77464a75cdca011143fea3ef795c4753f6e860057da5fb8bd599
+    cleanup:
+      - '/lib/cairomm*'
+
+  - name: pangomm
+    config-opts:
+      - --disable-documentation
+    sources: 
+      - type: archive
+        url: https://download.gnome.org/sources/pangomm/2.42/pangomm-2.42.1.tar.xz
+        sha256: '14bf04939930870d5cfa96860ed953ad2ce07c3fd8713add4a1bfe585589f40f'
+    cleanup:
+      - '/lib/pangomm*'
+
+  - name: atkmm
+    config-opts:
+      - --disable-documentation
+    sources:
+      - type: archive
+        url: https://download.gnome.org/sources/atkmm/2.28/atkmm-2.28.0.tar.xz
+        sha256: 4c4cfc917fd42d3879ce997b463428d6982affa0fb660cafcc0bc2d9afcedd3a
+    cleanup:
+      - '/lib/atkmm*'
+
+  - name: gtkmm
+    config-opts:
+      - --disable-documentation
+    sources:
+      - type: archive
+        url: https://download.gnome.org/sources/gtkmm/3.24/gtkmm-3.24.2.tar.xz
+        sha256: '6d71091bcd1863133460d4188d04102810e9123de19706fb656b7bb915b4adc3'
+    cleanup:
+      - '/lib/gdkmm*'
+      - '/lib/gtkmm*'
+  
+  - name: gtksourceviewmm
+    config-opts:
+      - --disable-documentation
+    sources: 
+      - type: archive
+        url : https://download.gnome.org/sources/gtksourceviewmm/3.21/gtksourceviewmm-3.21.3.tar.xz
+        sha256: 'dbb00b1c28e0407cc27d8b07a2ed0b4ea22f92e4b3e3006431cbd6726b6256b5'
+    cleanup:
+      - '/lib/gtksourceviewmm*'
+    modules:
+      - name: gtksourceview
+        config-opts:
+          - "--disable-gtk-doc"
+        sources:
+          - type: archive
+            url: https://download.gnome.org/sources/gtksourceview/3.24/gtksourceview-3.24.8.tar.xz
+            sha256: 1e9bb8ff190db705deb916dd23ff681f0e8803aec407bf0fd64c7e615ac436fe
+
+  - name: cLaTeXMath
+    buildsystem: meson
+    sources:
+      - type: git
+        url: https://github.com/NanoMichael/cLaTeXMath
+        commit: 81c9d00331ac615128ab39c0c5f0c21887cc2a78
+        
+  - name: notekit
+    buildsystem: meson
+    sources: 
+      - type: dir
+        path: ../../
