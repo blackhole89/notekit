@@ -17,10 +17,10 @@ enum {
 	WND_ACTION_TOGGLE_SIDEBAR
 };
 
-class CMainWindow : public Gtk::Window
+class CMainWindow : public Gtk::ApplicationWindow
 {
 public:
-	CMainWindow();
+	CMainWindow(const Glib::RefPtr<Gtk::Application> &);
 	virtual ~CMainWindow();
 
 	std::string active_document;

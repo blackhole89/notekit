@@ -8,7 +8,7 @@
 #include "latex.h"
 #endif
 
-CMainWindow::CMainWindow() : nav_model(), sview()
+CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::ApplicationWindow(app), nav_model(), sview()
 {
 	// Determine paths to operate on.
 	CalculatePaths();
