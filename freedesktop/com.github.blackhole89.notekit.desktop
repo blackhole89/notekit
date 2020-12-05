@@ -2,7 +2,7 @@
 Name=NoteKit
 GenericName=NoteKit
 Comment=Write your notes in instantly-formatted Markdown
-Icon=notekit
+Icon=com.github.blackhole89.notekit
 Exec=notekit
 Terminal=false
 Type=Application

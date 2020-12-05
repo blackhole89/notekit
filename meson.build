@@ -21,9 +21,9 @@ configure_file(input : 'config.h.meson.in',
 	configuration : conf_data
 )
 
-install_data('freedesktop/notekit.desktop', install_dir : get_option('datadir')/'applications')
-install_data('freedesktop/notekit.svg', install_dir : get_option('datadir')/'icons/hicolor/scalable/apps')
-install_data('freedesktop/notekit.png', install_dir : get_option('datadir')/'icons/hicolor/128x128/apps')
+
+subdir('freedesktop')
+
 install_subdir('data/', install_dir: get_option('datadir')/'notekit')
 install_subdir('sourceview/', install_dir: get_option('datadir')/'notekit')
 meson.add_install_script('symlink-clatexmath.sh')
