@@ -26,7 +26,6 @@ subdir('freedesktop')
 
 install_subdir('data/', install_dir: get_option('datadir')/'notekit')
 install_subdir('sourceview/', install_dir: get_option('datadir')/'notekit')
-meson.add_install_script('symlink-clatexmath.sh')
 
 executable('notekit',
 	'drawing.cpp',
