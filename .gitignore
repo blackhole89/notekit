@@ -1,2 +1,9 @@
+# meson generated files
 _build/
 config.h
+
+# gnome builder project configuration
+.buildconfig
+
+# protection against over-aggresive fontconfig
+data/fonts/.uuid
