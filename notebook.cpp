@@ -679,6 +679,10 @@ bool GetTagExtents(Gtk::TextIter t, Glib::RefPtr<Gtk::TextTag> tag, Gtk::TextIte
 
 void CNotebook::on_move_cursor()
 {
+	/* selecting text is mostly frustrating if the text layout
+	 * changes due to hiding/unhiding while doing it */
+	if(sbuffer->get_has_selection()) return;
+	
 	auto s = Glib::IdleSource::create();
 	s->connect(sigc::slot<bool>( [this]() { 
 		Gtk::TextIter new_iter = sbuffer->get_iter_at_mark(sbuffer->get_insert());
