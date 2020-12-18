@@ -149,7 +149,7 @@ int mkdirp(std::string dir)
 void CMainWindow::CalculatePaths()
 {
 	char *dbg = getenv("NK_DEVEL");
-	if(dbg || *dbg) {
+	if(dbg != NULL) {
 		fprintf(stderr,"INFO: Debug mode set! Will operate in %s.\n", dbg);
 		data_path=dbg;
 		config_path= data_path + "/notesbase";
