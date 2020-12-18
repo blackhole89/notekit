@@ -213,13 +213,13 @@
     <!-- Example:
                  <em>HTML code</em> displayed <strong>literally</strong>.
     -->
-    <context id="code-block" class="no-spell-check mono">
+	<!--<context id="code-block" class="no-spell-check mono">
       <match>^( {8,}|\t{2,})([^ \t]+.*)</match>
 
       <include>
         <context sub-pattern="2" style-ref="code"/>
       </include>
-    </context>
+	</context>-->
 
     <!-- Note about following code span contexts: within a paragraph, text
          wrapped with backticks indicates a code span. Markdown allows to use
@@ -487,7 +487,7 @@
         <context ref="setext-header2"/> -->
         <context ref="horizontal-rule"/>
         <context ref="list"/>
-        <context ref="code-block"/>
+			<!--<context ref="code-block"/>-->
         <context ref="1-backtick-code-span"/>
         <context ref="2-backticks-code-span"/>
         <context ref="3-backticks-code-span"/>
