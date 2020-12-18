@@ -184,14 +184,30 @@
         <context ref="line-break"/>
 
         <context ref="latex"/>
+        <context ref="latexml"/>
+        <context ref="escape"/>
 
       </include>
     </context>
-
-    <context id="latex" class="prox latex" style-ref="list-marker">
-      <match>(&#xFFFC;?)(\$\$[^\$]+\$\$|(?&lt;!\$)\$[^\$]+\$)</match>
+    <context id="latex" class="prox latex invisible" style-ref="list-marker">
+      <start>(&#xFFFC;?)(?&lt;![\$\\])\$(?!\$)</start>
+      <end>(?&lt;!\$)\$</end>
       <include>
-        <context sub-pattern="2" class="invisible"/>
+        <context sub-pattern="1" where="start" class-disabled="invisible"/>
+      </include>
+    </context>
+    <context id="latexml" class="prox latex invisible" style-ref="list-marker">
+      <start>(&#xFFFC;?)\$\$(?![\$\\])</start>
+      <end>(?&lt;!\$)\$\$</end>
+      <include>
+        <context sub-pattern="1" where="start" class-disabled="invisible"/>
+      </include>
+    </context>
+
+    <context id="escape" class="prox">
+      <match>(\\)\$</match>
+      <include>
+        <context sub-pattern="1" class="invisible" style-ref="list-marker"/>
       </include>
     </context>
     <!-- Example:
@@ -263,6 +279,8 @@
         <context ref="line-break"/>
 
         <context ref="latex"/>
+        <context ref="latexml"/>
+        <context ref="escape"/>
 
       </include>
     </context>
@@ -488,6 +506,8 @@
         <context ref="line-break"/>
 
         <context ref="latex"/>
+        <context ref="latexml"/>
+        <context ref="escape"/>
 
       </include>
     </context>
