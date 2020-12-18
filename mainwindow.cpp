@@ -25,9 +25,9 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 	printf("\n");
 	
 	#ifdef HAVE_CLATEXMATH
-	LaTeX::init((data_path+"/data/latex").c_str());
+	tex::LaTeX::init((data_path+"/data/latex").c_str());
 	/* allow \newcommand to override quietly, since we will be rerendering \newcommands unpredictably */
-	TeXRender *r = LaTeX::parse(utf82wide("\\fatalIfCmdConflict{false}"),1,1,1,0);
+	tex::TeXRender *r = tex::LaTeX::parse(tex::utf82wide("\\fatalIfCmdConflict{false}"),1,1,1,0);
 	if(r) delete r;
 	#endif
 	
