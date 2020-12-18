@@ -12,7 +12,7 @@ deps = [
 	dependency('jsoncpp'),
 	dependency('zlib'),
 	dependency('fontconfig'),
-	dependency('clatexmath')
+	dependency('clatexmath', version: '>=0.0.3')
 ]
 
 
