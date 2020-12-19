@@ -184,7 +184,7 @@
         <context ref="line-break"/>
 
         <context ref="latex"/>
-        <context ref="latexml"/>
+        <context ref="latexc"/>
         <context ref="escape"/>
 
       </include>
@@ -196,7 +196,7 @@
         <context sub-pattern="1" where="start" class-disabled="invisible"/>
       </include>
     </context>
-    <context id="latexml" class="prox latex invisible" style-ref="list-marker">
+    <context id="latexc" class="prox latex invisible" style-ref="list-marker">
       <start>(&#xFFFC;?)\$\$(?![\$\\])</start>
       <end>(?&lt;!\$)\$\$</end>
       <include>
@@ -279,7 +279,7 @@
         <context ref="line-break"/>
 
         <context ref="latex"/>
-        <context ref="latexml"/>
+        <context ref="latexc"/>
         <context ref="escape"/>
 
       </include>
@@ -506,7 +506,7 @@
         <context ref="line-break"/>
 
         <context ref="latex"/>
-        <context ref="latexml"/>
+        <context ref="latexc"/>
         <context ref="escape"/>
 
       </include>
