@@ -184,26 +184,42 @@
         <context ref="line-break"/>
 
         <context ref="latex"/>
+        <context ref="latexc"/>
+        <context ref="escape"/>
 
       </include>
     </context>
-
-    <context id="latex" class="prox latex" style-ref="list-marker">
-      <match>(&#xFFFC;?)(\$\$[^\$]+\$\$|(?&lt;!\$)\$[^\$]+\$)</match>
+    <context id="latex" class="prox latex invisible" style-ref="list-marker">
+      <start>(&#xFFFC;?)(?&lt;![\$\\])\$(?!\$)</start>
+      <end>(?&lt;!\$)\$</end>
       <include>
-        <context sub-pattern="2" class="invisible"/>
+        <context sub-pattern="1" where="start" class-disabled="invisible"/>
+      </include>
+    </context>
+    <context id="latexc" class="prox latex invisible" style-ref="list-marker">
+      <start>(&#xFFFC;?)\$\$(?![\$\\])</start>
+      <end>(?&lt;!\$)\$\$</end>
+      <include>
+        <context sub-pattern="1" where="start" class-disabled="invisible"/>
+      </include>
+    </context>
+
+    <context id="escape" class="prox">
+      <match>(\\)\$</match>
+      <include>
+        <context sub-pattern="1" class="invisible" style-ref="list-marker"/>
       </include>
     </context>
     <!-- Example:
                  <em>HTML code</em> displayed <strong>literally</strong>.
     -->
-    <context id="code-block" class="no-spell-check mono">
+	<!--<context id="code-block" class="no-spell-check mono">
       <match>^( {8,}|\t{2,})([^ \t]+.*)</match>
 
       <include>
         <context sub-pattern="2" style-ref="code"/>
       </include>
-    </context>
+	</context>-->
 
     <!-- Note about following code span contexts: within a paragraph, text
          wrapped with backticks indicates a code span. Markdown allows to use
@@ -263,6 +279,8 @@
         <context ref="line-break"/>
 
         <context ref="latex"/>
+        <context ref="latexc"/>
+        <context ref="escape"/>
 
       </include>
     </context>
@@ -469,7 +487,7 @@
         <context ref="setext-header2"/> -->
         <context ref="horizontal-rule"/>
         <context ref="list"/>
-        <context ref="code-block"/>
+			<!--<context ref="code-block"/>-->
         <context ref="1-backtick-code-span"/>
         <context ref="2-backticks-code-span"/>
         <context ref="3-backticks-code-span"/>
@@ -488,6 +506,8 @@
         <context ref="line-break"/>
 
         <context ref="latex"/>
+        <context ref="latexc"/>
+        <context ref="escape"/>
 
       </include>
     </context>
