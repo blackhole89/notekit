@@ -189,20 +189,23 @@
 
       </include>
     </context>
-    <context id="latex" class="prox latex invisible" style-ref="list-marker">
-      <start>(&#xFFFC;?)(?&lt;![\$\\])\$(?!\$)</start>
-      <end>(?&lt;!\$)\$</end>
+    <context id="latex" class="prox latex invisible" style-ref="list-marker" style-inside="true">
+      <start>(&#xFFFC;?)(?&lt;![\$\\])(\$)(?!\$)</start>
+      <end>(\$)</end>
       <include>
-        <context sub-pattern="1" where="start" class-disabled="invisible"/>
+        <context sub-pattern="2" where="start" class="invisible" style-ref="list-marker"/>
+        <context sub-pattern="1" where="end" class="invisible" style-ref="list-marker"/>
       </include>
     </context>
-    <context id="latexc" class="prox latex invisible" style-ref="list-marker">
-      <start>(&#xFFFC;?)\$\$(?![\$\\])</start>
-      <end>(?&lt;!\$)\$\$</end>
+    <context id="latexc" class="prox latex invisible" style-ref="list-marker" style-inside="true">
+      <start>(&#xFFFC;?)(?&lt;![\$\\])(\$\$)(?!\$)</start>
+      <end>(\$\$)</end>
       <include>
-        <context sub-pattern="1" where="start" class-disabled="invisible"/>
+        <context sub-pattern="2" where="start" class="invisible" style-ref="list-marker"/>
+        <context sub-pattern="1" where="end" class="invisible" style-ref="list-marker"/>
       </include>
     </context>
+
 
     <context id="escape" class="prox">
       <match>(\\)\$</match>
