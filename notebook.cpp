@@ -516,6 +516,8 @@ void CNotebook::RenderToWidget(Glib::ustring wtype, Gtk::TextBuffer::iterator &s
 		} else {
 			auto j = start; ++j;
 			sbuffer->remove_tag(tag_hidden,start,j);
+			// shift baseline for gtk checkbox widget
+			sbuffer->apply_tag(GetBaselineTag(2),start,j);
 			
 			Gtk::CheckButton *b = new Gtk::CheckButton();
 			if(is_checked) b->set_active(true);
@@ -545,7 +547,7 @@ void CNotebook::RenderToWidget(Glib::ustring wtype, Gtk::TextBuffer::iterator &s
 			
 			Gtk::manage(b);
 			add_child_at_anchor(*b,anch);
-			b->show();
+			b->show(); 
 		}
 		
 		end=PopIter();
