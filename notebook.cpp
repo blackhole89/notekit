@@ -14,6 +14,15 @@
 #define DMPRINTF(...)
 #endif
 
+/* list of Gsv syntax highlighting classes that can be rendered as widgets */
+/* TODO: this probably would be more elegant as a list of pairs (class,rendering function) */
+Glib::ustring CNotebook::renderable_classes[]
+	= { "checkbox", 
+#if defined (HAVE_LASEM) || defined (HAVE_CLATEXMATH)
+		"latex"
+#endif
+	};
+
 CNotebook::CNotebook()
 {
 	last_device=NULL;
@@ -594,7 +603,7 @@ void CNotebook::UnrenderWidgets(Gtk::TextBuffer::iterator &start, Gtk::TextBuffe
 	}
 }
 
-/* Remove widget child anchors in span. */
+/* Remove widget child anchors and proximity-related tags in span. */
 void CNotebook::CleanUpSpan(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end)
 {
 	DMPRINTF("start cleaning %d %d\n",start.get_offset(),end.get_offset());
@@ -673,15 +682,8 @@ void CNotebook::on_enter_region(Gtk::TextBuffer::iterator &start, Gtk::TextBuffe
 	for(auto &[cclass,ttag] : volatile_tags) {
 		sbuffer->remove_tag(ttag, start, end);
 	}
-	
-	Glib::ustring renderable_tags[]
-		= { "checkbox", 
-#if defined (HAVE_LASEM) || defined (HAVE_CLATEXMATH)
-		"latex"
-#endif
-		};
-		
-	for(auto &s : renderable_tags) {
+
+	for(auto &s : renderable_classes) {
 		if(sbuffer->iter_has_context_class(start, s)) {
 			UnrenderWidgets(start,end);
 		}
@@ -709,14 +711,7 @@ void CNotebook::on_leave_region(Gtk::TextBuffer::iterator &start, Gtk::TextBuffe
 		} while(i<end);
 	}
 	
-	Glib::ustring renderable_tags[]
-		= { "checkbox", 
-#if defined (HAVE_LASEM) || defined (HAVE_CLATEXMATH)
-		"latex"
-#endif
-		};
-		
-	for(auto &s : renderable_tags) {
+	for(auto &s : renderable_classes) {
 		if(sbuffer->iter_has_context_class(start, s)) {
 			UnrenderWidgets(start,end); // just in case
 			RenderToWidget(s,start,end);

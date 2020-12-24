@@ -76,24 +76,14 @@ public:
     bool on_button_release(GdkEventButton* event);
     bool on_motion_notify(GdkEventMotion* event);
 	
-	/* text-related events */
+	float ReadPressure(GdkEvent *e);
+	void Widget2Doc(double in_x, double in_y, double &out_x, double &out_y);
+	
+	/* text-related events and functionality */
 	Glib::RefPtr<Gtk::TextTag> tag_proximity;
 	Glib::RefPtr<Gtk::TextMark> last_position;
 	void on_move_cursor();
 	
-	std::map<int, Glib::RefPtr<Gtk::TextTag> > baseline_tags;
-	Glib::RefPtr<Gtk::TextTag> GetBaselineTag(int baseline);
-	
-	std::stack<Glib::RefPtr<Gtk::TextMark> > iter_stack;
-	Glib::RefPtr<Gtk::TextMark> PushIter(Gtk::TextIter i);
-	Gtk::TextIter PopIter();
-	
-	void QueueChildAnchor(Glib::RefPtr<Gtk::TextMark> mstart);
-	void RenderToWidget(Glib::ustring wtype, Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
-	void UnrenderWidgets(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
-	void CleanUpSpan(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
-	
-	Glib::RefPtr<Gtk::TextTag> tag_extra_space, tag_blockquote, tag_invisible, tag_hidden, tag_mono, tag_is_anchor;
 	void on_highlight_updated(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
 	void on_leave_region(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
 	void on_enter_region(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
@@ -106,13 +96,31 @@ public:
 	void on_changed();
 	virtual bool on_event(GdkEvent *ev);
 	
+	// additional Gtk::TextTags for metadata and formatting unsupported by Gsv language spec
+	void DebugTags(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
+	Glib::RefPtr<Gtk::TextTag> tag_extra_space, tag_blockquote, tag_invisible, tag_hidden, tag_mono, tag_is_anchor;
+	
+	std::map<int, Glib::RefPtr<Gtk::TextTag> > baseline_tags;
+	Glib::RefPtr<Gtk::TextTag> GetBaselineTag(int baseline);
+	
+	/* embedded widget handling */
+	
+	// list of Gsv language spec context classes that can be rendered with RenderToWidget
+	static Glib::ustring renderable_classes[];
+	
+	void QueueChildAnchor(Glib::RefPtr<Gtk::TextMark> mstart);
+	void RenderToWidget(Glib::ustring wtype, Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
+	void UnrenderWidgets(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
+	void CleanUpSpan(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
+	
+	/* export and import for copypaste/save */
 	guint8* on_serialize(const Glib::RefPtr<Gtk::TextBuffer>& content_buffer, const Gtk::TextBuffer::iterator& start, const Gtk::TextBuffer::iterator& end, gsize& length, bool render_images);
 	bool on_deserialize(const Glib::RefPtr<Gtk::TextBuffer>& content_buffer, Gtk::TextBuffer::iterator& iter, const guint8* data, gsize length, bool create_tags); 
 	
-	void DebugTags(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
-	
-	float ReadPressure(GdkEvent *e);
-	void Widget2Doc(double in_x, double in_y, double &out_x, double &out_y);
+	/* iterator stack for preserving iterators across buffer changes */
+	std::stack<Glib::RefPtr<Gtk::TextMark> > iter_stack;
+	Glib::RefPtr<Gtk::TextMark> PushIter(Gtk::TextIter i);
+	Gtk::TextIter PopIter();
 };
 
 #endif
