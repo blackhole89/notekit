@@ -6,6 +6,14 @@
 
 #include <unordered_set>
 
+// #define _DEBUG_MOTION_
+
+#ifdef _DEBUG_MOTION_
+#define DMPRINTF(...) printf(__VA_ARGS__);
+#else
+#define DMPRINTF(...)
+#endif
+
 CNotebook::CNotebook()
 {
 	last_device=NULL;
@@ -82,11 +90,6 @@ void CNotebook::Init(std::string data_path, bool use_highlight_proxy)
 	sbuffer->signal_highlight_updated().connect(sigc::mem_fun(this,&CNotebook::on_highlight_updated),true);
 	sbuffer->property_cursor_position().signal_changed().connect(sigc::mem_fun(this,&CNotebook::on_move_cursor));
 	
-	last_position=sbuffer->create_mark("last_position", sbuffer->begin(),true);
-	tag_proximity=sbuffer->create_tag();
-	//use for debug
-	//tag_proximity->property_background_rgba().set_value(Gdk::RGBA("rgb(255,128,128)"));
-	
 	/* overwrite clipboard signals with our custom impls */
 	GtkTextViewClass *k = GTK_TEXT_VIEW_GET_CLASS(gobj());
 	k->copy_clipboard = notebook_copy_clipboard;
@@ -131,8 +134,15 @@ void CNotebook::Init(std::string data_path, bool use_highlight_proxy)
 	tag_mono = sbuffer->create_tag();
 	tag_mono->property_family().set_value("monospace");
 	tag_mono->property_scale().set_value(0.8);
-	/*tag_extra_space->property_left_margin().set_value(32);
-	tag_extra_space->property_indent().set_value(-32);*/
+	
+	tag_is_anchor=sbuffer->create_tag();
+	
+	/* remember position for proximity widgets */
+	last_position=sbuffer->create_mark("last_position", sbuffer->begin(),true);
+	tag_proximity=sbuffer->create_tag();
+	
+	//use for debug
+	//tag_proximity->property_background_rgba().set_value(Gdk::RGBA("rgb(255,128,128)"));
 	
 	set_wrap_mode(Gtk::WRAP_WORD_CHAR);
 }
@@ -416,8 +426,69 @@ Gtk::TextIter CNotebook::PopIter()
 	return ret;
 }
 
+void CNotebook::DebugTags(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end)
+{
+	std::map<GtkTextTag*,char> known_tags;
+	std::map<GtkTextTag*,Glib::ustring> tag_names;
+	char lastid='A';
+	for(auto i=start;i<end;++i) {
+		std::string taglist;
+		std::vector<Glib::RefPtr<Gtk::TextTag> > tags = i.get_tags();
+		for(auto &t : tags) {
+			if(known_tags.count(t->gobj())) {
+				taglist += known_tags[t->gobj()];
+			} else {
+				taglist += lastid;
+				known_tags[t->gobj()] = lastid++;
+				tag_names[t->gobj()] = t->property_name().get_value();
+			}
+		}
+		printf("'%lc' %04X %s\n",i.get_char(),i.get_char(),taglist.c_str());
+	}
+}
+
+/* Queue creation of a new child anchor at the position indicated by the mark.
+ * The deferral may be necessary because insertion invalidates all iterators. */
+void CNotebook::QueueChildAnchor(Glib::RefPtr<Gtk::TextMark> mstart)
+{
+	/* once the anchor is created, syntax highlighting will recalculate, eventually
+	 * calling this function again from the start */
+	auto s = Glib::IdleSource::create();
+	s->connect(sigc::slot<bool>( [mstart,this]() {
+		Gtk::TextIter start = sbuffer->get_iter_at_mark(mstart);
+		
+		if(!start.get_child_anchor()) {
+			sbuffer->create_child_anchor(start);
+		}
+		
+		/* We may have entered the region between the issuance of the original command
+		 * and the IdleSource being processed, which would result in the second pass
+		 * that is supposed to actually attach the widget not happening. 
+		 * 
+		 * To prevent this resulting in a displayed [X], start with the anchor hidden. */
+		start = sbuffer->get_iter_at_mark(mstart);
+		auto j = start; ++j;
+		sbuffer->apply_tag(tag_hidden,start,j);
+		sbuffer->apply_tag(tag_is_anchor,start,j);
+		
+		sbuffer->delete_mark(mstart);
+		return false;
+	})); 
+
+	s->attach();
+}
+
 void CNotebook::RenderToWidget(Glib::ustring wtype, Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end) 
 {
+	// Debug output if necessary
+	DMPRINTF("rtw %s: %d, %d \n",wtype.c_str(),start.get_line_offset(),end.get_line_offset());
+	#ifdef _DEBUG_MOTION_
+	Gtk::TextBuffer::iterator s1=start, e1=end;
+	s1.backward_line(); s1.forward_line();
+	e1.forward_line(); e1.backward_char();
+	DebugTags(s1,e1);
+	#endif
+	
 	if(wtype=="checkbox") {
 		Gtk::TextIter i=start;
 		++i;
@@ -432,22 +503,7 @@ void CNotebook::RenderToWidget(Glib::ustring wtype, Gtk::TextBuffer::iterator &s
 		Glib::RefPtr<Gtk::TextBuffer::ChildAnchor> anch;
 		if(!(anch=start.get_child_anchor())) {
 			/* we haven't set up a child anchor yet, so we need to queue the creation of one */
-			
-			/* defer creation of anchor to prevent invalidating iters. */
-			/* once the anchor is created, syntax highlighting will recalculate, eventually
-			 * calling this function again from the start */
-			auto s = Glib::IdleSource::create();
-			s->connect(sigc::slot<bool>( [mstart,this]() {
-				Gtk::TextIter start = sbuffer->get_iter_at_mark(mstart);
-				sbuffer->delete_mark(mstart);
-				
-				if(!start.get_child_anchor()) {
-					sbuffer->create_child_anchor(start);
-				}
-				return false;
-			})); 
-			s->attach();
-			// anch = sbuffer->create_child_anchor(start);
+			QueueChildAnchor(mstart);
 		} else {
 			auto j = start; ++j;
 			sbuffer->remove_tag(tag_hidden,start,j);
@@ -493,22 +549,8 @@ void CNotebook::RenderToWidget(Glib::ustring wtype, Gtk::TextBuffer::iterator &s
 		
 		if(!(anch=start.get_child_anchor())) {
 			/* we haven't set up a child anchor yet, so we need to queue the creation of one */
-			/* defer creation of anchor to prevent invalidating iters. */
-			/* once the anchor is created, syntax highlighting will recalculate, eventually
-			 * calling this function again from the start */
 			Glib::RefPtr<Gtk::TextMark> mstart = sbuffer->create_mark(start,true);
-			auto s = Glib::IdleSource::create();
-			s->connect( [mstart,this]() {
-				Gtk::TextIter start = sbuffer->get_iter_at_mark(mstart);
-				sbuffer->delete_mark(mstart);
-				
-				if(!start.get_child_anchor()) {
-					sbuffer->create_child_anchor(start);
-				}
-				return false;
-			}); 
-			s->attach();
-			// anch = sbuffer->create_child_anchor(start);
+			QueueChildAnchor(mstart);
 		} else {
 			auto j = start; ++j;
 			sbuffer->remove_tag(tag_hidden,start,j);
@@ -555,6 +597,9 @@ void CNotebook::UnrenderWidgets(Gtk::TextBuffer::iterator &start, Gtk::TextBuffe
 /* Remove widget child anchors in span. */
 void CNotebook::CleanUpSpan(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end)
 {
+	DMPRINTF("start cleaning %d %d\n",start.get_offset(),end.get_offset());
+	
+	/* PASS 1: Clean any tag_proximity regions that disappeared. */
 	PushIter(start);
 	Gtk::TextBuffer::iterator i = start;
 	
@@ -567,7 +612,7 @@ void CNotebook::CleanUpSpan(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::i
 		sbuffer->iter_forward_to_context_class_toggle(nextc,"prox");
 		
 		if(i.has_tag(tag_proximity) && (ic!=i || nextc!=next)) {
-			//printf("clean %d %d\n",i.get_offset(),next.get_offset());
+			DMPRINTF("clean old prox region %d %d\n",i.get_offset(),next.get_offset());
 			std::pair<Glib::ustring,Glib::RefPtr<Gtk::TextTag> > volatile_tags[]
 				= { {"invisible", tag_hidden} };
 				
@@ -583,7 +628,34 @@ void CNotebook::CleanUpSpan(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::i
 				++next;
 				start=sbuffer->erase(i,next);
 				next=PopIter();
-				end=PopIter();
+				end=PopIter(); 
+			}
+		}
+		i=next;
+	} while(i<end);
+	start=PopIter();
+	
+	/* PASS 2: Clean any leftover internal child anchors from tag_proximity regions that got merged. */
+	PushIter(start);
+	i = start;
+	
+	do {
+		Gtk::TextBuffer::iterator next = i;
+		if(!next.forward_to_tag_toggle(tag_is_anchor) || next>end) next=end;
+		
+		Gtk::TextIter ic=next;
+		sbuffer->iter_backward_to_context_class_toggle(ic,"prox");
+		
+		if(i.has_tag(tag_is_anchor) && (ic!=i)) {
+			DMPRINTF("clean straggler tag %d %d\n",i.get_offset(),next.get_offset());
+			if(i.get_child_anchor()) {
+				PushIter(end);
+				PushIter(next);
+				next=i;
+				++next;
+				start=sbuffer->erase(i,next);
+				next=PopIter();
+				end=PopIter(); 
 			}
 		}
 		i=next;
@@ -593,7 +665,7 @@ void CNotebook::CleanUpSpan(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::i
 
 void CNotebook::on_enter_region(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end)
 {
-	//printf("enter: %d %d\n",start.get_offset(),end.get_offset());
+	DMPRINTF("enter region: %d %d\n",start.get_offset(),end.get_offset());
 	
 	std::pair<Glib::ustring,Glib::RefPtr<Gtk::TextTag> > volatile_tags[]
 		= { {"invisible", tag_hidden} };
@@ -618,7 +690,7 @@ void CNotebook::on_enter_region(Gtk::TextBuffer::iterator &start, Gtk::TextBuffe
 
 void CNotebook::on_leave_region(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end)
 {
-	//printf("leave: %d %d\n",start.get_offset(),end.get_offset());
+	DMPRINTF("leave region: %d %d\n",start.get_offset(),end.get_offset());
 	
 	std::pair<Glib::ustring,Glib::RefPtr<Gtk::TextTag> > volatile_tags[]
 		= { {"invisible", tag_hidden} };
@@ -720,6 +792,7 @@ void CNotebook::on_move_cursor()
 					on_enter_region(new_left,new_right);
 				} else if(new_iter==old_iter) {
 					/* we may have deleted right into a prox region's boundary. signal to be safe. */
+					DMPRINTF("deletion enter\n");
 					on_enter_region(new_left,new_right);
 				}
 				/* otherwise, we stayed in the same one. no signals needed */

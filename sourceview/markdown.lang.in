@@ -182,6 +182,7 @@
         <context ref="asterisks-strong-emphasis"/>
         <context ref="backslash-escape"/>
         <context ref="line-break"/>
+        <context ref="escape"/>
 ${LATEX_COMMENT_START}
         <context ref="latex"/>
 ${LATEX_COMMENT_END}
@@ -189,21 +190,28 @@ ${LATEX_COMMENT_END}
     </context>
 
     <context id="latex" class="prox latex" style-ref="list-marker">
-      <match>(&#xFFFC;?)(\$\$[^\$]+\$\$|(?&lt;!\$)\$[^\$]+\$)</match>
+      <match>(&#xFFFC;?)(\$\$[^\$]+\$\$(?!\$)|(?&lt;!\$)\$[^\$]+\$(?!\$))</match>
       <include>
         <context sub-pattern="2" class="invisible"/>
+      </include>
+    </context>
+
+    <context id="escape" class="prox">
+      <match>(\\)\$</match>
+      <include>
+        <context sub-pattern="1" class="invisible" style-ref="list-marker"/>
       </include>
     </context>
     <!-- Example:
                  <em>HTML code</em> displayed <strong>literally</strong>.
     -->
-    <context id="code-block" class="no-spell-check mono">
+    <!-- <context id="code-block" class="no-spell-check mono">
       <match>^( {8,}|\t{2,})([^ \t]+.*)</match>
 
       <include>
         <context sub-pattern="2" style-ref="code"/>
       </include>
-    </context>
+    </context> -->
 
     <!-- Note about following code span contexts: within a paragraph, text
          wrapped with backticks indicates a code span. Markdown allows to use
@@ -261,6 +269,7 @@ ${LATEX_COMMENT_END}
         <context ref="asterisks-strong-emphasis"/>
         <context ref="backslash-escape"/>
         <context ref="line-break"/>
+        <context ref="escape"/>
 ${LATEX_COMMENT_START}
         <context ref="latex"/>
 ${LATEX_COMMENT_END}
@@ -469,7 +478,7 @@ ${LATEX_COMMENT_END}
         <context ref="setext-header2"/> -->
         <context ref="horizontal-rule"/>
         <context ref="list"/>
-        <context ref="code-block"/>
+<!--        <context ref="code-block"/> -->
         <context ref="1-backtick-code-span"/>
         <context ref="2-backticks-code-span"/>
         <context ref="3-backticks-code-span"/>
@@ -486,6 +495,7 @@ ${LATEX_COMMENT_END}
         <context ref="asterisks-strong-emphasis"/>
         <context ref="backslash-escape"/>
         <context ref="line-break"/>
+        <context ref="escape"/>
 ${LATEX_COMMENT_START}
         <context ref="latex"/>
 ${LATEX_COMMENT_END}

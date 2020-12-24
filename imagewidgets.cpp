@@ -54,6 +54,7 @@ bool CImageWidget::on_draw(const Cairo::RefPtr<Cairo::Context> &ctx)
 
 CImageWidget::~CImageWidget()
 {
+//	printf("destructor on CImageWidget %08lX\n", (unsigned long) this);
 }
 
 #ifdef HAVE_LASEM
@@ -120,7 +121,7 @@ using namespace tex;
 CLatexWidget::CLatexWidget(Glib::RefPtr<Gdk::Window> wnd, Glib::ustring text, Gdk::RGBA fg) : CImageWidget(wnd)
 {	
 	source=text;
-
+	
 	unsigned int clr;
 	clr=0xff000000|int(fg.get_red()*255)<<16|int(fg.get_green()*255)<<8|int(fg.get_blue()*255);
 	

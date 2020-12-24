@@ -88,11 +88,12 @@ public:
 	Glib::RefPtr<Gtk::TextMark> PushIter(Gtk::TextIter i);
 	Gtk::TextIter PopIter();
 	
+	void QueueChildAnchor(Glib::RefPtr<Gtk::TextMark> mstart);
 	void RenderToWidget(Glib::ustring wtype, Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
 	void UnrenderWidgets(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
 	void CleanUpSpan(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
 	
-	Glib::RefPtr<Gtk::TextTag> tag_extra_space, tag_blockquote, tag_invisible, tag_hidden, tag_mono;
+	Glib::RefPtr<Gtk::TextTag> tag_extra_space, tag_blockquote, tag_invisible, tag_hidden, tag_mono, tag_is_anchor;
 	void on_highlight_updated(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
 	void on_leave_region(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
 	void on_enter_region(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
@@ -108,6 +109,7 @@ public:
 	guint8* on_serialize(const Glib::RefPtr<Gtk::TextBuffer>& content_buffer, const Gtk::TextBuffer::iterator& start, const Gtk::TextBuffer::iterator& end, gsize& length, bool render_images);
 	bool on_deserialize(const Glib::RefPtr<Gtk::TextBuffer>& content_buffer, Gtk::TextBuffer::iterator& iter, const guint8* data, gsize length, bool create_tags); 
 	
+	void DebugTags(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
 	
 	float ReadPressure(GdkEvent *e);
 	void Widget2Doc(double in_x, double in_y, double &out_x, double &out_y);
