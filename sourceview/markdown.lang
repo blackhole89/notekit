@@ -49,6 +49,7 @@
     <style id="strong-emphasis" name="Strong Emphasis" map-to="def:statement"/>
     <style id="backslash-escape" name="Backslash Escape" map-to="def:special-char"/>
     <style id="line-break" name="Line Break" map-to="def:note"/>
+    <style id="checked-off" name="Checked Off" map-to="markdown:tag"/>
   </styles>
 
   <definitions>
@@ -158,9 +159,46 @@
           [0-9]+\. # Number followed by period for ordered list.
         )
         [ \t]+     # Must be followed by at least 1 space or 1 tab.
+        (?!
+          (&#xFFFC;?)
+          (\[[x|X]\]|\[[\s]\]) # checkbox
+        )
+      </start>
+
+      <include>
+        <context sub-pattern="1" where="start" style-ref="list-marker"/>
+
+        <context ref="1-backtick-code-span"/>
+        <context ref="2-backticks-code-span"/>
+        <context ref="automatic-link"/>
+        <context ref="inline-link"/>
+        <context ref="reference-link"/>
+        <context ref="inline-image"/>
+        <context ref="reference-image"/>
+        <context ref="underscores-emphasis"/>
+        <context ref="asterisks-emphasis"/>
+        <context ref="underscores-strong-emphasis"/>
+        <context ref="asterisks-strong-emphasis"/>
+        <context ref="backslash-escape"/>
+        <context ref="line-break"/>
+        <context ref="escape"/>
+
+        <context ref="latex"/>
+
+      </include>
+    </context>
+
+    <context id="checkbox-on" end-at-line-end="true" class="list" style-ref="checked-off">
+      <start extended="true">
+        ^[ ]{0,3}  # Maximum 3 spaces at the beginning of the line.
+        (
+          \*|\+|-| # Asterisk, plus or hyphen for unordered list.
+          [0-9]+\. # Number followed by period for ordered list.
+        )
+        [ \t]+     # Must be followed by at least 1 space or 1 tab.
         (
           (&#xFFFC;?)
-          (\[[x|X\s]\])| # checkbox? 
+          (\[[x|X]\]) # checkbox? 
         )
       </start>
 
@@ -188,6 +226,46 @@
 
       </include>
     </context>
+
+    <context id="checkbox-off" end-at-line-end="true" class="list">
+      <start extended="true">
+        ^[ ]{0,3}  # Maximum 3 spaces at the beginning of the line.
+        (
+          \*|\+|-| # Asterisk, plus or hyphen for unordered list.
+          [0-9]+\. # Number followed by period for ordered list.
+        )
+        [ \t]+     # Must be followed by at least 1 space or 1 tab.
+        (
+          (&#xFFFC;?)
+          (\[[\s]\]) # checkbox? 
+        )
+      </start>
+
+      <include>
+        <context sub-pattern="1" where="start" style-ref="list-marker"/>
+        <context sub-pattern="2" where="start" class="prox checkbox"/>
+        <context sub-pattern="4" where="start" class="invisible"/>
+
+        <context ref="1-backtick-code-span"/>
+        <context ref="2-backticks-code-span"/>
+        <context ref="automatic-link"/>
+        <context ref="inline-link"/>
+        <context ref="reference-link"/>
+        <context ref="inline-image"/>
+        <context ref="reference-image"/>
+        <context ref="underscores-emphasis"/>
+        <context ref="asterisks-emphasis"/>
+        <context ref="underscores-strong-emphasis"/>
+        <context ref="asterisks-strong-emphasis"/>
+        <context ref="backslash-escape"/>
+        <context ref="line-break"/>
+        <context ref="escape"/>
+
+        <context ref="latex"/>
+
+      </include>
+    </context>
+
 
     <context id="latex" class="prox latex" style-ref="list-marker">
       <match>(&#xFFFC;?)(\$\$[^\$]+\$\$(?!\$)|(?&lt;!\$)\$[^\$]+\$(?!\$))</match>
@@ -478,6 +556,8 @@
         <context ref="setext-header2"/> -->
         <context ref="horizontal-rule"/>
         <context ref="list"/>
+        <context ref="checkbox-on"/>
+        <context ref="checkbox-off"/>
 <!--        <context ref="code-block"/> -->
         <context ref="1-backtick-code-span"/>
         <context ref="2-backticks-code-span"/>
