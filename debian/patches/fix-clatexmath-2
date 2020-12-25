@@ -1,0 +1,45 @@
+Description: Remove CMake 3.16 command.
+ .
+ notekit (0.1-7) unstable; urgency=medium
+ .
+   * Remove CMake 3.16 command from cLaTeXMath.
+Author: Matvey Soloviev <blackhole89@gmail.com>
+
+---
+The information above should follow the Patch Tagging Guidelines, please
+checkout http://dep.debian.net/deps/dep3/ to learn about the format. Here
+are templates for supplementary fields that you might want to add:
+
+Origin: <vendor|upstream|other>, <url of original patch>
+Bug: <url in upstream bugtracker>
+Bug-Debian: https://bugs.debian.org/<bugnumber>
+Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
+Forwarded: <no|not-needed|url proving that it has been forwarded>
+Reviewed-By: <name and email of someone who approved the patch>
+Last-Update: 2020-12-25
+
+--- notekit-0.1.orig/cLaTeXMath/CMakeLists.txt
++++ notekit-0.1/cLaTeXMath/CMakeLists.txt
+@@ -41,19 +41,19 @@ file(GLOB_RECURSE SRC "src/*.cpp")
+ 
+ if(QT)
+     message(STATUS, "Cross platform build using Qt")
+-    add_compile_definitions(BUILD_QT)
++    add_definitions(-DBUILD_QT)
+     include_directories("src")
+     set(CMAKE_AUTOMOC ON)
+     find_package(Qt5 COMPONENTS Widgets REQUIRED)
+     set(LINK_LIBS Qt5::Widgets)
+ elseif(WIN32)
+     message(STATUS "We are working on Windows")
+-    add_compile_definitions(BUILD_WIN32)
++    add_definitions(-DBUILD_WIN32)
+     include_directories("src")
+     set(LINK_LIBS gdiplus)
+ elseif(UNIX)
+     message(STATUS "We are working with GTK on a Unix like OS")
+-    add_compile_definitions(BUILD_GTK)
++    add_definitions(-DBUILD_GTK)
+     find_package(PkgConfig)
+     find_package(Fontconfig REQUIRED)
+     # include gtkmm module

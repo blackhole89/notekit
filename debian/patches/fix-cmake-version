@@ -1,0 +1,28 @@
+Description: Fix cmake version req
+ .
+ notekit (0.1-6) unstable; urgency=medium
+ .
+   * Fix cLaTeXMath minimum cmake version requirement.
+Author: Matvey Soloviev <blackhole89@gmail.com>
+
+---
+The information above should follow the Patch Tagging Guidelines, please
+checkout http://dep.debian.net/deps/dep3/ to learn about the format. Here
+are templates for supplementary fields that you might want to add:
+
+Origin: <vendor|upstream|other>, <url of original patch>
+Bug: <url in upstream bugtracker>
+Bug-Debian: https://bugs.debian.org/<bugnumber>
+Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
+Forwarded: <no|not-needed|url proving that it has been forwarded>
+Reviewed-By: <name and email of someone who approved the patch>
+Last-Update: 2020-12-25
+
+--- notekit-0.1.orig/cLaTeXMath/CMakeLists.txt
++++ notekit-0.1/cLaTeXMath/CMakeLists.txt
+@@ -1,4 +1,4 @@
+-cmake_minimum_required(VERSION 3.16)
++cmake_minimum_required(VERSION 3.10)
+ project(LaTeX)
+ 
+ 

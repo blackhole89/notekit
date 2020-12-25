@@ -1,0 +1,41 @@
+Description: Remove broken fontconfig deps
+ .
+ notekit (0.1-8) unstable; urgency=medium
+ .
+   * Remove broken dependency from cLaTeXMath.
+Author: Matvey Soloviev <blackhole89@gmail.com>
+
+---
+The information above should follow the Patch Tagging Guidelines, please
+checkout http://dep.debian.net/deps/dep3/ to learn about the format. Here
+are templates for supplementary fields that you might want to add:
+
+Origin: <vendor|upstream|other>, <url of original patch>
+Bug: <url in upstream bugtracker>
+Bug-Debian: https://bugs.debian.org/<bugnumber>
+Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
+Forwarded: <no|not-needed|url proving that it has been forwarded>
+Reviewed-By: <name and email of someone who approved the patch>
+Last-Update: 2020-12-25
+
+--- notekit-0.1.orig/cLaTeXMath/CMakeLists.txt
++++ notekit-0.1/cLaTeXMath/CMakeLists.txt
+@@ -55,15 +55,14 @@ elseif(UNIX)
+     message(STATUS "We are working with GTK on a Unix like OS")
+     add_definitions(-DBUILD_GTK)
+     find_package(PkgConfig)
+-    find_package(Fontconfig REQUIRED)
+     # include gtkmm module
+     pkg_check_modules(GTKMM gtkmm-3.0)
+     # include gtksourceview
+     pkg_check_modules(GSVMM gtksourceviewmm-3.0)
+     # includes and libraries
+-    link_directories(${GTKMM_LIBRARY_DIRS} ${GSVMM_LIBRARY_DIRS} ${Fontconfig_LIBRARY_DIRS})
+-    include_directories(${GTKMM_INCLUDE_DIRS} ${GSVMM_INCLUDE_DIRS} ${Fontconfig_INCLUDE_DIRS} "src")
+-    set(LINK_LIBS ${GTKMM_LIBRARIES} ${GSVMM_LIBRARIES} ${Fontconfig_LIBRARIES})
++    link_directories(${GTKMM_LIBRARY_DIRS} ${GSVMM_LIBRARY_DIRS})
++    include_directories(${GTKMM_INCLUDE_DIRS} ${GSVMM_INCLUDE_DIRS} "src")
++    set(LINK_LIBS ${GTKMM_LIBRARIES} ${GSVMM_LIBRARIES} fontconfig)
+ else()
+     message(STATUS "We are working on a unknown platform")
+     # other platforms...
