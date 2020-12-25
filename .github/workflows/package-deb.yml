@@ -1,0 +1,29 @@
+name: deb package
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-18.04
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: inspect shady library
+      run: apt-cache showpkg libgcc-s1
+    - name: removing gcc10
+      run: sudo apt remove libgcc-10-dev
+    - name: setting the dependencies up
+      run: sudo apt install libfontconfig1-dev zlib1g-dev libjsoncpp-dev libgtksourceviewmm-3.0-dev libgtkmm-3.0-dev cmake debhelper=12.1.1ubuntu1~ubuntu18.04.1 dpkg-dev
+    - name: running debhelper
+      run: dpkg-buildpackage -b -uc 
+    - uses: "marvinpinto/action-automatic-releases@latest"
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "latest-deb"
+        prerelease: true
+        title: "Ubuntu 18.04 package for development version"
+        files: ../notekit_0.1-1_amd64.deb
+
