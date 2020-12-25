@@ -1,0 +1,16 @@
+Source: notekit
+Section: text
+Priority: optional
+Maintainer: Matvey Soloviev <blackhole89@gmail.com>
+Build-Depends: cmake, debhelper-compat (= 13)
+Standards-Version: 4.5.1
+Homepage: https://github.com/blackhole89/notekit
+#Vcs-Browser: https://salsa.debian.org/debian/notekit
+Vcs-Git: https://github.com/blackhole89/notekit.git
+Rules-Requires-Root: no
+
+Package: notekit
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: <insert up to 60 chars description>
+ <insert long description, indented with spaces>
