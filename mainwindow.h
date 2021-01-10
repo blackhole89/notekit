@@ -90,6 +90,13 @@ protected:
 		Gtk::SeparatorMenuItem sep;
 		Gtk::CheckMenuItem hide_sidebar;
 	} am;
+	
+	/* classic menu */
+	struct {
+		Gtk::VBox menu_box;
+		Gtk::MenuBar mbar;
+		Gtk::MenuItem view;
+	} cm;
 };
 
 #endif // MAINWINDOW_H

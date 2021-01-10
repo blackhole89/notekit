@@ -118,8 +118,18 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 	ACTION("next-note",WND_ACTION_NEXT_NOTE,1);
 	ACTION("prev-note",WND_ACTION_PREV_NOTE,1);
 	
-	/* add the overall vbox */
-	add(split);
+	/* add the top-level layout */
+	if(use_hbar) {
+		add(split);
+	} else {
+		/* without a headerbar, we also need to have a vbox for the classic menu here */
+		cm.view.set_label("View");
+		cm.view.set_submenu(appmenu);
+		cm.mbar.append(cm.view);
+		cm.menu_box.pack_start(cm.mbar,Gtk::PACK_SHRINK);
+		cm.menu_box.pack_start(split);
+		add(cm.menu_box);
+	}
 
 	show_all();
 	
