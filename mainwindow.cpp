@@ -124,7 +124,9 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 	} else {
 		/* without a headerbar, we also need to have a vbox for the classic menu here */
 		cm.view.set_label("View");
-		cm.view.set_submenu(appmenu);
+		// TODO: this results in Gtk-CRITICALs on quit as appmenu elements are double freed. 
+		// Is there any way we can set a submenu here without making free of cm.view recursively free appmenu?
+		cm.view.set_submenu(appmenu); 
 		cm.mbar.append(cm.view);
 		cm.menu_box.pack_start(cm.mbar,Gtk::PACK_SHRINK);
 		cm.menu_box.pack_start(split);
