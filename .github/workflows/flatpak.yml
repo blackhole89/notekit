@@ -11,8 +11,9 @@ jobs:
       options: --privileged
     steps:
     - uses: actions/checkout@v2
-    - uses: bilelmoussaoui/flatpak-github-actions@v2
+    - uses: bilelmoussaoui/flatpak-github-actions@master
       with:
         bundle: "notekit-dev.flatpak"
         manifest-path: "pkgs/flatpak/com.github.blackhole89.notekit.yaml"
         run-tests: "true"
+        cache-key: flatpak-builder-${{ github.sha }}
