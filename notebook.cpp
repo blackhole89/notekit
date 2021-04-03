@@ -18,6 +18,7 @@
 /* TODO: this probably would be more elegant as a list of pairs (class,rendering function) */
 Glib::ustring CNotebook::renderable_classes[]
 	= { "checkbox", 
+		"image",
 #if defined (HAVE_LASEM) || defined (HAVE_CLATEXMATH)
 		"latex"
 #endif
@@ -552,7 +553,32 @@ void CNotebook::RenderToWidget(Glib::ustring wtype, Gtk::TextBuffer::iterator &s
 		
 		end=PopIter();
 		start=sbuffer->get_iter_at_mark(mstart);
-	}
+	} else if(wtype=="image") {
+		
+		Glib::RefPtr<Gtk::TextBuffer::ChildAnchor> anch;
+		
+		if(!(anch=start.get_child_anchor())) {
+			/* we haven't set up a child anchor yet, so we need to queue the creation of one */
+			Glib::RefPtr<Gtk::TextMark> mstart = sbuffer->create_mark(start,true);
+			QueueChildAnchor(mstart);
+		} else {
+			auto j = start; ++j;
+			sbuffer->remove_tag(tag_hidden,start,j);
+			
+			/* the worst thing that could happen is that we go to the end and URL becomes empty */
+			auto urlstart = j;
+			sbuffer->iter_forward_to_context_class_toggle(urlstart,"url");
+			auto urlend = urlstart;
+			sbuffer->iter_forward_to_context_class_toggle(urlend,"url");
+			
+			Gtk::Image *d = new Gtk::Image(urlstart.get_text(urlend));
+			Gtk::manage(d); 
+			//sbuffer->apply_tag(GetBaselineTag(d->GetBaseline()),start,j);
+			add_child_at_anchor(*d,anch);
+			d->show();
+		}
+		
+	} 
 #if defined (HAVE_LASEM) || defined (HAVE_CLATEXMATH)
 	else if(wtype=="latex") {
 		

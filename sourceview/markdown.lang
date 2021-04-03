@@ -444,8 +444,10 @@
          ![alt text]( <http://www.example.com/image.jpg> )
          ![alt text] (/path/to/image.jpg "Title")
     -->
-    <context id="inline-image">
+    <context id="inline-image" class="prox image">
       <match extended="true">
+        (&#xFFFC;?)
+        (
         (!)                     # Leading ! sign.
         \[(.*?)\][ ]?           # Alternate text for the image (and optional space).
         \(                      # Literal parenthesis.
@@ -455,14 +457,17 @@
           ([ \t]+(".*?"))?      # Optional title.
           [ \t]*                # Optional spaces or tabs before the closing parenthesis.
         \)                      # Literal parenthesis.
+        )
       </match>
 
       <include>
-        <context sub-pattern="1" style-ref="image-marker"/>
-        <context sub-pattern="2" style-ref="attribute-value"/>
-        <context sub-pattern="4" class="no-spell-check" style-ref="url"/>
-        <context sub-pattern="5" class="no-spell-check" style-ref="url"/>
-        <context sub-pattern="6" style-ref="attribute-value"/>
+        <context sub-pattern="1" /> 
+        <context sub-pattern="2" class="invisible" />
+        <context sub-pattern="3" style-ref="image-marker"/>
+        <context sub-pattern="4" style-ref="attribute-value"/>
+        <context sub-pattern="6" class="no-spell-check url" style-ref="url"/>
+        <context sub-pattern="7" class="no-spell-check url" style-ref="url"/>
+        <context sub-pattern="8" style-ref="attribute-value"/>
       </include>
     </context>
 
@@ -564,7 +569,7 @@
         <context ref="3-backticks-code-span"/>
         <context ref="blockquote"/>
         <context ref="automatic-link"/>
-        <context ref="inline-link"/>
+        <context ref="inline-link"/> 
         <context ref="reference-link"/>
         <context ref="link-definition"/>
         <context ref="inline-image"/>
