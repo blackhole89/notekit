@@ -3,6 +3,8 @@ This program is a structured notetaking application based on GTK+ 3. Write your 
 
 ![Screenshot](/screenshots/notekit-example.png?raw=true)
 
+We have a [Discord server](https://discord.gg/WVas9aX6Ee) for questions and discussing the project's development.
+
 ## Why?
 
 I figured it would be nice to have a free-software, platform-independent OneNote. While there is a remarkable number of free (speech or beer) notetaking applications out there, to my best knowledge, none of them simultaneously check the following boxes:
@@ -19,7 +21,7 @@ I figured it would be nice to have a free-software, platform-independent OneNote
 
 You can download the following binary builds:
 
-* [Linux x86_64](http://twilightro.kafuka.org/%7Eblackhole89/files/notekit-20210403.tar.gz) (Git version of 2021-04-03), or download the possibly unstable [automated build](https://github.com/blackhole89/notekit/releases) (This temporarily fails as of 2021-04-03, so the precompiled version or one of the alternative channels is recommended).
+* [Linux x86_64](http://twilightro.kafuka.org/%7Eblackhole89/files/notekit-20210403.tar.gz) (Git version of 2021-04-03), or download the possibly unstable [automated build](https://github.com/blackhole89/notekit/releases).
 * [Windows x86_64](http://twilightro.kafuka.org/%7Eblackhole89/files/notekit-20200426.zip) (Git version of 2020-04-26). The Windows version is less tested and incapable of remembering which folders are opened to mingw-w64's lack of support for xattrs.
 
 Moreover, there is also
