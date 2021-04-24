@@ -55,10 +55,10 @@ jobs:
           cp -r /usr/x86_64-w64-mingw32/sys-root/mingw/bin/* dist/bin/
           mv dist/share/ dist/bin/
           mv dist/bin/share/notekit/{data,sourceview} dist/bin/
-          # copy clatexmath to direct path, as it's autodetection does not work
-          cp -r dist/bin/share/clatexmath/ dist/bin/data/latex
           # copy share dir from mingw root to release
           cp -r /usr/x86_64-w64-mingw32/sys-root/mingw/share/* dist/bin/share/
+          # copy clatexmath to direct path, as it's autodetection does not work
+          cp -r dist/bin/share/clatexmath/ dist/bin/data/latex
           # add gtk-pixbuf libs
           mkdir dist/bin/lib/
           cp -r /usr/x86_64-w64-mingw32/sys-root/mingw/lib/gdk-pixbuf-2.0 dist/bin/lib/
