@@ -35,7 +35,7 @@ jobs:
             PATH=/usr/cargo/bin:$PATH
           git clone https://github.com/uutils/coreutils.git && cd coreutils
           git checkout $(git describe --abbrev=0 --tags)
-          cargo build --target=x86_64-pc-windows-gnu --release -p uu_mkdir -p uu_touch -p uu_mv
+          cargo build --target=x86_64-pc-windows-gnu --release -p uu_mkdir -p uu_touch -p uu_mv -p uu_rm
       - name: Install cLaTeXMath 🖋
         run: |
           dnf config-manager --add-repo https://download.opensuse.org/repositories/home:sp1rit:mingw/Fedora_33/home:sp1rit:mingw.repo
@@ -62,6 +62,8 @@ jobs:
           # add gtk-pixbuf libs
           mkdir dist/bin/lib/
           cp -r /usr/x86_64-w64-mingw32/sys-root/mingw/lib/gdk-pixbuf-2.0 dist/bin/lib/
+          # I'd advise against patching auto-generated files, however to run gtk-pixbuf-query-loaders.exe we'd need wine
+          sed 's|^"\.\./lib/|"./lib/|' -i dist/bin/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache
           # add Adwaita icons
           cp -r /usr/share/icons/Adwaita/ dist/bin/data/icons/
           # generate icon cache for notekit icons
