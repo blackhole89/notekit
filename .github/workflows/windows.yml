@@ -69,7 +69,7 @@ jobs:
           # generate icon cache for notekit icons
           gtk-update-icon-cache dist/bin/data/icons/hicolor/
           # add rust uutils coreutils 
-          cp coreutils/target/x86_64-pc-windows-gnu/release/{mkdir,touch,mv}.exe dist/bin/
+          cp coreutils/target/x86_64-pc-windows-gnu/release/{mkdir,touch,mv,rm}.exe dist/bin/
           # add notesbase folder and put README.md into it
           mkdir dist/bin/notesbase
           cp README.md dist/bin/notesbase
