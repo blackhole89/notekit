@@ -1,6 +1,6 @@
-From 941e49b986b4e10b5e5ef50f72d30306004e1518 Mon Sep 17 00:00:00 2001
+From 8ef382ade737c07211892b7cce0dc90f6c00b052 Mon Sep 17 00:00:00 2001
 From: sp1rit <sp1rit@disroot.org>
-Date: Sat, 24 Apr 2021 13:25:02 +0200
+Date: Wed, 28 Apr 2021 12:30:53 +0200
 Subject: [PATCH] various changes that are required to build notekit
  with mingw
 
@@ -8,9 +8,10 @@ Signed-off-by: sp1rit <sp1rit@disroot.org>
 ---
  drawing.cpp            | 6 +++---
  imagewidgets.cpp       | 4 ++--
+ main.cpp               | 2 +-
  mainwindow.cpp         | 3 ++-
  notebook_highlight.hpp | 4 ++--
- 4 files changed, 9 insertions(+), 8 deletions(-)
+ 5 files changed, 10 insertions(+), 9 deletions(-)
 
 diff --git a/drawing.cpp b/drawing.cpp
 index c4ee9f1..663198d 100644
@@ -58,8 +59,21 @@ index 1c52a6b..45012af 100644
  }
  
  void CImageWidget::SetSize(int x, int y)
+diff --git a/main.cpp b/main.cpp
+index 1fc7c32..842d14e 100644
+--- a/main.cpp
++++ b/main.cpp
+@@ -3,7 +3,7 @@
+ 
+ CMainWindow *mainwindow;
+ 
+-int main (int argc, char *argv[])
++int WinMain(int argc, char *argv[])
+ {
+ 	Gsv::init();
+ 	
 diff --git a/mainwindow.cpp b/mainwindow.cpp
-index 7a058ff..02d9c7f 100644
+index af65f5a..4e43c49 100644
 --- a/mainwindow.cpp
 +++ b/mainwindow.cpp
 @@ -2,6 +2,7 @@
@@ -70,7 +84,7 @@ index 7a058ff..02d9c7f 100644
  
  #ifdef HAVE_CLATEXMATH
  #define __OS_Linux__
-@@ -384,7 +385,7 @@ void CMainWindow::FetchAndSave()
+@@ -396,7 +397,7 @@ void CMainWindow::FetchAndSave()
  	fclose(fl);
  	
  	/* atomic replace */
