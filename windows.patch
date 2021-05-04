@@ -76,7 +76,7 @@ index 1fc7c32..9bbec94 100644
  	Gsv::init();
  	
 -	Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv, "com.github.blackhole89.notekit");
-+	Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(1, {"notekit.exe"}, "com.github.blackhole89.notekit");
++	Glib::RefPtr<Gtk::Application> app = Gtk::Application::create("com.github.blackhole89.notekit");
  	
  	app->signal_activate().connect( [app,&mainwindow]() {
  			mainwindow=new CMainWindow(app);
