@@ -18,4 +18,4 @@ ln -s /usr/local/opt/notekit/NoteKit.app /Applications/
 
 ---
 
-Please keep in mind, that the OS X version is less tested, because we have no iMac to test NoteKit on. If something breaks just create an [Issue](https://github.com/blackhole89/notekit/issues/new) and ping @sp1ritCS.
+Please keep in mind, that the OS X version is less tested, because we have no iMac to test NoteKit on. If something breaks just create an [Issue](https://github.com/blackhole89/notekit/issues/new) and ping [@sp1ritCS](https://github.com/sp1ritCS).
