@@ -21,7 +21,7 @@
 		<key>NSHumanReadableCopyright</key>
 		<string>Maintainer: Matvey Soloviev, Licensed under GPL-3.0</string>
 		<key>CFBundleExecutable</key>
-		<string>NoteKit</string>
+		<string>notekit</string>
 		<key>CFBundleIconFile</key>
 		<string>NoteKit.icns</string>
 	</dict>
