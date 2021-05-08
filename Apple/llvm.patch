@@ -1,0 +1,40 @@
+From e93560b8fe25d16836230eb78d037f52b577ab5d Mon Sep 17 00:00:00 2001
+From: sp1rit <sp1rit@disroot.org>
+Date: Tue, 27 Apr 2021 09:31:41 +0200
+Subject: [PATCH] tweaks to llvm clang build
+
+Signed-off-by: sp1rit <sp1rit@disroot.org>
+---
+ main.cpp    | 4 ++--
+ meson.build | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/main.cpp b/main.cpp
+index 1fc7c32..9f1077c 100644
+--- a/main.cpp
++++ b/main.cpp
+@@ -9,8 +9,8 @@ int main (int argc, char *argv[])
+ 	
+ 	Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv, "com.github.blackhole89.notekit");
+ 	
+-	app->signal_activate().connect( [app,&mainwindow]() {
+-			mainwindow=new CMainWindow(app);
++	app->signal_activate().connect( [app]() {
++			auto mainwindow=new CMainWindow(app);
+ 			app->add_window(*mainwindow);
+ 		} );
+ 	
+diff --git a/meson.build b/meson.build
+index 5a9f407..e55b597 100644
+--- a/meson.build
++++ b/meson.build
+@@ -1,6 +1,6 @@
+ project('notekit', 'cpp',
+ 	version : '0.1',
+-	default_options : ['warning_level=3', 'cpp_std=c++14']
++	default_options : ['warning_level=3', 'cpp_std=c++17']
+ )
+ 
+ conf_data = configuration_data()
+-- 
+2.31.1
