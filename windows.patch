@@ -1,0 +1,125 @@
+From d2e775b07fe181905caa9af3c7a0ffb83b8c368c Mon Sep 17 00:00:00 2001
+From: sp1rit <sp1rit@disroot.org>
+Date: Tue, 4 May 2021 21:58:31 +0200
+Subject: [PATCH] various changes that are required to build notekit
+ with mingw
+
+Signed-off-by: sp1rit <sp1rit@disroot.org>
+---
+ drawing.cpp            | 6 +++---
+ imagewidgets.cpp       | 4 ++--
+ main.cpp               | 5 +++--
+ mainwindow.cpp         | 3 ++-
+ notebook_highlight.hpp | 4 ++--
+ 5 files changed, 12 insertions(+), 10 deletions(-)
+
+diff --git a/drawing.cpp b/drawing.cpp
+index c4ee9f1..663198d 100644
+--- a/drawing.cpp
++++ b/drawing.cpp
+@@ -392,13 +392,13 @@ void CBoundDrawing::Unselect() {
+ 
+ void CBoundDrawing::on_unrealize()
+ {
+-	printf("unrealize event on %08lX\n", (unsigned long) this);
++	printf("unrealize event on %08llX\n", (uintptr_t) this);
+ 	//get_parent()->remove(*this);
+ }
+ 
+ void CBoundDrawing::destroy_notify_()
+ {
+-	printf("destroy event on %08lX\n", (unsigned long) this);
++	printf("destroy event on %08llX\n", (uintptr_t) this);
+ 	strokes.~vector<CStroke>();
+ }
+ 
+@@ -516,4 +516,4 @@ bool CStroke::Select(float x0, float x1, float y0, float y1)
+ void CStroke::Unselect()
+ {
+ 	selected.clear();
+-}
+\ No newline at end of file
++}
+diff --git a/imagewidgets.cpp b/imagewidgets.cpp
+index 1c52a6b..45012af 100644
+--- a/imagewidgets.cpp
++++ b/imagewidgets.cpp
+@@ -13,12 +13,12 @@ CImageWidget::CImageWidget(Glib::RefPtr<Gdk::Window> wnd) : Glib::ObjectBase("CI
+ 
+ void CImageWidget::on_unrealize()
+ {
+-	printf("unrealize event on CImageWidget %08lX\n", (unsigned long) this);
++	printf("unrealize event on CImageWidget %08llX\n", (uintptr_t) this);
+ }
+ 
+ void CImageWidget::destroy_notify_()
+ {
+-	printf("destroy event on CImageWidget %08lX\n", (unsigned long) this);
++	printf("destroy event on CImageWidget %08llX\n", (uintptr_t) this);
+ }
+ 
+ void CImageWidget::SetSize(int x, int y)
+diff --git a/main.cpp b/main.cpp
+index 1fc7c32..9bbec94 100644
+--- a/main.cpp
++++ b/main.cpp
+@@ -1,13 +1,14 @@
+ #include "mainwindow.h"
+ #include <gtkmm/application.h>
++#include <windows.h>
+ 
+ CMainWindow *mainwindow;
+ 
+-int main (int argc, char *argv[])
++int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+ {
+ 	Gsv::init();
+ 	
+-	Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv, "com.github.blackhole89.notekit");
++	Glib::RefPtr<Gtk::Application> app = Gtk::Application::create("com.github.blackhole89.notekit");
+ 	
+ 	app->signal_activate().connect( [app,&mainwindow]() {
+ 			mainwindow=new CMainWindow(app);
+diff --git a/mainwindow.cpp b/mainwindow.cpp
+index af65f5a..4e43c49 100644
+--- a/mainwindow.cpp
++++ b/mainwindow.cpp
+@@ -2,6 +2,7 @@
+ #include "navigation.h"
+ #include <iostream>
+ #include <fontconfig/fontconfig.h>
++#include <windows.h>
+ 
+ #ifdef HAVE_CLATEXMATH
+ #define __OS_Linux__
+@@ -396,7 +397,7 @@ void CMainWindow::FetchAndSave()
+ 	fclose(fl);
+ 	
+ 	/* atomic replace */
+-	rename(tmp_filename.c_str(), filename.c_str());
++	MoveFileExA(tmp_filename.c_str(), filename.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH);
+ }
+ 
+ void CMainWindow::OpenDocument(std::string filename)
+diff --git a/notebook_highlight.hpp b/notebook_highlight.hpp
+index cf8569c..f1e846e 100644
+--- a/notebook_highlight.hpp
++++ b/notebook_highlight.hpp
+@@ -1,6 +1,6 @@
+ std::string CNotebook::GetHighlightProxyDir()
+ {
+-	if(mkdir("/tmp/notekit.gsv",0777) && errno!=EEXIST) {
++	if(mkdir("/tmp/notekit.gsv") && errno!=EEXIST) {
+ 		printf("Failed to create a temporary directory for syntax highlighting data.\n");
+ 		return "";
+ 	}
+@@ -52,4 +52,4 @@ std::string CNotebook::GetHighlightProxyDir()
+ 	
+ 	fclose(fl);
+ 	
+-	return "/tmp/notekit.gsv";}
+\ No newline at end of file
++	return "/tmp/notekit.gsv";}
+-- 
+2.31.1
+
