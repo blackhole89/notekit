@@ -58,7 +58,7 @@ jobs:
       with:
         name: Build artifacts (Linux)
         path: x86_64-linux-gnu.tar.zst
-  mingw:
+  MinGW:
     runs-on: ubuntu-latest
     container:
       image: registry.fedoraproject.org/fedora:33
@@ -96,7 +96,7 @@ jobs:
         with:
           name: Build artifacts (Windows MinGW)
           path: x86_64-w64-mingw32.tar.zst
-  darwin:
+  Darwin:
     strategy:
       matrix:
         os:
