@@ -89,13 +89,13 @@ jobs:
       - name: Compress build artifacts 📦
         run: |
           pushd x86_64-w64-mingw32
-          tar -c * | zstd -o ../x86_64-w64-mingw32.tar.zst
+          tar -c * | zstd -o $GITHUB_WORKSPACE/x86_64-w64-mingw32.tar.zst
           popd
       - name: Upload build artifacts 📤
         uses: actions/upload-artifact@v1
         with:
           name: Build artifacts (Windows MinGW)
-          path: x86_64-w64-mingw32.tar.zst
+          path: ${{ env.GITHUB_WORKSPACE }}/x86_64-w64-mingw32.tar.zst
   darwin:
     strategy:
       matrix:
