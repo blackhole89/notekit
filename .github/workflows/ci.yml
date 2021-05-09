@@ -88,7 +88,7 @@ jobs:
         run: ninja -C x86_64-w64-mingw32
       - name: Compress build artifacts 📦
         run: |
-          pushd _build
+          pushd x86_64-w64-mingw32
           tar -c * | zstd -o $GITHUB_WORKSPACE/x86_64-w64-mingw32.tar.zst
           popd
       - name: Upload build artifacts 📤
@@ -123,7 +123,7 @@ jobs:
         run: ninja -C ${{ matrix.os.triplet }}
       - name: Compress build artifacts 📦
         run: |
-          pushd _build
+          pushd ${{ matrix.os.triplet }}
           tar -c * | zstd -o $GITHUB_WORKSPACE/${{ matrix.os.triplet }}.tar.zst
           popd
       - name: Upload build artifacts 📤
