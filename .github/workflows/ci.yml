@@ -92,10 +92,10 @@ jobs:
           tar -c * | zstd -o $GITHUB_WORKSPACE/x86_64-w64-mingw32.tar.zst
           popd
       - name: Upload build artifacts 📤
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
           name: Build artifacts (Windows MinGW)
-          path: ${{ env.GITHUB_WORKSPACE }}/x86_64-w64-mingw32.tar.zst
+          path: x86_64-w64-mingw32.tar.zst
   darwin:
     strategy:
       matrix:
