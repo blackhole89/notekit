@@ -5,7 +5,7 @@ on:
   - pull_request
 
 jobs:
-  build:
+  Linux:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix: 
@@ -51,10 +51,83 @@ jobs:
     - name: Compress build artifacts 📦
       run: |
         pushd _build
-        tar -c * | zstd -o $GITHUB_WORKSPACE/artifacts.tar.zst
+        tar -c * | zstd -o $GITHUB_WORKSPACE/x86_64-linux-gnu.tar.zst
         popd
     - name: Upload build artifacts 📤
       uses: actions/upload-artifact@v1
       with:
-        name: Build artifacts
-        path: artifacts.tar.zst
+        name: Build artifacts (Linux)
+        path: x86_64-linux-gnu.tar.zst
+  MinGW:
+    runs-on: ubuntu-latest
+    container:
+      image: registry.fedoraproject.org/fedora:33
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download dependencies 📥
+        run: |
+          dnf install -y "dnf-command(config-manager)" curl git patch tar zstd
+          dnf install -y gcc-c++ meson
+          dnf install -y mingw64-filesystem mingw64-gcc-c++
+          dnf install -y mingw64-winpthreads-static
+          dnf install -y mingw64-gtkmm30 mingw64-gtksourceviewmm3 mingw64-jsoncpp mingw64-zlib mingw64-fontconfig mingw64-librsvg2
+      - name: Install cLaTeXMath 🖋
+        run: |
+          dnf config-manager --add-repo https://download.opensuse.org/repositories/home:sp1rit:mingw/Fedora_33/home:sp1rit:mingw.repo
+          dnf install -y mingw64-clatexmath mingw64-clatexmath-static
+      - name: Patch NoteKit 🩹
+        run: patch -p1 < windows.patch
+      - name: Configure 🔧
+        run: |
+          export CFLAGS="-O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions --param=ssp-buffer-size=4 -mwindows" \
+            LDFLAGS="-fstack-protector -lssp -mwindows -Wl,--subsystem,windows"
+          export CXXFLAGS="$CFLAGS"
+          meson --prefix=/ --cross-file=/usr/share/mingw/toolchain-mingw64.meson --default-library shared x86_64-w64-mingw32
+      - name: Compile 🎲
+        run: ninja -C x86_64-w64-mingw32
+      - name: Compress build artifacts 📦
+        run: |
+          pushd x86_64-w64-mingw32
+          tar -c * | zstd -o $GITHUB_WORKSPACE/x86_64-w64-mingw32.tar.zst
+          popd
+      - name: Upload build artifacts 📤
+        uses: actions/upload-artifact@v2
+        with:
+          name: Build artifacts (Windows MinGW)
+          path: x86_64-w64-mingw32.tar.zst
+  Darwin:
+    strategy:
+      matrix:
+        os:
+          - name: Linux Homebrew
+            id: ubuntu-latest
+            triplet: x86_64-linux-gnu
+          - name: OS X
+            id: macos-latest
+            triplet: x86_64-apple-darwin
+    runs-on: ${{ matrix.os.id }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Homebrew 🍺
+        uses: Homebrew/actions/setup-homebrew@master
+      - name: Download dependencies 📥
+        run: |
+          brew install meson ninja pkg-config
+          brew install fontconfig gtkmm3 gtksourceviewmm3 jsoncpp librsvg sp1ritCS/tap/clatexmath zlib
+      - name: Patch NoteKit 🩹
+        run: patch -p1 < Apple/llvm.patch
+      - name: Configure 🔧
+        run: meson ${{ matrix.os.triplet }}
+      - name: Compile 🎲
+        run: ninja -C ${{ matrix.os.triplet }}
+      - name: Compress build artifacts 📦
+        run: |
+          pushd ${{ matrix.os.triplet }}
+          tar -c * | zstd -o $GITHUB_WORKSPACE/${{ matrix.os.triplet }}.tar.zst
+          popd
+      - name: Upload build artifacts 📤
+        uses: actions/upload-artifact@v1
+        with:
+          name: Build artifacts (${{ matrix.os.name }})
+          path: ${{ matrix.os.triplet }}.tar.zst
