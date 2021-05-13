@@ -46,6 +46,12 @@ if (HAVE_CLATEXMATH)
     include_directories("${CLATEXMATH_PATH}/src/")
     set (LATEX_COMMENT_START "")
     set (LATEX_COMMENT_END "")
+    find_package(PkgConfig)
+    # due to
+    # https://github.com/NanoMichael/cLaTeXMath/pull/68
+    # https://github.com/NanoMichael/cLaTeXMath/pull/70
+    # we have to link tinyxml2 manually now
+    pkg_check_modules(tinyxml2 tinyxml2)
 endif (HAVE_CLATEXMATH)
 
 configure_file (
@@ -161,7 +167,7 @@ if (HAVE_LASEM)
 endif (HAVE_LASEM)
 
 if (HAVE_CLATEXMATH)
-    set(LINK_OPTIONS -L${CLATEXMATH_PATH}/ -l:libclatexmath.a ${LINK_OPTIONS})
+    set(LINK_OPTIONS -L${CLATEXMATH_PATH}/ -l:libLaTeX.a -l${tinyxml2_LIBRARIES} ${LINK_OPTIONS})
 endif (HAVE_CLATEXMATH)
 #}}}}
 
