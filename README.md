@@ -1,7 +1,7 @@
 # NoteKit
 This program is a structured notetaking application based on GTK+ 3. Write your notes in instantly-formatted Markdown, organise them in a tree of folders that can be instantly navigated from within the program, and add hand-drawn notes by mouse, touchscreen or digitiser.
 
-![Screenshot](/screenshots/notekit-example.png?raw=true)
+![Screenshot](/screenshots/notekit.png?raw=true)
 
 We have a [Discord server](https://discord.gg/WVas9aX6Ee) for questions and discussing the project's development.
 
@@ -88,7 +88,7 @@ Development and testing was exclusively conducted on X11-based Linux. The one te
 
 ### Syntax highlighting
 
-![Screenshot](/screenshots/syntax-highlighting.png?raw=true)
+![Screenshot](/screenshots/notekit-syntax_highlighting.png?raw=true)
 
 ### Misc
 

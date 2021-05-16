@@ -7,6 +7,7 @@
 
 #include <json/json.h>
 
+#include "about.h"
 #include "notebook.h"
 #include "navigation.h"
 
@@ -83,19 +84,19 @@ protected:
 	Gtk::HeaderBar hbar;
 	Gtk::MenuButton appbutton;
 	
+	AboutDiag about;
 	/* menu */
+	bool navigation = true;
+	Glib::RefPtr<Gio::SimpleAction> pref_action = add_action("pref", sigc::mem_fun(this,&CMainWindow::RunConfigWindow));
+	Glib::RefPtr<Gio::SimpleAction> about_action = add_action("about", sigc::mem_fun(about,&AboutDiag::show));
+	Glib::RefPtr<Gio::SimpleAction> sidebar_action = add_action_bool("sidebar", sigc::bind( sigc::mem_fun(this,&CMainWindow::on_action), "toggle-sidebar", WND_ACTION_TOGGLE_SIDEBAR, 1), &navigation);
+	Glib::RefPtr<Gio::Menu> menu = Gio::Menu::create();
 	Gtk::Menu appmenu;
-	struct {
-		Gtk::MenuItem prefs;
-		Gtk::SeparatorMenuItem sep;
-		Gtk::CheckMenuItem hide_sidebar;
-	} am;
 	
 	/* classic menu */
 	struct {
 		Gtk::VBox menu_box;
 		Gtk::MenuBar mbar;
-		Gtk::MenuItem view;
 	} cm;
 };
 

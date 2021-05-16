@@ -33,6 +33,7 @@ install_subdir('sourceview/', install_dir: get_option('datadir')/'notekit')
 #endif
 
 executable('notekit',
+	'about.cpp',
 	'drawing.cpp',
 	'imagewidgets.cpp',
 	'main.cpp',
