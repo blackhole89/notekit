@@ -7,6 +7,7 @@
 
 #include <json/json.h>
 
+#include "about.h"
 #include "notebook.h"
 #include "navigation.h"
 
@@ -102,21 +103,21 @@ protected:
 	Gtk::HeaderBar hbar;
 	Gtk::MenuButton appbutton;
 	
+	AboutDiag about;
 	/* menu */
+	bool navigation = true;
+	bool markdown_rendering = true;
+	Glib::RefPtr<Gio::SimpleAction> pref_action = add_action("pref", sigc::mem_fun(this,&CMainWindow::RunConfigWindow));
+	Glib::RefPtr<Gio::SimpleAction> about_action = add_action("about", sigc::mem_fun(about,&AboutDiag::show));
+	Glib::RefPtr<Gio::SimpleAction> sidebar_action = add_action_bool("sidebar", sigc::bind( sigc::mem_fun(this,&CMainWindow::on_action), "toggle-sidebar", WND_ACTION_TOGGLE_SIDEBAR, 1), &navigation);
+	Glib::RefPtr<Gio::SimpleAction> markdown_rendering_action = add_action_bool("markdown-rendering", sigc::bind( sigc::mem_fun(this,&CMainWindow::on_action), "markdown-rendering", WND_ACTION_TOGGLE_MARKDOWN_RENDERING, 0), &markdown_rendering);
+	Glib::RefPtr<Gio::Menu> menu = Gio::Menu::create();
 	Gtk::Menu appmenu;
-	struct {
-		Gtk::MenuItem prefs;
-		Gtk::SeparatorMenuItem sep;
-		Gtk::CheckMenuItem hide_sidebar;
-		Gtk::CheckMenuItem render_markdown;
-		Gtk::MenuItem exprt;
-	} am;
-	
+
 	/* classic menu */
 	struct {
 		Gtk::VBox menu_box;
 		Gtk::MenuBar mbar;
-		Gtk::MenuItem view;
 	} cm;
 };
 

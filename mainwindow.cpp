@@ -56,27 +56,18 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 	if( GdkVisual *vrgba = gdk_screen_get_rgba_visual( get_screen()->gobj() ) ) {
 		gtk_widget_set_visual(GTK_WIDGET(gobj()), vrgba );
 	}
-	
-	/* set up menu */
-	am.prefs.set_label("Preferences");
-	am.prefs.signal_activate().connect( sigc::mem_fun(this,&CMainWindow::RunConfigWindow) );
-	appmenu.append(am.prefs);
-	am.exprt.set_label("Export current");
-	am.exprt.signal_activate().connect( sigc::mem_fun(this,&CMainWindow::FetchAndExport) );
-	appmenu.append(am.exprt);
-	appmenu.append(am.sep);
-	am.hide_sidebar.set_label("Hide sidebar");
-	// this should probably use Gio::Menu actions instead...? documentation is an unholy mess on this
-	am.hide_sidebar.signal_activate().connect( sigc::bind( sigc::mem_fun(this,&CMainWindow::on_action), "toggle-sidebar", WND_ACTION_TOGGLE_SIDEBAR, 1)); 
-	appmenu.append(am.hide_sidebar);
-	
-	am.render_markdown.set_label("Full markdown rendering");
-	am.render_markdown.set_active(true);
-	am.render_markdown.signal_activate().connect( sigc::bind( sigc::mem_fun(this,&CMainWindow::on_action), "toggle-markdown-rendering", WND_ACTION_TOGGLE_MARKDOWN_RENDERING, 1)); 
-	appmenu.append(am.render_markdown);
-	
-	appmenu.show_all();
-	
+		
+	/*
+	 * set up menu
+	 * I don't kow why every item is prefixed with _,
+	 * but every other application I looked at did it
+	 * so we are doing it too :D.
+	 */
+	menu->append("_Preferences", "win.pref");
+	menu->append("_Toggle Sidebar", "win.sidebar");
+	menu->append("_Full markdown rendering", "win.markdown-rendering");
+	menu->append("_About", "win.about");
+
 	/* set up header bar */
 	use_hbar = config["use_headerbar"].asBool();
 	
@@ -84,7 +75,8 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 		hbar.set_show_close_button(true);
 		hbar.set_title("NoteKit");
 		appbutton.set_image_from_icon_name("accessories-text-editor", Gtk::ICON_SIZE_BUTTON, true);
-		appbutton.set_menu(appmenu);
+		appbutton.set_use_popover(true);
+		appbutton.set_menu_model(menu);
 		set_icon_name("accessories-text-editor");
 	
 		get_style_context()->add_class("csd");
@@ -155,11 +147,10 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 		add(split);
 	} else {
 		/* without a headerbar, we also need to have a vbox for the classic menu here */
-		cm.view.set_label("View");
-		// TODO: this results in Gtk-CRITICALs on quit as appmenu elements are double freed. 
-		// Is there any way we can set a submenu here without making free of cm.view recursively free appmenu?
-		cm.view.set_submenu(appmenu); 
-		cm.mbar.append(cm.view);
+
+		Glib::RefPtr<Gio::Menu> legacy = Gio::Menu::create();
+		legacy->append_submenu("View", menu);
+		cm.mbar = Gtk::MenuBar(legacy);
 		cm.menu_box.pack_start(cm.mbar,Gtk::PACK_SHRINK);
 		cm.menu_box.pack_start(split);
 		add(cm.menu_box);
@@ -619,20 +610,26 @@ void CMainWindow::on_action(std::string name, int type, int param)
 		search_bar.set_search_mode();
 		search_entry.grab_focus();
 		break;
-	case WND_ACTION_TOGGLE_SIDEBAR:
-		if(am.hide_sidebar.get_active()) {
+	case WND_ACTION_TOGGLE_SIDEBAR: {
+		if(navigation) {
 			nav_scroll.set_visible(false);
 		} else {
 			nav_scroll.set_visible(true);
 		}
-		break;
-	case WND_ACTION_TOGGLE_MARKDOWN_RENDERING:
-		if(am.render_markdown.get_active()) {
+		navigation = !navigation;
+		Glib::Variant<bool> mesh = Glib::Variant<bool>::create(navigation);
+		sidebar_action->set_state(mesh);
+		} break;
+	case WND_ACTION_TOGGLE_MARKDOWN_RENDERING: {
+		markdown_rendering = !markdown_rendering;
+		if(markdown_rendering) {
 			sview.EnableProximityRendering();
 		} else {
 			sview.DisableProximityRendering();
 		}
-		break;
+		Glib::Variant<bool> mesh = Glib::Variant<bool>::create(markdown_rendering);
+		markdown_rendering_action->set_state(mesh);
+		} break;
 	}
 }
 
