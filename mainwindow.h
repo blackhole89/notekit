@@ -17,6 +17,7 @@ enum {
 	WND_ACTION_PREV_NOTE,
 	WND_ACTION_SHOW_FIND,
 	WND_ACTION_TOGGLE_SIDEBAR,
+	WND_ACTION_TOGGLE_PRESENTATION,
 	WND_ACTION_TOGGLE_MARKDOWN_RENDERING
 };
 
@@ -103,14 +104,18 @@ protected:
 	Gtk::HeaderBar hbar;
 	Gtk::MenuButton appbutton;
 	
+	Gtk::Button presentbtn;
+
 	AboutDiag about;
 	/* menu */
 	bool navigation = true;
+	bool presentation_mode = false;
 	bool markdown_rendering = true;
 	Glib::RefPtr<Gio::SimpleAction> pref_action = add_action("pref", sigc::mem_fun(this,&CMainWindow::RunConfigWindow));
 	Glib::RefPtr<Gio::SimpleAction> about_action = add_action("about", sigc::mem_fun(about,&AboutDiag::show));
-	Glib::RefPtr<Gio::SimpleAction> sidebar_action = add_action_bool("sidebar", sigc::bind( sigc::mem_fun(this,&CMainWindow::on_action), "toggle-sidebar", WND_ACTION_TOGGLE_SIDEBAR, 1), &navigation);
-	Glib::RefPtr<Gio::SimpleAction> markdown_rendering_action = add_action_bool("markdown-rendering", sigc::bind( sigc::mem_fun(this,&CMainWindow::on_action), "markdown-rendering", WND_ACTION_TOGGLE_MARKDOWN_RENDERING, 0), &markdown_rendering);
+	Glib::RefPtr<Gio::SimpleAction> sidebar_action = add_action_bool("sidebar", sigc::bind( sigc::mem_fun(this,&CMainWindow::on_action), "toggle-sidebar", WND_ACTION_TOGGLE_SIDEBAR, 1), navigation);
+	Glib::RefPtr<Gio::SimpleAction> presentation_action = add_action_bool("presentation", sigc::bind( sigc::mem_fun(this,&CMainWindow::on_action), "toggle-presentation-mode", WND_ACTION_TOGGLE_PRESENTATION, 1), presentation_mode);
+	Glib::RefPtr<Gio::SimpleAction> markdown_rendering_action = add_action_bool("markdown-rendering", sigc::bind( sigc::mem_fun(this,&CMainWindow::on_action), "markdown-rendering", WND_ACTION_TOGGLE_MARKDOWN_RENDERING, 0), markdown_rendering);
 	Glib::RefPtr<Gio::Menu> menu = Gio::Menu::create();
 	Gtk::Menu appmenu;
 

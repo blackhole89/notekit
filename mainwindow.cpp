@@ -77,11 +77,14 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 		appbutton.set_image_from_icon_name("accessories-text-editor", Gtk::ICON_SIZE_BUTTON, true);
 		appbutton.set_use_popover(true);
 		appbutton.set_menu_model(menu);
-		set_icon_name("accessories-text-editor");
+
+		presentbtn.set_image_from_icon_name("maximize-symbolic");
+		presentbtn.signal_clicked().connect( sigc::bind( sigc::mem_fun(this,&CMainWindow::on_action), "toggle-presentation-mode", WND_ACTION_TOGGLE_PRESENTATION, 1 ));
 	
 		get_style_context()->add_class("csd");
 	
 		hbar.pack_start(appbutton);
+		hbar.pack_end(presentbtn);
 		set_titlebar(hbar);
 	}
 	
@@ -620,6 +623,19 @@ void CMainWindow::on_action(std::string name, int type, int param)
 		Glib::Variant<bool> mesh = Glib::Variant<bool>::create(navigation);
 		sidebar_action->set_state(mesh);
 		} break;
+	case WND_ACTION_TOGGLE_PRESENTATION:
+		presentation_mode = !presentation_mode;
+		presentation_action->set_enabled(!presentation_mode);
+		if (presentation_mode) {
+			nav_scroll.set_visible(false);
+			toolbar->hide();
+			presentbtn.set_image_from_icon_name("minimize-symbolic");
+		} else {
+			nav_scroll.set_visible(navigation);
+			toolbar->show();
+			presentbtn.set_image_from_icon_name("maximize-symbolic");
+		}
+		break;
 	case WND_ACTION_TOGGLE_MARKDOWN_RENDERING: {
 		markdown_rendering = !markdown_rendering;
 		if(markdown_rendering) {
