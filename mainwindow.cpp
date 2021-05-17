@@ -55,6 +55,9 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 	am.prefs.set_label("Preferences");
 	am.prefs.signal_activate().connect( sigc::mem_fun(this,&CMainWindow::RunConfigWindow) );
 	appmenu.append(am.prefs);
+	am.exprt.set_label("Export current");
+	am.exprt.signal_activate().connect( sigc::mem_fun(this,&CMainWindow::FetchAndExport) );
+	appmenu.append(am.exprt);
 	appmenu.append(am.sep);
 	am.hide_sidebar.set_label("Hide sidebar");
 	// this should probably use Gio::Menu actions instead...? documentation is an unholy mess on this
@@ -397,6 +400,60 @@ void CMainWindow::FetchAndSave()
 	
 	/* atomic replace */
 	rename(tmp_filename.c_str(), filename.c_str());
+}
+
+void CMainWindow::FetchAndExport()
+{
+	if(active_document=="") return;
+	
+	Gtk::FileChooserDialog d("Export current note", Gtk::FILE_CHOOSER_ACTION_SAVE);
+	d.set_transient_for(*this);
+	d.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
+	d.add_button("_Export", Gtk::RESPONSE_OK);
+	
+	auto filter_md = Gtk::FileFilter::create();
+	filter_md->set_name("Portable markdown");
+	filter_md->add_mime_type("text/plain");
+	filter_md->add_mime_type("text/markdown");
+	d.add_filter(filter_md);
+	
+	auto filter_pdf = Gtk::FileFilter::create();
+	filter_pdf->set_name("Pandoc to PDF (requires pandoc)");
+	filter_pdf->add_mime_type("application/pdf");
+	d.add_filter(filter_pdf);
+	
+	switch(d.run()) {
+	case Gtk::RESPONSE_OK: {
+		gsize len;
+		guint8 *buf;
+		buf = sbuffer->serialize(sbuffer,"text/plain",sbuffer->begin(),sbuffer->end(),len);
+		std::string str((const char*)buf,len);
+		g_free(buf);
+		
+		if(d.get_filter() == filter_md) {
+			FILE *fl = fopen(d.get_filename().c_str(), "wb");
+			fwrite(str.c_str(),str.length(),1,fl);
+			fclose(fl);
+		} else if(d.get_filter() == filter_pdf) {
+			char *tempmd = tempnam(NULL,"nkexport");
+			FILE *fl = fopen(tempmd, "wb");
+			fwrite(str.c_str(),str.length(),1,fl);
+			fclose(fl);
+			
+			char cmdbuf[1024];
+			snprintf(cmdbuf,1024,"pandoc -f markdown -t latex -o \"%s\" \"%s\"",d.get_filename().c_str(),tempmd);
+			int retval;
+			if(retval=system(cmdbuf)) {
+				printf("Exporting to PDF (temporary file: %s): failure (%d). Temporary file not deleted.\n",tempmd,retval);
+			} else {
+				printf("Exporting to PDF (temporary file: %s): success.\n",tempmd);
+				::remove(tempmd);
+			}
+		}
+		
+	break; }
+	default:;
+	}
 }
 
 void CMainWindow::OpenDocument(std::string filename)

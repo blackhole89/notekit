@@ -33,6 +33,8 @@ public:
 	void OpenDocument(std::string filename);
 	void SetActiveFilename(std::string filename);
 	
+	void FetchAndExport();
+	
 	void FocusDocument();
 	
 	void GetColor(int id, float &r, float &g, float &b);
@@ -89,6 +91,7 @@ protected:
 		Gtk::MenuItem prefs;
 		Gtk::SeparatorMenuItem sep;
 		Gtk::CheckMenuItem hide_sidebar;
+		Gtk::MenuItem exprt;
 	} am;
 	
 	/* classic menu */
