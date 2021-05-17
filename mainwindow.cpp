@@ -441,7 +441,7 @@ void CMainWindow::FetchAndExport()
 			fclose(fl);
 			
 			char cmdbuf[1024];
-			snprintf(cmdbuf,1024,"pandoc -f markdown -t latex -o \"%s\" \"%s\"",d.get_filename().c_str(),tempmd);
+			snprintf(cmdbuf,1024,"pandoc -f markdown+hard_line_breaks+compact_definition_lists -t latex -o \"%s\" \"%s\"",d.get_filename().c_str(),tempmd);
 			int retval;
 			if(retval=system(cmdbuf)) {
 				printf("Exporting to PDF (temporary file: %s): failure (%d). Temporary file not deleted.\n",tempmd,retval);
