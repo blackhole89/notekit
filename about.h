@@ -7,7 +7,7 @@ class AboutDiag : public Gtk::AboutDialog {
 		std::vector<Glib::ustring> contributers {
 			"Matvey Soloviev",
 			"Florian \"sp1rit\"",
-			"Lyes Saadi",
+			"Lyes Saadi"
 		};
 		std::vector<Glib::ustring> artists {
 			"Thomas Kole"
