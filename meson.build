@@ -1,9 +1,10 @@
 project('notekit', 'cpp',
-	version : '0.1',
+	version : '0.1.0',
 	default_options : ['warning_level=3', 'cpp_std=c++14']
 )
 
 conf_data = configuration_data()
+conf_data.set('version', meson.project_version())
 
 deps = [
 	dependency('gtkmm-3.0'),
@@ -14,7 +15,7 @@ deps = [
 ]
 
 if get_option('clatexmath')
-	deps += dependency('clatexmath', version: '>=0.0.3')
+	deps += dependency('clatexmath', version: '>=0.0.3', fallback: ['clatexmath', 'clatexmath_dep'])
 	conf_data.set('HAVE_CLATEXMATH', true)
 endif
 

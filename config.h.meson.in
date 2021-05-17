@@ -1,3 +1,4 @@
 // global config
 
+#define NK_VERSION "@version@"
 #mesondefine HAVE_CLATEXMATH
