@@ -16,8 +16,8 @@ int main (int argc, char *argv[])
 	
 	app->set_accel_for_action("notebook.next-note", "<Primary>Tab");
 	app->set_accel_for_action("notebook.prev-note", "<Primary><Shift>Tab");
-    app->set_accel_for_action("win.sidebar", "<Shift>Tab");
-	app->set_accel_for_action("win.zen", "<Primary>F11");
+    app->set_accel_for_action("win.sidebar", "F9");
+	app->set_accel_for_action("win.zen", "F11");
 	
 	auto ret = app->run();
 
