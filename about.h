@@ -23,6 +23,7 @@ class AboutDiag : public Gtk::AboutDialog {
 			"大黄老鼠",
 		};
 		std::vector<Glib::ustring> artists {
-			"Thomas Kole"
+			"Thomas Kole",
+			"James & Orman Clark @ iconic.app http://iconic.app"
 		};
 };

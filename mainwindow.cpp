@@ -70,9 +70,12 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 		appbutton.set_image_from_icon_name("accessories-text-editor", Gtk::ICON_SIZE_BUTTON, true);
 		appbutton.set_use_popover(true);
 		appbutton.set_menu_model(menu);
-		set_icon_name("accessories-text-editor");
+
+		zenbtn.set_image_from_icon_name("maximize-symbolic");
+		zenbtn.signal_clicked().connect( sigc::bind( sigc::mem_fun(this,&CMainWindow::on_action), "toggle-zen", WND_ACTION_TOGGLE_ZEN, 1 ));
 	
 		hbar.pack_start(appbutton);
+		hbar.pack_end(zenbtn);
 		set_titlebar(hbar);
 	}
 	
@@ -494,6 +497,19 @@ void CMainWindow::on_action(std::string name, int type, int param)
 	case WND_ACTION_PREV_NOTE:
 		nav_model.PrevDoc();
 		break;
+	case WND_ACTION_TOGGLE_ZEN:
+	    zen = !zen;
+	    sidebar_action->set_enabled(!zen);
+	    if (zen) {
+	        nav_scroll.set_visible(false);
+	        toolbar->hide();
+	        zenbtn.set_image_from_icon_name("minimize-symbolic");
+	    } else {
+	        nav_scroll.set_visible(navigation);
+	        toolbar->show();
+	        zenbtn.set_image_from_icon_name("maximize-symbolic");
+	    }
+	    break;
 	case WND_ACTION_TOGGLE_SIDEBAR:
 		if(navigation) {
 			nav_scroll.set_visible(false);
