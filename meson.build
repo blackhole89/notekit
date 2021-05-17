@@ -4,7 +4,11 @@ project('notekit', 'cpp',
 )
 
 conf_data = configuration_data()
-conf_data.set('version', meson.project_version())
+if get_option('version') != ''
+	conf_data.set('version', get_option('version'))
+else
+	conf_data.set('version', meson.project_version())
+endif
 
 deps = [
 	dependency('gtkmm-3.0'),

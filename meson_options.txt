@@ -1,1 +1,2 @@
 option('clatexmath', type : 'boolean', value : true, description : 'Use cLaTeXMath')
+option('version', type: 'string', description: 'Sets a custom version string, you\'ll most likely not need to do this.')
