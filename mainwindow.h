@@ -35,6 +35,8 @@ public:
 	void OpenDocument(std::string filename);
 	void SetActiveFilename(std::string filename);
 	
+	void FetchAndExport();
+
 	void FocusDocument();
 	
 	void GetColor(int id, float &r, float &g, float &b);
@@ -91,6 +93,7 @@ protected:
 	AboutDiag about;
 	/* menu */
 	bool navigation = true;
+	Glib::RefPtr<Gio::SimpleAction> export_action = add_action("export", sigc::mem_fun(this,&CMainWindow::FetchAndExport));
 	Glib::RefPtr<Gio::SimpleAction> pref_action = add_action("pref", sigc::mem_fun(this,&CMainWindow::RunConfigWindow));
 	Glib::RefPtr<Gio::SimpleAction> about_action = add_action("about", sigc::mem_fun(about,&AboutDiag::show));
 	Glib::RefPtr<Gio::SimpleAction> sidebar_action = add_action_bool("sidebar", sigc::bind( sigc::mem_fun(this,&CMainWindow::on_action), "toggle-sidebar", WND_ACTION_TOGGLE_SIDEBAR, 1), &navigation);
