@@ -31,7 +31,7 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 	if(r) delete r;
 	#endif
 	
-	sview.Init(data_path, config["use_highlight_proxy"].asBool());
+	sview.Init(data_path, settings->get_boolean("syntax-highlighting"));
 	nav_model.SetBasePath(config["base_path"].asString());
 	
 	// make sure document is in place for tree expansion so we can set the selection
@@ -62,23 +62,21 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 	menu->append("_Toggle Sidebar", "win.sidebar");
 	menu->append("_About", "win.about");
 
-	/* set up header bar */
-	use_hbar = config["use_headerbar"].asBool();
-	
-	if(use_hbar) {
-		hbar.set_show_close_button(true);
-		hbar.set_title("NoteKit");
-		appbutton.set_image_from_icon_name("accessories-text-editor", Gtk::ICON_SIZE_BUTTON, true);
-		appbutton.set_use_popover(true);
-		appbutton.set_menu_model(menu);
+	/* set up header bar */	
+	hbar.set_show_close_button(true);
+	hbar.set_title("NoteKit");
+	appbutton.set_image_from_icon_name("accessories-text-editor", Gtk::ICON_SIZE_BUTTON, true);
+	appbutton.set_use_popover(true);
+	appbutton.set_menu_model(menu);
 
-		zenbtn.set_image_from_icon_name("maximize-symbolic");
-		zenbtn.signal_clicked().connect( sigc::bind( sigc::mem_fun(this,&CMainWindow::on_action), "toggle-zen", WND_ACTION_TOGGLE_ZEN, 1 ));
-	
-		hbar.pack_start(appbutton);
-		hbar.pack_end(zenbtn);
-		set_titlebar(hbar);
-	}
+	zenbtn.set_image_from_icon_name("maximize-symbolic");
+	zenbtn.signal_clicked().connect( sigc::bind( sigc::mem_fun(this,&CMainWindow::on_action), "toggle-zen", WND_ACTION_TOGGLE_ZEN, 1 ));
+
+	hbar.pack_start(appbutton);
+	hbar.pack_end(zenbtn);
+	set_titlebar(hbar);
+
+	settings->bind("csd", hbar.property_visible());
 	
 	/* install tree view */
 	nav_model.AttachView(this,&nav);
@@ -123,19 +121,14 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 	ACTION("prev-note",WND_ACTION_PREV_NOTE,1);
 	
 	/* add the top-level layout */
-	if(use_hbar) {
-		add(split);
-	} else {
-		/* without a headerbar, we also need to have a vbox for the classic menu here */
-
-		Glib::RefPtr<Gio::Menu> legacy = Gio::Menu::create();
-		legacy->append_submenu("View", menu);
-		cm.mbar = Gtk::MenuBar(legacy);
-		cm.menu_box.pack_start(cm.mbar,Gtk::PACK_SHRINK);
-		cm.menu_box.pack_start(split);
-		add(cm.menu_box);
-	}
-
+	Glib::RefPtr<Gio::Menu> legacy = Gio::Menu::create();
+	legacy->append_submenu("View", menu);
+	cm.mbar = Gtk::MenuBar(legacy);
+	cm.menu_box.pack_start(cm.mbar,Gtk::PACK_SHRINK);
+	cm.menu_box.pack_start(split);
+	add(cm.menu_box);
+	
+	settings->bind("csd", cm.mbar.property_visible(), Gio::SettingsBindFlags::SETTINGS_BIND_INVERT_BOOLEAN);
 	show_all();
 	
 	/* workaround to make sure the right pen width is selected at start */
@@ -274,12 +267,14 @@ void CMainWindow::RunConfigWindow()
 	config_builder->get_widget("use_headerbar",use_headerbar);
 	config_builder->get_widget("use_highlight_proxy",use_highlight_proxy);
 	dir->set_current_folder(config["base_path"].asString());
-	use_headerbar->set_active(config["use_headerbar"].asBool());
-	use_highlight_proxy->set_active(config["use_highlight_proxy"].asBool());
+	//use_headerbar->set_active(config["use_headerbar"].asBool());
+	settings->bind("csd", use_headerbar->property_active());
+	settings->bind("syntax-highlighting", use_highlight_proxy->property_active());
+	//use_highlight_proxy->set_active(config["use_highlight_proxy"].asBool());
 	if(dlg->run() == Gtk::RESPONSE_OK) {
 		config["base_path"]=dir->get_current_folder();
-		config["use_highlight_proxy"]=use_highlight_proxy->get_active();
-		config["use_headerbar"]=use_headerbar->get_active();
+		//config["use_highlight_proxy"]=use_highlight_proxy->get_active();
+		//config["use_headerbar"]=use_headerbar->get_active();
 		SaveConfig();
 	}
 	dlg->hide();
@@ -435,7 +430,7 @@ void CMainWindow::FetchAndExport()
 			fwrite(str.c_str(),str.length(),1,fl);
 			fclose(fl);
 		} else if(d.get_filter() == filter_pdf) {
-			char *tempmd = tempnam(NULL,"nkexport");
+		   	char *tempmd = tempnam(NULL,"nkexport");
 			FILE *fl = fopen(tempmd, "wb");
 			fwrite(str.c_str(),str.length(),1,fl);
 			fclose(fl);
@@ -515,11 +510,10 @@ void CMainWindow::SetActiveFilename(std::string filename)
 {
 	active_document = filename;
 	selected_document = filename;
-	if(use_hbar) {
-		hbar.set_subtitle(active_document);
-	} else {
-		set_title(active_document + " - NoteKit");
-	}
+	set_title(active_document + " - NoteKit");
+	hbar.set_title("NoteKit");
+	hbar.set_subtitle(active_document);
+	
 	config["active_document"]=filename;
 }
 
