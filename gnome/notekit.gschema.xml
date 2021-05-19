@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="com.github.blackhole89.NoteKit">
+	<schema id="com.github.blackhole89.NoteKit" path="/com/github/blackhole89/NoteKit/">
+		<key name="base-path" type="s">
+			<default>"µ{default}"</default>
+			<summary>The directory in which the tree of notes is stored.</summary>
+		</key>
+<key name="csd" type="b">
+			<default>true</default>
+			<summary>Display a GNOME style CSD title bar instead of deferring to the window manager / gtk fallback. </summary>
+		</key>
+		<key name="syntax-highlighting" type="b">
+			<default>true</default>
+			<summary>Enable syntax highlighting in three-backtick code spans, using the languages supported by your system's GtkSourceView (gedit, pluma etc.) setup.</summary>
+		</key>
+	</schema>
+</schemalist>
