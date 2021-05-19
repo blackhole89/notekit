@@ -75,6 +75,9 @@ protected:
 	void LoadConfig();
 	void SaveConfig();
 	void RunConfigWindow();
+
+  /* settings */
+  Glib::RefPtr<Gio::Settings> settings = Gio::Settings::create("com.github.blackhole89.NoteKit");
 	
 	/* tree view on the left */
 	Gtk::ScrolledWindow nav_scroll;
@@ -100,7 +103,6 @@ protected:
 	void UpdateToolbarColors();
 	
 	/* header */
-	bool use_hbar;
 	Gtk::HeaderBar hbar;
 	Gtk::MenuButton appbutton;
 	
