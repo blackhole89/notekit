@@ -5,8 +5,6 @@
 
 #include <gtkmm.h>
 
-#include <json/json.h>
-
 #include "about.h"
 #include "notebook.h"
 #include "navigation.h"
@@ -33,14 +31,13 @@ public:
 	void HardClose();
 	void FetchAndSave();
 	void OpenDocument(std::string filename);
-	void SetActiveFilename(std::string filename);
+	void SetupDocumentWindow(Glib::ustring filename);
 	
 	void FetchAndExport();
 
 	void FocusDocument();
-	
-	void GetColor(int id, float &r, float &g, float &b);
-	void SetColor(int id, float r, float g, float b);
+
+	typedef std::tuple<double, double, double, double> color_t;
 protected:
 	//Signal handlers:
 	bool on_close(GdkEventAny* any_event);
@@ -59,13 +56,13 @@ protected:
 	std::string default_base_path;
 	std::string data_path;
 	void CalculatePaths();
-	Json::Value config;
-	void LoadConfig();
-	void SaveConfig();
-	void RunConfigWindow();
+	void RunPreferenceDiag();
 
   /* settings */
   Glib::RefPtr<Gio::Settings> settings = Gio::Settings::create("com.github.blackhole89.NoteKit");
+	void SettingChange(const Glib::ustring& key);
+	bool binit = true;
+	void UpdateBasePath();
 	
 	/* tree view on the left */
 	Gtk::ScrolledWindow nav_scroll;
@@ -96,7 +93,7 @@ protected:
 	/* menu */
 	bool navigation = true;
 	Glib::RefPtr<Gio::SimpleAction> export_action = add_action("export", sigc::mem_fun(this,&CMainWindow::FetchAndExport));
-	Glib::RefPtr<Gio::SimpleAction> pref_action = add_action("pref", sigc::mem_fun(this,&CMainWindow::RunConfigWindow));
+	Glib::RefPtr<Gio::SimpleAction> pref_action = add_action("pref", sigc::mem_fun(this,&CMainWindow::RunPreferenceDiag));
 	Glib::RefPtr<Gio::SimpleAction> about_action = add_action("about", sigc::mem_fun(about,&AboutDiag::show));
 	Glib::RefPtr<Gio::SimpleAction> sidebar_action = add_action_bool("sidebar", sigc::bind( sigc::mem_fun(this,&CMainWindow::on_action), "toggle-sidebar", WND_ACTION_TOGGLE_SIDEBAR, 1), &navigation);
 	Glib::RefPtr<Gio::SimpleAction> zen_action = add_action_bool("zen", sigc::bind( sigc::mem_fun(this,&CMainWindow::on_action), "toggle-zen", WND_ACTION_TOGGLE_ZEN, 1), zen);
@@ -108,6 +105,8 @@ protected:
 		Gtk::VBox menu_box;
 		Gtk::MenuBar mbar;
 	} cm;
+
+	Gtk::FileChooserButton *dir;
 };
 
 #endif // MAINWINDOW_H

@@ -13,7 +13,6 @@ endif
 deps = [
 	dependency('gtkmm-3.0'),
 	dependency('gtksourceviewmm-3.0'),
-	dependency('jsoncpp'),
 	dependency('zlib'),
 	dependency('fontconfig')
 ]
@@ -33,6 +32,10 @@ subdir('freedesktop')
 install_subdir('data/', install_dir: get_option('datadir')/'notekit')
 install_subdir('sourceview/', install_dir: get_option('datadir')/'notekit')
 
+install_data('gnome/notekit.gschema.xml',
+  install_dir: join_paths(get_option('datadir'), 'glib-2.0/schemas')
+)
+
 #if get_option('clatexmath')
 #	meson.add_install_script('symlink-clatexmath.sh')
 #endif
@@ -48,3 +51,5 @@ executable('notekit',
 	dependencies: deps,
 	install : true
 )
+
+meson.add_install_script('build-aux/postinstall.py')

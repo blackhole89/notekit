@@ -1,6 +1,7 @@
 #include "about.h"
 #include "config.h"
 
+// TODO: Figure out why the fallback buttons don't work on Mate/Compiz
 AboutDiag::AboutDiag() {
 	set_program_name("NoteKit");
 	set_logo_icon_name("com.github.blackhole89.notekit");
