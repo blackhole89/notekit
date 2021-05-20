@@ -5,13 +5,49 @@
 			<default>"µ{default}"</default>
 			<summary>The directory in which the tree of notes is stored.</summary>
 		</key>
-<key name="csd" type="b">
+	  <key name="active-document" type="s">
+	    <default>""</default>
+	    <summary>The currently active document</summary>
+	  </key>
+    <key name="csd" type="b">
 			<default>true</default>
 			<summary>Display a GNOME style CSD title bar instead of deferring to the window manager / gtk fallback. </summary>
 		</key>
 		<key name="syntax-highlighting" type="b">
 			<default>true</default>
 			<summary>Enable syntax highlighting in three-backtick code spans, using the languages supported by your system's GtkSourceView (gedit, pluma etc.) setup.</summary>
+		</key>
+	  <key name="zen" type="b">
+			<default>false</default>
+			<summary>Enables Zen / hide-everything mode</summary>
+		</key>
+	  <key name="color1" type="(dddd)">
+			<default>(0.0,0.0,0.0,1.0)</default>
+			<summary>The color (rgba) of the first color button</summary>
+		</key>
+	  <key name="color2" type="(dddd)">
+			<default>(0.62745100259780884,0.65882354974746704,0.75294119119644165,1.0)</default>
+			<summary>The color (rgba) of the second color button</summary>
+		</key>
+	  <key name="color3" type="(dddd)">
+			<default>(0.97647058963775635,0.12156862765550613,0.21568627655506134,1.0)</default>
+			<summary>The color (rgba) of the third color button</summary>
+		</key>
+	  <key name="color4" type="(dddd)">
+			<default>(0.61568629741668701,0.7607843279838562,0.3960784375667572,1.0)</default>
+			<summary>The color (rgba) of the fouth color button</summary>
+		</key>
+	  <key name="color5" type="(dddd)">
+			<default>(0.21176470816135406,0.47058823704719543,0.73725491762161255,1.0)</default>
+			<summary>The color (rgba) of the fith color button</summary>
+		</key>
+	  <key name="color6" type="(dddd)">
+			<default>(1.0,0.64313727617263794,0.0,1.0)</default>
+			<summary>The color (rgba) of the sixth color button</summary>
+		</key>
+	  <key name="color7" type="(dddd)">
+			<default>(0.76862746477127075,0.26666668057441711,0.49019607901573181,1.0)</default>
+			<summary>The color (rgba) of the seventh color button</summary>
 		</key>
 	</schema>
 </schemalist>
