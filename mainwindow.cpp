@@ -4,27 +4,35 @@
 #include <iostream>
 #include <fontconfig/fontconfig.h>
 
+#include <stdlib.h>
+
 #ifdef HAVE_CLATEXMATH
 #define __OS_Linux__
 #include "latex.h"
 #endif
 
+/* thanks to @Tim Cooper & @Замфир Йончев on SO; https://stackoverflow.com/a/13487193/10890264, https://stackoverflow.com/a/62628594/10890264 */
+constexpr unsigned long hash(const char *str) {
+    unsigned long hash = 5381;
+
+    while (int c = *str++) {
+        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+    }
+
+    return hash;
+}
+
 CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::ApplicationWindow(app), nav_model(), sview()
 {
 	// Determine paths to operate on.
 	CalculatePaths();
-	
+
 	printf("== This is notekit, built at " __TIMESTAMP__ ". ==\n");
 	printf("Detected paths:\n");
-	printf("Config: %s\n",config_path.c_str());
+	//printf("Config: %s\n",config_path.c_str());
+	printf("Active notes path: %s\n",settings->get_string("base-path").c_str());
 	printf("Default notes path: %s\n",default_base_path.c_str());
 	printf("Resource path: %s\n",data_path.c_str());
-	
-	// Load config.
-	std::setlocale(LC_NUMERIC, "C"); // workaround for old jsoncpp on German (decimal comma) systems
-	LoadConfig();
-	
-	printf("Active notes path: %s\n",config["base_path"].asString().c_str());
 	printf("\n");
 	
 	#ifdef HAVE_CLATEXMATH
@@ -35,10 +43,14 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 	#endif
 	
 	sview.Init(data_path, settings->get_boolean("syntax-highlighting"));
-	nav_model.SetBasePath(config["base_path"].asString());
+	if (settings->get_string("base-path") == "µ{default}") {
+	    settings->set_string("base-path", default_base_path);
+	} else {
+	    SettingChange("base-path");
+	}
 	
 	// make sure document is in place for tree expansion so we can set the selection
-	selected_document = config["active_document"].asString();
+	selected_document = settings->get_string("active-document");
 	
 	// set up window
 	set_border_width(0);
@@ -85,7 +97,6 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 	settings->bind("csd", hbar.property_visible());
 
 	/* install tree view */
-	nav_model.AttachView(this,&nav);
 	nav.get_style_context()->add_class("sidebar");
 	nav.get_style_context()->add_class("nemo-window");
 	
@@ -150,19 +161,26 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 	add(cm.menu_box);
 	
 	settings->bind("csd", cm.mbar.property_visible(), Gio::SettingsBindFlags::SETTINGS_BIND_INVERT_BOOLEAN);
+	settings->signal_changed().connect(sigc::mem_fun(this,&CMainWindow::SettingChange));
 	show_all();
 	
 	/* workaround to make sure the right pen width is selected at start */
 	Gtk::RadioToolButton *b;
 	toolbar_builder->get_widget("medium",b); b->set_active(false); b->set_active(true);
 	
-	OpenDocument(selected_document);
+	if (settings->get_string("active-document") == "") {
+	    settings->set_string("active-document", "");
+	} else {
+	    SettingChange("active-document");
+	}
 	
 	close_handler = this->signal_delete_event().connect( sigc::mem_fun(this, &CMainWindow::on_close) );
 	
 	signal_motion_notify_event().connect(sigc::mem_fun(this,&CMainWindow::on_motion_notify),false);
 	
 	idle_timer = Glib::signal_timeout().connect(sigc::mem_fun(this,&CMainWindow::on_idle),5000,Glib::PRIORITY_LOW);
+
+	printf("Current document: %s\n", settings->get_string("active-document").c_str());
 }
 
 int mkdirp(std::string dir)
@@ -235,71 +253,29 @@ void CMainWindow::CalculatePaths()
 	free(data_dirs);
 }
 
-void CMainWindow::LoadConfig()
-{
-	char *buf; gsize length;
-	Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(config_path+"/config.json");
-	
-	try {
-		file->load_contents(buf, length);
-	} catch(Gio::Error &e) {
-		file = Gio::File::create_for_path(data_path+"/data/default_config.json");
-		
-		try {
-			file->load_contents(buf, length);
-		} catch(Gio::Error &e) {
-			fprintf(stderr,"FATAL: config.json not found in note tree, and default_config.json not found in data tree!\n");
-			exit(-1);
-		}
-	}
-
-	Json::CharReaderBuilder rbuilder;
-	std::istringstream i(buf);
-	std::string errs;
-	Json::parseFromStream(rbuilder, i, &config, &errs);
-	
-	/* set default base path if none has been explicitly set */
-	if(!config["base_path"].isString() || config["base_path"].asString()=="") {
-		config["base_path"]=default_base_path;
-	}
-
-	g_free(buf);
-}
-
-void CMainWindow::SaveConfig()
-{
-	Json::StreamWriterBuilder wbuilder;
-	std::string str = Json::writeString(wbuilder, config);
-	
-	FILE *fl = fopen( (config_path+"/config.json").c_str(), "wb");
-	fwrite(str.c_str(),str.length(),1,fl);
-	fclose(fl);
-}
-
-void CMainWindow::RunConfigWindow()
+void CMainWindow::RunPreferenceDiag()
 {
 	Glib::RefPtr<Gtk::Builder> config_builder;
 	
 	config_builder = Gtk::Builder::create_from_file(data_path+"/data/preferences.glade");
 	Gtk::Dialog *dlg;
 	config_builder->get_widget("preferences",dlg); 
-	Gtk::FileChooserButton *dir;
 	Gtk::CheckButton *use_headerbar, *use_highlight_proxy;
 	config_builder->get_widget("base_path",dir); 
 	config_builder->get_widget("use_headerbar",use_headerbar);
 	config_builder->get_widget("use_highlight_proxy",use_highlight_proxy);
-	dir->set_current_folder(config["base_path"].asString());
-	//use_headerbar->set_active(config["use_headerbar"].asBool());
+	dir->set_current_folder(settings->get_string("base-path"));
+	dir->signal_file_set().connect(sigc::mem_fun(this,&CMainWindow::UpdateBasePath));
 	settings->bind("csd", use_headerbar->property_active());
 	settings->bind("syntax-highlighting", use_highlight_proxy->property_active());
-	//use_highlight_proxy->set_active(config["use_highlight_proxy"].asBool());
-	if(dlg->run() == Gtk::RESPONSE_OK) {
-		config["base_path"]=dir->get_current_folder();
-		//config["use_highlight_proxy"]=use_highlight_proxy->get_active();
-		//config["use_headerbar"]=use_headerbar->get_active();
-		SaveConfig();
-	}
+	dlg->run();
 	dlg->hide();
+}
+
+void CMainWindow::UpdateBasePath() {
+    printf("base path updated\n");
+    /* TODO: get_current_folder() is incorrect. it doesn't work if you enter a path with <CTRL>L */
+    settings->set_string("base-path", dir->get_current_folder());
 }
 
 void CMainWindow::InitToolbar()
@@ -315,7 +291,9 @@ void CMainWindow::InitToolbar()
 	
 	/* generate colour buttons */
 	Gtk::RadioToolButton *b0 = nullptr;
-	for(unsigned int i=1;i<=config["colors"].size();++i) {
+	// TODO: implement colors with one a(dddd) key instead of seven, fixed (dddd) keys.
+	const guint buttons = 7;
+	for(unsigned int i=1;i<=buttons;++i) {
 		char buf[255];
 		//Gtk::Widget *sdfg;
 		
@@ -343,25 +321,6 @@ void CMainWindow::InitToolbar()
 	}
 }
 
-void CMainWindow::GetColor(int id, float &r, float &g, float &b)
-{
-	Json::Value def;
-	def["r"]=def["g"]=def["b"]=0;
-	r=config["colors"].get(id-1,def)["r"].asFloat();
-	g=config["colors"].get(id-1,def)["g"].asFloat();
-	b=config["colors"].get(id-1,def)["b"].asFloat();
-}
-
-void CMainWindow::SetColor(int id, float r, float g, float b)
-{
-	Json::Value def;
-	def["r"]=def["g"]=def["b"]=0;
-	config["colors"][id-1]["r"]=r;
-	config["colors"][id-1]["g"]=g;
-	config["colors"][id-1]["b"]=b;
-}
-
-
 void CMainWindow::UpdateToolbarColors()
 {
 	std::string colorcss;
@@ -369,8 +328,21 @@ void CMainWindow::UpdateToolbarColors()
 	int i=1;
 	char buf[255];
 	
-	for(auto a : config["colors"]) {
-		sprintf(buf,"#color%d { -gtk-icon-palette: warning rgb(%d,%d,%d); }\n", i, (int)(255*a["r"].asDouble()), (int)(255*a["g"].asDouble()), (int)(255*a["b"].asDouble()) );
+	Glib::Variant<color_t> gcolors[7];
+	settings->get_value("color1", gcolors[0]);
+	settings->get_value("color2", gcolors[1]);
+	settings->get_value("color3", gcolors[2]);
+	settings->get_value("color4", gcolors[3]);
+	settings->get_value("color5", gcolors[4]);
+	settings->get_value("color6", gcolors[5]);
+	settings->get_value("color7", gcolors[6]);
+
+
+	for(Glib::Variant<color_t> gcolor : gcolors) {
+	    color_t color = gcolor.get();
+		gchar alpha_buffer[5];
+		gchar* alpha = g_ascii_dtostr(alpha_buffer, 5, std::get<3>(color));
+		sprintf(buf,"#color%d { -gtk-icon-palette: warning rgba(%d,%d,%d,%s); }\n", i, (int)(255*std::get<0>(color)), (int)(255*std::get<1>(color)), (int)(255*std::get<2>(color)), alpha_buffer);
 		colorcss += buf;
 		++i;
 	}
@@ -452,7 +424,33 @@ void CMainWindow::FetchAndExport()
 			fwrite(str.c_str(),str.length(),1,fl);
 			fclose(fl);
 		} else if(d.get_filter() == filter_pdf) {
-		   	char *tempmd = tempnam(NULL,"nkexport");
+		    #ifdef _WIN32
+		    // TODO: this doesn't work on microsoft
+		    char[] filename = std::getenv("TMP");
+		    strcat(filename, "/nkexportXXXXXX");
+		    #elif __APPLE__
+		    char[] filename = std::getenv("TMPDIR");
+		    strcat(filename, "/nkexportXXXXXX");
+		    #else
+		    char filename[] = "/tmp/nkexportXXXXXX";
+		    #endif
+            int fd = mkstemp(filename);
+            printf("Export: %s, Desciptor: %d\n", filename, fd);
+            FILE *fl = fdopen(fd, "w");
+            fwrite(str.c_str(),str.length(),1,fl);
+            fclose(fl);
+
+            char cmdbuf[1024];
+			snprintf(cmdbuf,1024,"pandoc -f markdown -t latex -o \"%s\" \"%s\"",d.get_filename().c_str(),filename);
+			int retval;
+			if((retval=system(cmdbuf))) {
+				printf("Exporting to PDF (temporary file: %s): failure (%d). Temporary file not deleted.\n",filename,retval);
+			} else {
+				printf("Exporting to PDF (temporary file: %s): success.\n",filename);
+				::remove(filename);
+			}
+
+		   	/*char *tempmd = tempnam(NULL,"nkexport");
 			FILE *fl = fopen(tempmd, "wb");
 			fwrite(str.c_str(),str.length(),1,fl);
 			fclose(fl);
@@ -460,12 +458,12 @@ void CMainWindow::FetchAndExport()
 			char cmdbuf[1024];
 			snprintf(cmdbuf,1024,"pandoc -f markdown+hard_line_breaks+compact_definition_lists -t latex -o \"%s\" \"%s\"",d.get_filename().c_str(),tempmd);
 			int retval;
-			if(retval=system(cmdbuf)) {
+			if((retval=system(cmdbuf))) {
 				printf("Exporting to PDF (temporary file: %s): failure (%d). Temporary file not deleted.\n",tempmd,retval);
 			} else {
 				printf("Exporting to PDF (temporary file: %s): success.\n",tempmd);
 				::remove(tempmd);
-			}
+			}*/
 		}
 		
 	break; }
@@ -473,73 +471,18 @@ void CMainWindow::FetchAndExport()
 	}
 }
 
-void CMainWindow::OpenDocument(std::string filename)
-{
+void CMainWindow::OpenDocument(std::string filename) {
 	FetchAndSave();
-	
-	if(filename=="") {
-		sview.set_editable(false);
-		sview.set_can_focus(false);
-		
-		SetActiveFilename("");
-		
-		sbuffer->begin_not_undoable_action();
-		sbuffer->set_text("( Nothing opened. Please create or open a file. ) ");
-		sbuffer->end_not_undoable_action();
-		return;
-	}
-	sview.set_editable(true);
-	sview.set_can_focus(true);
-	
-	char *buf; gsize length;
-	try {
-		Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(nav_model.base + "/" + filename);
-		file->load_contents(buf, length);
-		
-		sbuffer->begin_not_undoable_action();
-		sbuffer->set_text("");
-		
-		if(file->has_parent()) {
-			sview.SetDocumentPath(file->get_parent()->get_path());
-		} else {
-			sview.SetDocumentPath("");
-		}
-		
-		Gtk::TextBuffer::iterator i = sbuffer->begin();
-		if(length)
-			sbuffer->deserialize(sbuffer,"text/notekit-markdown",i,(guint8*)buf,length);
-		sbuffer->end_not_undoable_action();
-		
-		SetActiveFilename(filename);
-
-		g_free(buf);
-	} catch(Gio::Error &e) {
-		sview.set_editable(false);
-		sview.set_can_focus(false);
-		
-		fprintf(stderr,"Error: Failed to load document %s!\n",filename.c_str());
-		SetActiveFilename("");
-		
-		sbuffer->begin_not_undoable_action();
-		char error_msg[512];
-		sprintf(error_msg,"( Failed to open %s. Please create or open a file. ) ",filename.c_str());
-		sbuffer->set_text(error_msg);
-		sbuffer->end_not_undoable_action();
-		
-		return;
-	}
+	settings->set_string("active-document", filename);
 }
 
 /* set apparent opened document filename without actually loading/unload anything */
-void CMainWindow::SetActiveFilename(std::string filename)
-{
+void CMainWindow::SetupDocumentWindow(Glib::ustring filename) {
 	active_document = filename;
 	selected_document = filename;
 	set_title(active_document + " - NoteKit");
 	hbar.set_title("NoteKit");
 	hbar.set_subtitle(active_document);
-	
-	config["active_document"]=filename;
 }
 
 /* follow a link clicked in a document */
@@ -577,7 +520,6 @@ CMainWindow::~CMainWindow()
 
 bool CMainWindow::on_close(GdkEventAny* any_event)
 {
-	SaveConfig();
 	
 	if(active_document=="") return false;
 
@@ -588,12 +530,18 @@ bool CMainWindow::on_close(GdkEventAny* any_event)
 
 void CMainWindow::on_action(std::string name, int type, int param)
 {
-	printf("%s\n",name.c_str());
+	printf("Action triggered: %s\n",name.c_str());
 	switch(type) {
-	case WND_ACTION_COLOR:
-		GetColor(param, sview.active.r,sview.active.g, sview.active.b);
-		sview.active.a=1;
-		break;
+	case WND_ACTION_COLOR: { /* for some reason, this has to live in it's own seperate block */
+	        char strcolor[7]; // color (5) + number (1) + null-terminator (1) = 7
+		    sprintf(strcolor, "color%d", param);
+			double r,g,b,a;
+		    g_settings_get(settings->gobj(), strcolor, "(dddd)", &r, &g, &b, &a);
+			sview.active.r = (float)r;
+			sview.active.g = (float)g;
+			sview.active.b = (float)b;
+			sview.active.a = (float)a;
+		} break;
 	case WND_ACTION_NEXT_NOTE:
 		nav_model.NextDoc();
 		break;
@@ -613,7 +561,7 @@ void CMainWindow::on_action(std::string name, int type, int param)
 		}
 		navigation = !navigation;
 		Glib::Variant<bool> mesh = Glib::Variant<bool>::create(navigation);
-		sidebar_action->set_state(mesh);
+		sidebar_action->set_enabled(mesh);
 		} break;
 	case WND_ACTION_TOGGLE_PRESENTATION:
 		presentation_mode = !presentation_mode;
@@ -639,6 +587,82 @@ void CMainWindow::on_action(std::string name, int type, int param)
 		markdown_rendering_action->set_state(mesh);
 		} break;
 	}
+}
+
+void CMainWindow::SettingChange(const Glib::ustring& key) {
+    printf("Setting changed: %s\n", key.c_str());
+    const char* skey;
+    if (g_str_has_prefix(key.c_str(), "color")) {
+        skey = "color";
+    } else {
+        skey = key.c_str();
+    }
+    switch (hash(skey)) {
+        // TODO: Implement Settings for sidebar & presentation mode.
+        /*case hash("sidebar"):
+            nav_scroll.set_visible(settings->get_boolean("sidebar"));
+            break;*/
+        case hash("base-path"):
+            printf("Basepath update: %s\n", settings->get_string("base-path").c_str());
+            /*
+             * This is a somewhat ugly cheat:
+             * binit is set to true in mainwindow.h by default. After launch notekit shound set the currently active document to whatever is set in gsettings.
+             * After changing base_dir within the preferences notekit should not drop any active document.
+             */
+            if (!binit) {
+                settings->set_string("active-document", "");
+            } else {
+                binit = false;
+            }
+            nav_model.SetBasePath(settings->get_string("base-path"));
+            nav_model.AttachView(this,&nav);
+            break;
+        case hash("active-document"): {
+            Glib::ustring filename = settings->get_string("active-document");
+            printf("Active document: %s\n", filename.c_str());
+            if (filename == "") {
+                sview.set_editable(false);
+                sview.set_can_focus(false);
+                SetupDocumentWindow("");
+                sbuffer->begin_not_undoable_action();
+                sbuffer->set_text("( Nothing opened. Please create or open a file. ) ");
+                sbuffer->end_not_undoable_action();
+                return;
+            }
+            sview.set_editable(true);
+            sview.set_can_focus(true);
+
+            char *buf; gsize length;
+            try {
+                Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(nav_model.base + "/" + filename);
+                file->load_contents(buf, length);
+            } catch(Gio::Error &e) {
+                sview.set_editable(false);
+                sview.set_can_focus(false);
+                fprintf(stderr,"Error: Failed to load document %s!\n",filename.c_str());
+                SetupDocumentWindow("");
+                sbuffer->begin_not_undoable_action();
+                char error_msg[512];
+                sprintf(error_msg,"( Failed to open %s. Please create or open a file. ) ",filename.c_str());
+                sbuffer->set_text(error_msg);
+                sbuffer->end_not_undoable_action();
+                return;
+            }
+
+            sbuffer->begin_not_undoable_action();
+            sbuffer->set_text("");
+            Gtk::TextBuffer::iterator i = sbuffer->begin();
+            if(length) sbuffer->deserialize(sbuffer,"text/notekit-markdown",i,(guint8*)buf,length);
+            sbuffer->end_not_undoable_action();
+
+            SetupDocumentWindow(filename);
+
+	        g_free(buf);
+            } break;
+        case hash("color"):
+            UpdateToolbarColors();
+            break;
+    }
 }
 
 bool CMainWindow::on_idle()
@@ -717,20 +741,37 @@ bool CMainWindow::on_click_color(GdkEventButton* e, int number)
 		Gtk::ColorChooserDialog dialog("Select a color");
 		dialog.set_transient_for(*this);
 		
-		char buf[32];
-		float r,g,b;
-		GetColor(number,r,g,b);
-		sprintf(buf,"rgb(%d,%d,%d)",(int)(r*255),(int)(g*255),(int)(b*255));
+		// Part of previsusly mentiond todo. This is an implementation of getting the color of a button if we'd use a(dddd)
+		/*Glib::Variant<std::vector<std::tuple<double, double, double, double>>> colors;
+		settings->get_value("colors", colors);
+		try {
+		    auto color = colors.get_child(number-1);
+		    Gdk::RGBA gcolor = Gdk::RGBA();
+		    gcolor.set_rgba(std::get<0>(color), std::get<1>(color), std::get<2>(color), std::get<3>(color));
+		    dialog.set_rgba(gcolor);
+		} catch (std::out_of_range const&) {
+		    fprintf(stderr, "Color %d is not available in settings, if this persists try resetting com/github/blackhole89/NoteKit/colors\n", number);
+		}*/
 		
-		dialog.set_rgba(Gdk::RGBA(buf));
+		char strcolor[7]; // color (5) + number (1) + null-terminator (1) = 7
+		sprintf(strcolor, "color%d", number);
 		
+		double r,g,b,a;
+		g_settings_get(settings->gobj(), strcolor, "(dddd)", &r, &g, &b, &a);
+		Gdk::RGBA gcolor = Gdk::RGBA();
+		gcolor.set_rgba(r, g, b, a);
+		dialog.set_rgba(gcolor);
+
 		const int result = dialog.run();
 		
 		switch(result) {
 		case Gtk::RESPONSE_OK: {
-			Gdk::RGBA col = dialog.get_rgba();
+			/*Gdk::RGBA col = dialog.get_rgba();
 			SetColor(number,col.get_red(),col.get_green(),col.get_blue());
-			UpdateToolbarColors();
+			UpdateToolbarColors();*/
+			Gdk::RGBA ncolor = dialog.get_rgba();
+			g_settings_set(settings->gobj(), strcolor, "(dddd)", ncolor.get_red(), ncolor.get_green(), ncolor.get_blue(), ncolor.get_alpha());
+
 			break;
 		}
 		default:;

@@ -11,7 +11,7 @@
 
 class CStroke {
 public:
-	float r,g,b,a;
+	double r,g,b,a;
 	std::vector<float> xcoords;
 	std::vector<float> ycoords;
 	std::vector<float> pcoords;
