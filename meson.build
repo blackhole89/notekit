@@ -32,7 +32,7 @@ subdir('freedesktop')
 install_subdir('data/', install_dir: get_option('datadir')/'notekit')
 install_subdir('sourceview/', install_dir: get_option('datadir')/'notekit')
 
-install_data('gnome/notekit.gschema.xml',
+install_data('gnome/com.github.blackhole89.notekit.gschema.xml',
   install_dir: join_paths(get_option('datadir'), 'glib-2.0/schemas')
 )
 
