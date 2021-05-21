@@ -277,10 +277,14 @@ std::string CBoundDrawing::Serialize()
 	raw_data.push_back(h);
 	raw_data.push_back(strokes.size());
 	for(auto &s : strokes) {
-		raw_data.push_back(*(unsigned int*)&s.r);
-		raw_data.push_back(*(unsigned int*)&s.g);
-		raw_data.push_back(*(unsigned int*)&s.b);
-		raw_data.push_back(*(unsigned int*)&s.a);
+		float r = (float)s.r;
+		float g = (float)s.g;
+		float b = (float)s.b;
+		float a = (float)s.a;
+		raw_data.push_back(*(unsigned int*)&r);
+		raw_data.push_back(*(unsigned int*)&g);
+		raw_data.push_back(*(unsigned int*)&b);
+		raw_data.push_back(*(unsigned int*)&a);
 		raw_data.push_back(s.xcoords.size());
 		int pos = raw_data.size(), len=s.xcoords.size();
 		raw_data.resize( raw_data.size()+3*len );
@@ -326,10 +330,10 @@ void CBoundDrawing::Deserialize(std::string input)
 	int pos=3;
 	for(unsigned int nstrokes = 0; nstrokes<raw_data[2]; ++nstrokes) {
 		strokes.push_back(CStroke());
-		strokes.back().r = *(float*)&raw_data[pos  ];
-		strokes.back().g = *(float*)&raw_data[pos+1];
-		strokes.back().b = *(float*)&raw_data[pos+2];
-		strokes.back().a = *(float*)&raw_data[pos+3];
+		strokes.back().r = (double)*(float*)&raw_data[pos  ];
+		strokes.back().g = (double)*(float*)&raw_data[pos+1];
+		strokes.back().b = (double)*(float*)&raw_data[pos+2];
+		strokes.back().a = (double)*(float*)&raw_data[pos+3];
 		int ncoords = raw_data[pos+4];
 		strokes.back().xcoords.resize(ncoords); memcpy(&strokes.back().xcoords[0], &raw_data[pos+5], 4*ncoords);
 		strokes.back().ycoords.resize(ncoords); memcpy(&strokes.back().ycoords[0], &raw_data[pos+5+ncoords], 4*ncoords);

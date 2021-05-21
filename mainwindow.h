@@ -42,7 +42,7 @@ protected:
 	//Signal handlers:
 	bool on_close(GdkEventAny* any_event);
 	void on_action(std::string name,int type, int param);
-	bool on_click_color(GdkEventButton *btn, int num);
+	bool on_click_color(GdkEventButton *btn, unsigned int num);
 	bool on_motion_notify(GdkEventMotion* event);
 	
 	sigc::connection idle_timer;
