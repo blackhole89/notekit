@@ -136,6 +136,9 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 	settings->signal_changed().connect(sigc::mem_fun(this,&CMainWindow::SettingChange));
 	show_all();
 	
+	SettingSidebarUpdate();
+	SettingZenUpdate();
+
 	/* workaround to make sure the right pen width is selected at start */
 	Gtk::RadioToolButton *b;
 	toolbar_builder->get_widget("medium",b); b->set_active(false); b->set_active(true);
@@ -477,27 +480,10 @@ void CMainWindow::on_action(std::string name, int type, int param)
 		nav_model.PrevDoc();
 		break;
 	case WND_ACTION_TOGGLE_ZEN:
-		zen = !zen;
-		sidebar_action->set_enabled(!zen);
-		if (zen) {
-			nav_scroll.set_visible(false);
-			toolbar->hide();
-			zenbtn.set_image_from_icon_name("minimize-symbolic");
-		} else {
-			nav_scroll.set_visible(navigation);
-			toolbar->show();
-			zenbtn.set_image_from_icon_name("maximize-symbolic");
-		}
+		settings->set_boolean("zen", !settings->get_boolean("zen"));
 		break;
 	case WND_ACTION_TOGGLE_SIDEBAR:
-		if(navigation) {
-			nav_scroll.set_visible(false);
-		} else {
-			nav_scroll.set_visible(true);
-		}
-		navigation = !navigation;
-		Glib::Variant<bool> mesh = Glib::Variant<bool>::create(navigation);
-		sidebar_action->set_enabled(mesh);
+		settings->set_boolean("sidebar", !settings->get_boolean("sidebar"));
 		break;
 	}
 }
@@ -506,12 +492,12 @@ void CMainWindow::SettingChange(const Glib::ustring& key) {
 	printf("Setting changed: %s\n", key.c_str());
 	settingmap_t::iterator setting = settingmap.find(key);
 	if (setting != settingmap.end()) {
-	    setting->second();
+		setting->second();
 	}
 }
 
 void CMainWindow::SettingBasepathUpdate() {
-    printf("Basepath update: %s\n", settings->get_string("base-path").c_str());
+	printf("Basepath update: %s\n", settings->get_string("base-path").c_str());
 	/*
 	 * This is a somewhat ugly cheat:
 	 * binit is set to true in mainwindow.h by default. After launch notekit shound set the currently active document to whatever is set in gsettings.
@@ -527,7 +513,7 @@ void CMainWindow::SettingBasepathUpdate() {
 }
 
 void CMainWindow::SettingDocumentUpdate() {
-    Glib::ustring filename = settings->get_string("active-document");
+	Glib::ustring filename = settings->get_string("active-document");
 	printf("Active document: %s\n", filename.c_str());
 	if (filename == "") {
 		sview.set_editable(false);
@@ -567,6 +553,29 @@ void CMainWindow::SettingDocumentUpdate() {
 	SetupDocumentWindow(filename);
 
 	g_free(buf);
+}
+
+void CMainWindow::SettingZenUpdate() {
+	bool state = settings->get_boolean("zen");
+	sidebar_action->set_enabled(!state);
+	if (state) {
+		nav_scroll.set_visible(false);
+		toolbar->hide();
+		zenbtn.set_image_from_icon_name("minimize-symbolic");
+	} else {
+		nav_scroll.set_visible(settings->get_boolean("sidebar"));
+		toolbar->show();
+		zenbtn.set_image_from_icon_name("maximize-symbolic");
+	}
+	Glib::Variant<bool> mesh = Glib::Variant<bool>::create(state);
+	zen_action->set_state(mesh);
+}
+
+void CMainWindow::SettingSidebarUpdate() {
+	bool state = settings->get_boolean("sidebar");
+	nav_scroll.set_visible(state);
+	Glib::Variant<bool> mesh = Glib::Variant<bool>::create(state);
+	sidebar_action->set_state(mesh);
 }
 
 bool CMainWindow::on_idle()

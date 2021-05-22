@@ -17,6 +17,10 @@
 			<default>false</default>
 			<summary>Enable syntax highlighting in three-backtick code spans, using the languages supported by your system's GtkSourceView (gedit, pluma etc.) setup.</summary>
 		</key>
+		<key name="sidebar" type="b">
+			<default>true</default>
+			<summary>Enables Zen / hide-everything mode</summary>
+		</key>
 		<key name="zen" type="b">
 			<default>false</default>
 			<summary>Enables Zen / hide-everything mode</summary>
