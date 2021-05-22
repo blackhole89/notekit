@@ -12,17 +12,6 @@
 #include "latex.h"
 #endif
 
-/* thanks to @Tim Cooper & @Замфир Йончев on SO; https://stackoverflow.com/a/13487193/10890264, https://stackoverflow.com/a/62628594/10890264 */
-constexpr unsigned long hash(const char *str) {
-    unsigned long hash = 5381;
-
-    while (int c = *str++) {
-        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
-    }
-
-    return hash;
-}
-
 CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::ApplicationWindow(app), nav_model(), sview()
 {
 	// Determine paths to operate on.
@@ -421,7 +410,7 @@ void CMainWindow::FetchAndExport()
 			fclose(fl);
 		} else if(d.get_filter() == filter_pdf) {
 			#ifdef _WIN32
-			// TODO: this doesn't work on microsoft
+			// TODO: this doesn't work on microsoft, EDIT: maybe it does
 			char* filename = std::getenv("TMP");
 			strcat(filename, "/nkexportXXXXXX");
 			#elif __APPLE__
@@ -586,78 +575,69 @@ void CMainWindow::on_action(std::string name, int type, int param)
 
 void CMainWindow::SettingChange(const Glib::ustring& key) {
 	printf("Setting changed: %s\n", key.c_str());
-	const char* skey;
-	if (g_str_has_prefix(key.c_str(), "color")) {
-		skey = "color";
-	} else {
-		skey = key.c_str();
+	settingmap_t::iterator setting = settingmap.find(key);
+	if (setting != settingmap.end()) {
+	    setting->second();
 	}
-	switch (hash(skey)) {
-		// TODO: Implement Settings for sidebar & "zen".
-		/*case hash("sidebar"):
-			nav_scroll.set_visible(settings->get_boolean("sidebar"));
-			break;*/
-		case hash("base-path"):
-			printf("Basepath update: %s\n", settings->get_string("base-path").c_str());
-			/*
-			 * This is a somewhat ugly cheat:
-			 * binit is set to true in mainwindow.h by default. After launch notekit shound set the currently active document to whatever is set in gsettings.
-			 * After changing base_dir within the preferences notekit should not drop any active document.
-			 */
-			if (!binit) {
-				settings->set_string("active-document", "");
-			} else {
-				binit = false;
-			}
-			nav_model.SetBasePath(settings->get_string("base-path"));
-			nav_model.AttachView(this,&nav);
-			break;
-		case hash("active-document"): {
-			Glib::ustring filename = settings->get_string("active-document");
-			printf("Active document: %s\n", filename.c_str());
-			if (filename == "") {
-				sview.set_editable(false);
-				sview.set_can_focus(false);
-				SetupDocumentWindow("");
-				sbuffer->begin_not_undoable_action();
-				sbuffer->set_text("( Nothing opened. Please create or open a file. ) ");
-				sbuffer->end_not_undoable_action();
-				return;
-			}
-			sview.set_editable(true);
-			sview.set_can_focus(true);
+}
 
-			char *buf; gsize length;
-			try {
-				Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(nav_model.base + "/" + filename);
-				file->load_contents(buf, length);
-			} catch(Gio::Error &e) {
-				sview.set_editable(false);
-				sview.set_can_focus(false);
-				fprintf(stderr,"Error: Failed to load document %s!\n",filename.c_str());
-				SetupDocumentWindow("");
-				sbuffer->begin_not_undoable_action();
-				char error_msg[512];
-				sprintf(error_msg,"( Failed to open %s. Please create or open a file. ) ",filename.c_str());
-				sbuffer->set_text(error_msg);
-				sbuffer->end_not_undoable_action();
-				return;
-			}
+void CMainWindow::SettingBasepathUpdate() {
+    printf("Basepath update: %s\n", settings->get_string("base-path").c_str());
+	/*
+	 * This is a somewhat ugly cheat:
+	 * binit is set to true in mainwindow.h by default. After launch notekit shound set the currently active document to whatever is set in gsettings.
+	 * After changing base_dir within the preferences notekit should not drop any active document.
+	 */
+	if (!binit) {
+		settings->set_string("active-document", "");
+	} else {
+		binit = false;
+	}
+	nav_model.SetBasePath(settings->get_string("base-path"));
+	nav_model.AttachView(this,&nav);
+}
 
-			sbuffer->begin_not_undoable_action();
-			sbuffer->set_text("");
-			Gtk::TextBuffer::iterator i = sbuffer->begin();
-			if(length) sbuffer->deserialize(sbuffer,"text/notekit-markdown",i,(guint8*)buf,length);
-			sbuffer->end_not_undoable_action();
+void CMainWindow::SettingDocumentUpdate() {
+    Glib::ustring filename = settings->get_string("active-document");
+	printf("Active document: %s\n", filename.c_str());
+	if (filename == "") {
+		sview.set_editable(false);
+		sview.set_can_focus(false);
+		SetupDocumentWindow("");
+		sbuffer->begin_not_undoable_action();
+		sbuffer->set_text("( Nothing opened. Please create or open a file. ) ");
+		sbuffer->end_not_undoable_action();
+		return;
+	}
+	sview.set_editable(true);
+	sview.set_can_focus(true);
 
-			SetupDocumentWindow(filename);
+	char *buf; gsize length;
+	try {
+		Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(nav_model.base + "/" + filename);
+		file->load_contents(buf, length);
+	} catch(Gio::Error &e) {
+		sview.set_editable(false);
+		sview.set_can_focus(false);
+		fprintf(stderr,"Error: Failed to load document %s!\n",filename.c_str());
+		SetupDocumentWindow("");
+		sbuffer->begin_not_undoable_action();
+		char error_msg[512];
+		sprintf(error_msg,"( Failed to open %s. Please create or open a file. ) ",filename.c_str());
+		sbuffer->set_text(error_msg);
+		sbuffer->end_not_undoable_action();
+		return;
+	}
 
-			g_free(buf);
-			} break;
-		case hash("color"):
-			UpdateToolbarColors();
-			break;
-		}
+	sbuffer->begin_not_undoable_action();
+	sbuffer->set_text("");
+	Gtk::TextBuffer::iterator i = sbuffer->begin();
+	if(length) sbuffer->deserialize(sbuffer,"text/notekit-markdown",i,(guint8*)buf,length);
+	sbuffer->end_not_undoable_action();
+
+	SetupDocumentWindow(filename);
+
+	g_free(buf);
 }
 
 bool CMainWindow::on_idle()
