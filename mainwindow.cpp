@@ -304,7 +304,7 @@ void CMainWindow::InitToolbar()
 		ACTION(buf,WND_ACTION_COLOR,i);
 		
 		Gtk::RadioToolButton *b = nullptr;
-		if(i == 0) {
+		if(i == active_color) {
 			b = b0 = new Gtk::RadioToolButton(buf);
 		} else {
 			Gtk::RadioToolButton::Group g = b0->get_group(); // because for some reason, the group argument is &
@@ -534,6 +534,7 @@ void CMainWindow::on_action(std::string name, int type, int param)
 			sview.active.g = (float)g;
 			sview.active.b = (float)b;
 			sview.active.a = (float)a;
+			active_color = param;
 		} break;
 	case WND_ACTION_NEXT_NOTE:
 		nav_model.NextDoc();
@@ -750,10 +751,20 @@ bool CMainWindow::on_click_color(GdkEventButton* e, unsigned int number)
 			GVariant* colors = g_settings_get_value(settings->gobj(), "colors");
 			GVariantBuilder builder;
 			g_variant_builder_init(&builder, G_VARIANT_TYPE ("a(dddd)"));
-			for(unsigned int i=0;i<=g_variant_n_children(colors);++i) {
+			for(unsigned int i=0;i<=g_variant_n_children(colors)-1;++i) {
 				if (i == number) {
 					Gdk::RGBA ncolor = dialog.get_rgba();
 					g_variant_builder_add(&builder, "(dddd)", ncolor.get_red(), ncolor.get_green(), ncolor.get_blue(), ncolor.get_alpha());
+					/*
+					 * If the color that gets currently edited (this) is the actuve color, it should update the colors of the sourceview too.
+					 * Otherwise the color of the button will change, but the pen will continue to draw the old color until the (still active) button is pressed.
+					 */
+					if (number == active_color) {
+						sview.active.r = ncolor.get_red();
+						sview.active.g = ncolor.get_green();
+						sview.active.b = ncolor.get_blue();
+						sview.active.a = ncolor.get_alpha();
+					}
 				} else {
 					g_variant_builder_add_value(&builder, g_variant_get_child_value(colors, i));
 				}

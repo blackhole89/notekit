@@ -98,6 +98,7 @@ protected:
 	Gtk::Toolbar *toolbar;
 	void InitToolbar();
 	void UpdateToolbarColors();
+	unsigned int active_color = 0;
 	
 	/* header */
 	Gtk::HeaderBar hbar;
