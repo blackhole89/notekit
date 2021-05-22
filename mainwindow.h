@@ -70,8 +70,8 @@ protected:
 	void CalculatePaths();
 	void RunPreferenceDiag();
 
-  /* settings */
-  Glib::RefPtr<Gio::Settings> settings = Gio::Settings::create("com.github.blackhole89.NoteKit");
+	/* settings */
+	Glib::RefPtr<Gio::Settings> settings = Gio::Settings::create("com.github.blackhole89.NoteKit");
 	void SettingChange(const Glib::ustring& key);
 	bool binit = true;
 	void UpdateBasePath();
@@ -129,12 +129,19 @@ protected:
 
 	void SettingBasepathUpdate();
 	void SettingDocumentUpdate();
+	void SettingProximityUpdate();
+	void SettingSidebarUpdate();
+	void SettingPresentationModeUpdate();
+	
 
 	typedef std::map<const Glib::ustring, sigc::slot<void()>> settingmap_t;
 	settingmap_t settingmap {
 		{"base-path", sigc::mem_fun(this,&CMainWindow::SettingBasepathUpdate)},
 		{"active-document", sigc::mem_fun(this,&CMainWindow::SettingDocumentUpdate)},
 		{"colors", sigc::mem_fun(this,&CMainWindow::UpdateToolbarColors)},
+		{"proximity-widgets", sigc::mem_fun(this,&CMainWindow::SettingProximityUpdate)},
+		{"sidebar", sigc::mem_fun(this,&CMainWindow::SettingSidebarUpdate)},
+		{"presentation-mode", sigc::mem_fun(this,&CMainWindow::SettingPresentationModeUpdate)}
 	};
 };
 

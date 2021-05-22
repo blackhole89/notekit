@@ -155,7 +155,11 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 	settings->bind("csd", cm.mbar.property_visible(), Gio::SettingsBindFlags::SETTINGS_BIND_INVERT_BOOLEAN);
 	settings->signal_changed().connect(sigc::mem_fun(this,&CMainWindow::SettingChange));
 	show_all();
-	
+
+	SettingProximityUpdate();
+	SettingSidebarUpdate();
+	SettingPresentationModeUpdate();
+
 	/* workaround to make sure the right pen width is selected at start */
 	Gtk::RadioToolButton *b;
 	toolbar_builder->get_widget("medium",b); b->set_active(false); b->set_active(true);
@@ -537,39 +541,15 @@ void CMainWindow::on_action(std::string name, int type, int param)
 		search_bar.set_search_mode();
 		search_entry.grab_focus();
 		break;
-	case WND_ACTION_TOGGLE_SIDEBAR: {
-		if(navigation) {
-			nav_scroll.set_visible(false);
-		} else {
-			nav_scroll.set_visible(true);
-		}
-		navigation = !navigation;
-		Glib::Variant<bool> mesh = Glib::Variant<bool>::create(navigation);
-		sidebar_action->set_enabled(mesh);
-		} break;
-	case WND_ACTION_TOGGLE_PRESENTATION:
-		presentation_mode = !presentation_mode;
-		presentation_action->set_enabled(!presentation_mode);
-		if (presentation_mode) {
-			nav_scroll.set_visible(false);
-			toolbar->hide();
-			presentbtn.set_image_from_icon_name("minimize-symbolic");
-		} else {
-			nav_scroll.set_visible(navigation);
-			toolbar->show();
-			presentbtn.set_image_from_icon_name("maximize-symbolic");
-		}
+	case WND_ACTION_TOGGLE_SIDEBAR:
+		settings->set_boolean("sidebar", !settings->get_boolean("sidebar"));
 		break;
-	case WND_ACTION_TOGGLE_MARKDOWN_RENDERING: {
-		markdown_rendering = !markdown_rendering;
-		if(markdown_rendering) {
-			sview.EnableProximityRendering();
-		} else {
-			sview.DisableProximityRendering();
-		}
-		Glib::Variant<bool> mesh = Glib::Variant<bool>::create(markdown_rendering);
-		markdown_rendering_action->set_state(mesh);
-		} break;
+	case WND_ACTION_TOGGLE_PRESENTATION:
+		settings->set_boolean("presentation-mode", !settings->get_boolean("presentation-mode"));
+		break;
+	case WND_ACTION_TOGGLE_MARKDOWN_RENDERING:
+		settings->set_boolean("proximity-widgets", !settings->get_boolean("proximity-widgets"));
+		break;
 	}
 }
 
@@ -577,12 +557,12 @@ void CMainWindow::SettingChange(const Glib::ustring& key) {
 	printf("Setting changed: %s\n", key.c_str());
 	settingmap_t::iterator setting = settingmap.find(key);
 	if (setting != settingmap.end()) {
-	    setting->second();
+		setting->second();
 	}
 }
 
 void CMainWindow::SettingBasepathUpdate() {
-    printf("Basepath update: %s\n", settings->get_string("base-path").c_str());
+	printf("Basepath update: %s\n", settings->get_string("base-path").c_str());
 	/*
 	 * This is a somewhat ugly cheat:
 	 * binit is set to true in mainwindow.h by default. After launch notekit shound set the currently active document to whatever is set in gsettings.
@@ -598,7 +578,7 @@ void CMainWindow::SettingBasepathUpdate() {
 }
 
 void CMainWindow::SettingDocumentUpdate() {
-    Glib::ustring filename = settings->get_string("active-document");
+	Glib::ustring filename = settings->get_string("active-document");
 	printf("Active document: %s\n", filename.c_str());
 	if (filename == "") {
 		sview.set_editable(false);
@@ -638,6 +618,36 @@ void CMainWindow::SettingDocumentUpdate() {
 	SetupDocumentWindow(filename);
 
 	g_free(buf);
+}
+
+void CMainWindow::SettingProximityUpdate() {
+	if (settings->get_boolean("proximity-widgets"))
+		sview.EnableProximityRendering();
+	else
+		sview.DisableProximityRendering();
+}
+
+void CMainWindow::SettingSidebarUpdate() {
+	bool state = settings->get_boolean("sidebar");
+	nav_scroll.set_visible(state);
+	Glib::Variant<bool> mesh = Glib::Variant<bool>::create(state);
+	sidebar_action->set_state(mesh);
+}
+
+void CMainWindow::SettingPresentationModeUpdate() {
+	bool state = settings->get_boolean("presentation-mode");
+	sidebar_action->set_enabled(!state);
+	if (state) {
+		nav_scroll.set_visible(false);
+		toolbar->hide();
+		presentbtn.set_image_from_icon_name("minimize-symbolic");
+	} else {
+		nav_scroll.set_visible(settings->get_boolean("sidebar"));
+		toolbar->show();
+		presentbtn.set_image_from_icon_name("maximize-symbolic");
+	}
+	Glib::Variant<bool> mesh = Glib::Variant<bool>::create(state);
+	presentation_action->set_state(mesh);
 }
 
 bool CMainWindow::on_idle()
