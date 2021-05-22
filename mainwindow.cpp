@@ -249,6 +249,11 @@ void CMainWindow::CalculatePaths()
 	free(data_dirs);
 }
 
+void CMainWindow::RunAboutDiag() {
+    about.run();
+    about.hide();
+}
+
 void CMainWindow::RunPreferenceDiag()
 {
 	Glib::RefPtr<Gtk::Builder> config_builder;
