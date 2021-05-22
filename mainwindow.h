@@ -126,6 +126,16 @@ protected:
 	} cm;
 
 	Gtk::FileChooserButton *dir;
+
+	void SettingBasepathUpdate();
+	void SettingDocumentUpdate();
+
+	typedef std::map<const Glib::ustring, sigc::slot<void()>> settingmap_t;
+	settingmap_t settingmap {
+		{"base-path", sigc::mem_fun(this,&CMainWindow::SettingBasepathUpdate)},
+		{"active-document", sigc::mem_fun(this,&CMainWindow::SettingDocumentUpdate)},
+		{"colors", sigc::mem_fun(this,&CMainWindow::UpdateToolbarColors)},
+	};
 };
 
 #endif // MAINWINDOW_H
