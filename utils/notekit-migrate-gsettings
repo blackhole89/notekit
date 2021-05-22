@@ -1,0 +1,11 @@
+#!/bin/sh
+
+CONFIG="${@:-$HOME/.config/notekit/config.json}"
+[[ -z ${GLIB_SCHEMA_DIRECTORY} ]] || _NK_MGS_SCHEMADIR="--schemadir ${GLIB_SCHEMA_DIRECTORY} "
+
+set +u
+gsettings ${_NK_MGS_SCHEMADIR}set com.github.blackhole89.NoteKit base-path "$(jq -r .base_path $CONFIG)"
+gsettings ${_NK_MGS_SCHEMADIR}set com.github.blackhole89.NoteKit active-document "$(jq -r .active_document $CONFIG)"
+gsettings ${_NK_MGS_SCHEMADIR}set com.github.blackhole89.NoteKit csd "$(jq -r .use_headerbar $CONFIG)"
+gsettings ${_NK_MGS_SCHEMADIR}set com.github.blackhole89.NoteKit syntax-highlighting "$(jq -r .use_highlight_proxy $CONFIG)"
+gsettings ${_NK_MGS_SCHEMADIR}set com.github.blackhole89.NoteKit colors "$(jq -r '[.colors | .[] | "(\(.r), \(.g), \(.b), 1.0)"]' $CONFIG | sed 's/"//g')"
