@@ -143,11 +143,11 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 	Gtk::RadioToolButton *b;
 	toolbar_builder->get_widget("medium",b); b->set_active(false); b->set_active(true);
 	
-	if (settings->get_string("active-document") == "") {
-		settings->set_string("active-document", "");
-	} else {
-		SettingChange("active-document");
-	}
+	//if (settings->get_string("active-document") == "") {
+	//	settings->set_string("active-document", "");
+	//} else {
+	SettingChange("active-document");
+	//}
 	
 	close_handler = this->signal_delete_event().connect( sigc::mem_fun(this, &CMainWindow::on_close) );
 	
@@ -243,7 +243,7 @@ void CMainWindow::RunPreferenceDiag()
 	config_builder->get_widget("base_path",dir); 
 	config_builder->get_widget("use_headerbar",use_headerbar);
 	config_builder->get_widget("use_highlight_proxy",use_highlight_proxy);
-	dir->set_current_folder(settings->get_string("base-path"));
+	dir->set_filename(settings->get_string("base-path"));
 	dir->signal_file_set().connect(sigc::mem_fun(this,&CMainWindow::UpdateBasePath));
 	settings->bind("csd", use_headerbar->property_active());
 	settings->bind("syntax-highlighting", use_highlight_proxy->property_active());
@@ -252,9 +252,7 @@ void CMainWindow::RunPreferenceDiag()
 }
 
 void CMainWindow::UpdateBasePath() {
-	printf("base path updated\n");
-	/* TODO: get_current_folder() is incorrect. it doesn't work if you enter a path with <CTRL>L */
-	settings->set_string("base-path", dir->get_current_folder());
+	settings->set_string("base-path", dir->get_filename());
 }
 
 void CMainWindow::InitToolbar()
