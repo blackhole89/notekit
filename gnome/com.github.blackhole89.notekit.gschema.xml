@@ -17,9 +17,17 @@
 			<default>false</default>
 			<summary>Enable syntax highlighting in three-backtick code spans, using the languages supported by your system's GtkSourceView (gedit, pluma etc.) setup.</summary>
 		</key>
-		<key name="zen" type="b">
+		<key name="proximity-widgets" type="b">
+			<default>true</default>
+			<summary>Enable proximity widgets</summary>
+		</key>
+		<key name="sidebar" type="b">
+			<default>true</default>
+			<summary>Change the sidebar visibility</summary>
+		</key>
+		<key name="presentation-mode" type="b">
 			<default>false</default>
-			<summary>Enables Zen / hide-everything mode</summary>
+			<summary>Enables presentation / hide-everything mode</summary>
 		</key>
 		<key name="colors" type="a(dddd)">
 			<default>[
