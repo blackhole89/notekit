@@ -25,6 +25,8 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 	printf("Resource path: %s\n",data_path.c_str());
 	printf("\n");
 	
+	settings->signal_changed().connect(sigc::mem_fun(this,&CMainWindow::SettingChange));
+
 	#ifdef HAVE_CLATEXMATH
 	tex::LaTeX::init((data_path+"/data/latex").c_str());
 	/* allow \newcommand to override quietly, since we will be rerendering \newcommands unpredictably */
@@ -153,7 +155,6 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 	add(cm.menu_box);
 	
 	settings->bind("csd", cm.mbar.property_visible(), Gio::SettingsBindFlags::SETTINGS_BIND_INVERT_BOOLEAN);
-	settings->signal_changed().connect(sigc::mem_fun(this,&CMainWindow::SettingChange));
 	show_all();
 
 	SettingProximityUpdate();
