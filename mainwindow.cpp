@@ -118,7 +118,7 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 	insert_action_group("notebook",sview.actions);
 	UpdateToolbarColors(); 
 	split.pack_start(*toolbar,Gtk::PACK_SHRINK);
-	on_action("color1",WND_ACTION_COLOR,1);
+	on_action("color0",WND_ACTION_COLOR,0);
 	
 	#define ACTION(name,param1,param2) sview.actions->add_action(name, sigc::bind( sigc::mem_fun(this,&CMainWindow::on_action), std::string(name), param1, param2 ) )
 	ACTION("next-note",WND_ACTION_NEXT_NOTE,1);
@@ -272,7 +272,7 @@ void CMainWindow::InitToolbar()
 	Gtk::RadioToolButton *b0 = nullptr;
 	Glib::Variant<std::vector<color_t>> colors;
 	settings->get_value("colors", colors);
-	for(unsigned int i=1;i<=colors.get_n_children();++i) {
+	for(unsigned int i=0;i<=colors.get_n_children()-1;++i) {
 		char buf[255];
 		//Gtk::Widget *sdfg;
 		
@@ -282,7 +282,7 @@ void CMainWindow::InitToolbar()
 		ACTION(buf,WND_ACTION_COLOR,i);
 		
 		Gtk::RadioToolButton *b = nullptr;
-		if(i == 1) {
+		if(i == 0) {
 			b = b0 = new Gtk::RadioToolButton(buf);
 		} else {
 			Gtk::RadioToolButton::Group g = b0->get_group(); // because for some reason, the group argument is &
@@ -304,7 +304,7 @@ void CMainWindow::UpdateToolbarColors()
 {
 	std::string colorcss;
 	
-	int i=1;
+	int i=0;
 	char buf[255];
 	
 	Glib::Variant<std::vector<color_t>> gcolors;
@@ -476,7 +476,7 @@ void CMainWindow::on_action(std::string name, int type, int param)
 	switch(type) {
 	case WND_ACTION_COLOR: { /* for some reason, this has to live in it's own seperate block */
 			GVariant* colors = g_settings_get_value(settings->gobj(), "colors");
-			g_variant_get_child(colors, param-1, "(dddd)", &sview.active.r, &sview.active.g, &sview.active.b, &sview.active.a);
+			g_variant_get_child(colors, param, "(dddd)", &sview.active.r, &sview.active.g, &sview.active.b, &sview.active.a);
 		} break;
 	case WND_ACTION_NEXT_NOTE:
 		nav_model.NextDoc();
@@ -604,7 +604,7 @@ bool CMainWindow::on_click_color(GdkEventButton* e, unsigned int number)
 		Glib::Variant<std::vector<color_t>> colors;
 		settings->get_value("colors", colors);
 		try {
-			color_t color = colors.get_child(number-1);
+			color_t color = colors.get_child(number);
 			Gdk::RGBA gcolor = Gdk::RGBA();
 			gcolor.set_rgba(std::get<0>(color), std::get<1>(color), std::get<2>(color), std::get<3>(color));
 			dialog.set_rgba(gcolor);
@@ -620,12 +620,12 @@ bool CMainWindow::on_click_color(GdkEventButton* e, unsigned int number)
 			GVariant* colors = g_settings_get_value(settings->gobj(), "colors");
 			GVariantBuilder builder;
 			g_variant_builder_init(&builder, G_VARIANT_TYPE ("a(dddd)"));
-			for(unsigned int i=1;i<=g_variant_n_children(colors);++i) {
+			for(unsigned int i=0;i<=g_variant_n_children(colors);++i) {
 				if (i == number) {
 					Gdk::RGBA ncolor = dialog.get_rgba();
 					g_variant_builder_add(&builder, "(dddd)", ncolor.get_red(), ncolor.get_green(), ncolor.get_blue(), ncolor.get_alpha());
 				} else {
-					g_variant_builder_add_value(&builder, g_variant_get_child_value(colors, i-1));
+					g_variant_builder_add_value(&builder, g_variant_get_child_value(colors, i));
 				}
 			}
 			GVariant *variant = g_variant_builder_end (&builder);
