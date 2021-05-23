@@ -1,5 +1,5 @@
 #include "about.h"
-#include "config.h"
+#include <config.h>
 
 AboutDiag::AboutDiag() {
 	set_program_name("NoteKit");
