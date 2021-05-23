@@ -7,3 +7,6 @@ config.h
 
 # protection against over-aggresive fontconfig
 data/fonts/.uuid
+
+# compile gsettings schemas
+gnome/gschemas.compiled

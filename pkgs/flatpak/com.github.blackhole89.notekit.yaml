@@ -8,14 +8,14 @@ finish-args:
   - --socket=fallback-x11
   - --device=dri
 modules:
-  - name: jsoncpp
+  - name: tinyxml2
     buildsystem: meson
     config-opts:
       - "-Dtests=false"
     sources:
-      - type: archive
-        url: https://github.com/open-source-parsers/jsoncpp/archive/1.9.4.tar.gz
-        sha256: 'e34a628a8142643b976c7233ef381457efad79468c67cb1ae0b83a33d7493999' 
+      - type: git
+        url: git://github.com/leethomason/tinyxml2.git
+        commit: 4c7cc9d6e4fbc2ec6edfba1887118960ca5c4940
 
   - name: mm-common
     buildsystem: meson
@@ -109,7 +109,7 @@ modules:
     sources:
       - type: git
         url: https://github.com/NanoMichael/cLaTeXMath
-        commit: 580809b4c5177fa59a8a645987bbba105361b4a2
+        commit: e482066d9aca23be5f2c4fc1aeefe773f3b10aa2
         
   - name: notekit
     buildsystem: meson

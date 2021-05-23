@@ -12,7 +12,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: setting the dependencies up
-      run: sudo apt install libfontconfig1-dev zlib1g-dev libjsoncpp-dev libgtksourceviewmm-3.0-dev libtinyxml2-dev libgtkmm-3.0-dev cmake ninja-build
+      run: sudo apt install libfontconfig1-dev zlib1g-dev libgtksourceviewmm-3.0-dev libtinyxml2-dev libgtkmm-3.0-dev cmake ninja-build
     - name: installing cLaTeXMath
       run: ./install-clatexmath.sh
     - name: configure

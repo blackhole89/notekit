@@ -3,7 +3,7 @@ This program is a structured notetaking application based on GTK+ 3. Write your 
 
 ![Screenshot](/screenshots/notekit.png?raw=true)
 
-We have a [Discord server](https://discord.gg/WVas9aX6Ee) for questions and discussing the project's development.
+We have a [Discord server](https://discord.gg/WVas9aX6Ee) and a bridged [Matrix space](https://matrix.to/#/!qrAsPfOWegCOsSGhWc:tchncs.de?via=tchncs.de&via=matrix.org&via=t2bot.io) for questions and discussing the project's development.
 
 ## Why?
 
@@ -33,7 +33,24 @@ Moreover, there is also
 
 To run the binary, you will in addition require at least the following packages: `libgtkmm-3.0-1v5 libgtksourceviewmm-3.0-0v5 libjsoncpp1 zlib1g libxml2`, where the version of `libgtkmm-3.0-1v5` is at least 3.20. (In particular, this means that Ubuntu 16.04 LTS (xenial) and derived distributions are too old.) If the binary does not work for you, it is recommended that you build from source, as described below.
 
-## How to build
+## How to build from source
+
+### Building with meson
+
+Invoke `meson _build` followed by `ninja -C _build` to compile NoteKit. You can then install NoteKit by invoking `meson install -C _build` (If you don't have polkit running, you'll need to execute it as uid 0).
+
+Required dependencies (pkg-config names):
+
+* `gtkmm-3.0`
+* `gtksourceview-3.0`
+* `zlib`
+* `fontconfig`
+* `clatexmath`*
+
+\* If clatexmath is not installed, meson will automatically build it too (you'll need the additional `tinyxml2` dependency). If you do not want cLaTeXMath, you can give meson the `-Dclatexmath=false` option.
+
+### Building with cmake
+
 Either invoke `cmake .` followed by `make` (which will build a binary at `cmake-build-Release/output/notekit`), or get [CodeLite](https://codelite.org/), open and build the workspace.
 
 Required libraries:
@@ -41,7 +58,6 @@ Required libraries:
 * `cmake`.
 * `libgtkmm-3.0-dev`>=3.20 (UI stuff)
 * `libgtksourceviewmm-3.0-dev`>=3.18 (more UI stuff)
-* `libjsoncpp-dev` ~ 1.7.4 (config files; older versions may work)
 * `zlib1g-dev`
 * `libfontconfig1-dev` ~ 2.13 (to use custom fonts)
 
@@ -50,6 +66,7 @@ If you want to enable LaTeX math rendering support, you moreover need:
 * Set the CMAKE variable `HAVE_CLATEXMATH` to ON.
 * Run `install-clatexmath.sh` to clone [cLaTeXMath](https://github.com/NanoMichael/cLaTeXMath) into a subfolder and build it as a static library.
 * If you observe linker errors, make sure your `gcc` is sufficiently new.
+* `libtinyxml2-dev` >= 7.0.1
 
 For older LaTeX math support using [lasem](https://github.com/GNOME/lasem), you can proceed as follows:
 
@@ -59,8 +76,17 @@ For older LaTeX math support using [lasem](https://github.com/GNOME/lasem), you 
 
 Development and testing was exclusively conducted on X11-based Linux. The one tested way of building on Windows involves [MSYS2](https://www.msys2.org/)'s mingw-w64 package family (following the `cmake` route outlined above). Since MSYS2's `coreutils` depend on its Cygwin fork, the released Windows binary packages instead include a subset of coreutils from [GnuWin32](http://gnuwin32.sourceforge.net/).
 
+### Development environment with meson
+
+NoteKit provides a virtual environment that sets everything up for you.
+
+If you have bash or zsh (other shells *may* work too, but havn't been tested) you can run `source devel/bin/active` to turn it on. Then you can then simply run `configure _build` followed by `ninja -C _build` (you might also need to regenerate the gsettings cache by running `glib-compile-schemas devel/gnome/`). Running NoteKit should be as easy as executing the `notekit` binary within `_build`.
+
+To deactivate the environment, simply invoke `deactivate`.
+
 ## Installation notes
-* By default, configuration is saved in `$HOME/.config/notekit`, and notes are in `$HOME/.local/share/notekit`. This may depend on your `$XDG_` environmental variables, and the notes base path can be changed in the `config.json` file in the configuration folder.
+* The settings are handled by GSettings. This means NoteKit will store it's preferences in an "OS native" way (dconf on Linux, registry on Windows and plist files on OS X). However if you dont want this, you can set the `GSETTINGS_BACKEND` environment variable to `keyfile`, to store all gsettings in an ini file.
+* By default, the notes are stored in `$HOME/.local/share/notekit`. This may depend on your `$XDG_` environmental variables, and the notes base path can be set in the preferences.
 * Resources (`data/` and `sourceview/`) are searched in `/notekit/` under `$XDG_DATA_DIRS` (default: `/usr/local/share:/usr/share`), followed by the current working directory `.`. If packaging Notekit or otherwise preparing it for system-wide installation, these two folders should probably be copied into `/usr/share/notekit/data` and `/usr/share/notekit/sourceview` respectively.
 
 ## Usage notes

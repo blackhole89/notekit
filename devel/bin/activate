@@ -1,0 +1,166 @@
+# Modified version of python3's venv
+# Copyright (c) 2021 Florian "sp1rit".
+# Copyright © 2001-2021 Python Software Foundation. All rights reserved.
+#
+# PYTHON SOFTWARE FOUNDATION LICENSE VERSION 2
+# --------------------------------------------
+#
+# 1. This LICENSE AGREEMENT is between the Python Software Foundation
+# ("PSF"), and the Individual or Organization ("Licensee") accessing and
+# otherwise using this software ("Python") in source or binary form and
+# its associated documentation.
+#
+# 2. Subject to the terms and conditions of this License Agreement, PSF hereby
+# grants Licensee a nonexclusive, royalty-free, world-wide license to reproduce,
+# analyze, test, perform and/or display publicly, prepare derivative works,
+# distribute, and otherwise use Python alone or in any derivative version,
+# provided, however, that PSF's License Agreement and PSF's notice of copyright,
+# i.e., "Copyright (c) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
+# 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021 Python Software Foundation;
+# All Rights Reserved" are retained in Python alone or in any derivative version
+# prepared by Licensee.
+#
+# 3. In the event Licensee prepares a derivative work that is based on
+# or incorporates Python or any part thereof, and wants to make
+# the derivative work available to others as provided herein, then
+# Licensee hereby agrees to include in any such work a brief summary of
+# the changes made to Python.
+#
+# 4. PSF is making Python available to Licensee on an "AS IS"
+# basis.  PSF MAKES NO REPRESENTATIONS OR WARRANTIES, EXPRESS OR
+# IMPLIED.  BY WAY OF EXAMPLE, BUT NOT LIMITATION, PSF MAKES NO AND
+# DISCLAIMS ANY REPRESENTATION OR WARRANTY OF MERCHANTABILITY OR FITNESS
+# FOR ANY PARTICULAR PURPOSE OR THAT THE USE OF PYTHON WILL NOT
+# INFRINGE ANY THIRD PARTY RIGHTS.
+# 
+# 5. PSF SHALL NOT BE LIABLE TO LICENSEE OR ANY OTHER USERS OF PYTHON
+# FOR ANY INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES OR LOSS AS
+# A RESULT OF MODIFYING, DISTRIBUTING, OR OTHERWISE USING PYTHON,
+# OR ANY DERIVATIVE THEREOF, EVEN IF ADVISED OF THE POSSIBILITY THEREOF.
+#
+# 6. This License Agreement will automatically terminate upon a material
+# breach of its terms and conditions.
+#
+# 7. Nothing in this License Agreement shall be deemed to create any
+# relationship of agency, partnership, or joint venture between PSF and
+# Licensee.  This License Agreement does not grant permission to use PSF
+# trademarks or trade name in a trademark sense to endorse or promote
+# products or services of Licensee, or any third party.
+# 
+# 8. By copying, installing or otherwise using Python, Licensee
+# agrees to be bound by the terms and conditions of this License
+# Agreement.
+
+# This file must be used with "source bin/activate" *from bash*
+# you cannot run it directly
+
+configure() {
+	meson --prefix $VIRTUAL_ENV $@
+}
+
+deactivate () {
+    # reset old environment variables
+    if [ -n "${_OLD_VIRTUAL_PATH:-}" ] ; then
+        PATH="${_OLD_VIRTUAL_PATH:-}"
+        export PATH
+        unset _OLD_VIRTUAL_PATH
+    fi
+    
+	# This should detect bash and zsh, which have a hash command that must
+    # be called to get it to forget past commands.  Without forgetting
+    # past commands the $PATH changes we made may not be respected
+    if [ -n "${BASH:-}" -o -n "${ZSH_VERSION:-}" ] ; then
+        hash -r
+    fi
+
+    if [ -n "${_OLD_VIRTUAL_PS1:-}" ] ; then
+        PS1="${_OLD_VIRTUAL_PS1:-}"
+        export PS1
+        unset _OLD_VIRTUAL_PS1
+    fi
+
+    unset VIRTUAL_ENV
+    unset VIRTUAL_ENV_LANG
+
+	unset -f configure
+
+	if [ ! "${1:-}" = "nondestructive" ]; then
+		unset XDG_CONFIG_HOME
+		if [[ -n "${_OLD_VIRTUAL_XDG_CONFIG_HOME:-}" ]]; then
+			echo "Setting config home"
+			XDG_CONFIG_HOME="${_OLD_VIRTUAL_XDG_CONFIG_HOME:-}"
+			export XDG_CONFIG_HOME
+			unset _OLD_VIRTUAL_XDG_CONFIG_HOME
+		fi
+
+		unset GSETTINGS_BACKEND
+		if [[ -n "${_OLD_VIRTUAL_GSETTINGS_BACKEND}" ]]; then
+			GSETTINGS_BACKEND="${_OLD_VIRTUAL_GSETTINGS_BACKEND}"
+			export GSETTINGS_BACKEND
+			unset _OLD_VIRTUAL_GSETTINGS_BACKEND
+		fi
+
+		unset GSETTINGS_SCHEMA_DIR
+		if [[ -n "${_OLD_VIRTUAL_GSETTINGS_SCHEMA_DIR}" ]]; then
+			GSETTINGS_SCHEMA_DIR="${_OLD_VIRTUAL_GSETTINGS_SCHEMA_DIR}"
+			export GSETTINGS_SCHEMA_DIR
+			unset _OLD_VIRTUAL_GSETTINGS_SCHEMA_DIR
+		fi
+
+		unset NK_DEVEL
+		if [[ -n "${_OLD_VIRTUAL_NK_DEVEL}" ]]; then
+			NK_DEVEL="${_OLD_VIRTUAL_NK_DEVEL}"
+			export NK_DEVEL
+			unset _OLD_VIRTUAL_NK_DEVEL
+		fi
+
+		# Self destruct!
+        unset -f deactivate
+    fi
+}
+
+# unset irrelevant variables
+deactivate nondestructive
+
+VIRTUAL_ENV="$(git rev-parse --show-toplevel)/devel"
+VIRTUAL_ENV_LANG="c++"
+export VIRTUAL_ENV VIRTUAL_ENV_LANG
+
+_OLD_VIRTUAL_PATH="$PATH"
+PATH="$VIRTUAL_ENV/bin:$PATH"
+export PATH
+
+if [ -z "${VIRTUAL_ENV_DISABLE_PROMPT:-}" ] ; then
+    _OLD_VIRTUAL_PS1="${PS1:-}"
+    if [ "x(NoteKit Development) " != x ] ; then
+	PS1="(NoteKit Development) ${PS1:-}"
+    else
+    if [ "`basename \"$VIRTUAL_ENV\"`" = "__" ] ; then
+        # special case for Aspen magic directories
+        # see https://aspen.io/
+        PS1="[`basename \`dirname \"$VIRTUAL_ENV\"\``] $PS1"
+    else
+        PS1="(`basename \"$VIRTUAL_ENV\"`)$PS1"
+    fi
+    fi
+    export PS1
+fi
+
+# NoteKit specific env vars
+_OLD_VIRTUAL_XDG_CONFIG_HOME="$XDG_CONFIG_HOME"
+XDG_CONFIG_HOME="$VIRTUAL_ENV/config"
+_OLD_VIRTUAL_GSETTINGS_BACKEND="$GSETTINGS_BACKEND"
+GSETTINGS_BACKEND=keyfile
+_OLD_VIRTUAL_GSETTINGS_SCHEMA_DIR="$GSETTINGS_SCHEMA_DIR"
+GSETTINGS_SCHEMA_DIR="$VIRTUAL_ENV/gnome"
+_OLD_VIRTUAL_NK_DEVEL="$NK_DEVEL"
+NK_DEVEL="$VIRTUAL_ENV"
+export XDG_CONFIG_HOME GSETTINGS_BACKEND GSETTINGS_SCHEMA_DIR NK_DEVEL
+export _OLD_VIRTUAL_XDG_CONFIG_HOME _OLD_VIRTUAL_GSETTINGS_BACKEND _OLD_VIRTUAL_GSETTINGS_SCHEMA_DIR _OLD_VIRTUAL_NK_DEVEL
+
+# This should detect bash and zsh, which have a hash command that must
+# be called to get it to forget past commands.  Without forgetting
+# past commands the $PATH changes we made may not be respected
+if [ -n "${BASH:-}" -o -n "${ZSH_VERSION:-}" ] ; then
+    hash -r
+fi
