@@ -72,6 +72,8 @@ jobs:
           cp -r /usr/share/icons/Adwaita/ dist/bin/data/icons/
           # generate icon cache for notekit icons
           gtk-update-icon-cache dist/bin/data/icons/hicolor/
+          # recompile gsettings schema cache
+          glib-compile-schemas dist/bin/share/glib-2.0/schemas/gnome
           # add rust uutils coreutils 
           cp coreutils/target/x86_64-pc-windows-gnu/release/{mkdir,touch,mv,rm}.exe dist/bin/
           # add notesbase folder and put README.md into it

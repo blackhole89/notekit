@@ -62,7 +62,8 @@
 
 
 #mainView {
-    font: 16px Charter;
+    font-size: 16px;
+	font-family: Charter, serif;
     padding-top: 16px;
     padding-right: 16px;
     padding-bottom: 16px;

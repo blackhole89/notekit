@@ -175,7 +175,6 @@ void CMainWindow::CalculatePaths()
 	if(dbg != NULL) {
 		fprintf(stderr,"INFO: Debug mode set! Will operate in %s.\n", dbg);
 		data_path=dbg;
-		config_path= data_path + "/notesbase";
 		default_base_path= data_path + "/notesbase";
 		return;
 	}
@@ -183,20 +182,10 @@ void CMainWindow::CalculatePaths()
 	char *home = getenv("HOME");
 	if(!home || !*home) {
 		fprintf(stderr,"WARNING: Could not determine user's home directory! Will operate in current working directory.\n");
-		config_path="notesbase";
 		default_base_path="notesbase";
 		data_path=".";
 		return;
-	}
-	
-	char *config_home = getenv("XDG_CONFIG_HOME");
-	if(!config_home || !*config_home) config_path=std::string(home)+"/.config/notekit";
-	else config_path=std::string(config_home)+"/notekit";
-	
-	if(mkdirp(config_path)) {
-		fprintf(stderr,"WARNING: Could not create config path '%s'. Falling back to current working directory.\n",config_path.c_str());
-		config_path="notesbase";
-	}
+	}	
 	
 	char *data_home = getenv("XDG_DATA_HOME");
 	if(!data_home || !*data_home) default_base_path=std::string(home)+"/.local/share/notekit";
