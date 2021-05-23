@@ -82,8 +82,8 @@ jobs:
         run: patch -p1 < windows.patch
       - name: Configure 🔧
         run: |
-          export CFLAGS="-O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions --param=ssp-buffer-size=4 -mwindows" \
-            LDFLAGS="-fstack-protector -lssp -mwindows -Wl,--subsystem,windows"
+          export CFLAGS="-O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions --param=ssp-buffer-size=4" \
+            LDFLAGS="-fstack-protector -lssp"
           export CXXFLAGS="$CFLAGS"
           meson --prefix=/ --cross-file=/usr/share/mingw/toolchain-mingw64.meson --default-library shared x86_64-w64-mingw32
       - name: Compile 🎲
