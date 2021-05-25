@@ -648,15 +648,19 @@ bool CMainWindow::on_motion_notify(GdkEventMotion *e)
 		switch(sview.devicemodes[d]) {
 		case NB_MODE_DRAW:
 			sview.SetCursor(pen_cursor);
+			sview.set_cursor_visible(false);
 			break;
 		case NB_MODE_TEXT:
 			sview.SetCursor(text_cursor);
+			sview.set_cursor_visible(true);
 			break;
 		case NB_MODE_ERASE:
 			sview.SetCursor(eraser_cursor);
+			sview.set_cursor_visible(false);
 			break;
 		case NB_MODE_SELECT:
 			sview.SetCursor(selection_cursor);
+			sview.set_cursor_visible(false);
 			break;
 		}
 	}
