@@ -13,41 +13,10 @@ jobs:
           - ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Setting up cLaTeXMath cache 🗂
-      id: cache-clatexmath
-      uses: actions/cache@v2
-      with:
-        path: ~/cLaTeXMath/
-        key: ${{ runner.os }}-clatexmath
-    - name: Updating apt package lists
-      run: sudo apt-get update
     - name: Downloading dependencies 📥
-      run: sudo apt-get install build-essential libfontconfig1-dev zlib1g-dev libjsoncpp-dev libgtksourceviewmm-3.0-dev libgtkmm-3.0-dev libtinyxml2-dev python3 python3-pip python3-setuptools
-    - name: Download the latest version of Meson 🧰
-      run: |
-        sudo pip3 install meson ninja
-    - name: Build cLaTeXMath from cache ✏
-      id: build-clatexmath_cache
-      if: steps.cache-clatexmath.outputs.cache-hit == 'true'
-      run: |
-        pushd ~/cLaTeXMath/
-        git pull
-        meson _build --reconfigure
-        ninja -C _build
-        sudo meson install -C _build
-        popd
-    - name: Build cLaTeXMath from source 🖋
-      if: steps.cache-clatexmath.outputs.cache-hit != 'true' || steps.build-clatexmath_cache == 'failure'
-      run: |
-        rm -rf ~/cLaTeXMath/
-        git clone https://github.com/NanoMichael/cLaTexMath ~/cLaTeXMath/
-        pushd ~/cLaTeXMath/
-        meson _build
-        ninja -C _build
-        sudo meson install -C _build
-        popd
+      run: sudo apt-get install build-essential meson libfontconfig1-dev zlib1g-dev libgtksourceviewmm-3.0-dev libgtkmm-3.0-dev libtinyxml2-dev
     - name: Configure 🔧
-      run: meson _build
+      run: meson _build --default-library static
     - name: Compile 🎲
       run: ninja -C _build
     - name: Compress build artifacts 📦
