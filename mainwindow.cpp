@@ -415,7 +415,7 @@ void CMainWindow::FetchAndExport()
 			fclose(fl);
 
 			char cmdbuf[1024];
-			snprintf(cmdbuf,1024,"pandoc -f markdown -t latex -o \"%s\" \"%s\"",d.get_filename().c_str(),tempmd);
+			snprintf(cmdbuf,1024,"pandoc -f markdown+hard_line_breaks+compact_definition_lists -t latex -o \"%s\" \"%s\"",d.get_filename().c_str(),tempmd);
 			int retval;
 			if((retval=system(cmdbuf))) {
 				printf("Exporting to PDF (temporary file: %s): failure (%d). Temporary file not deleted.\n",tempmd,retval);
@@ -683,15 +683,19 @@ bool CMainWindow::on_motion_notify(GdkEventMotion *e)
 		switch(sview.devicemodes[d]) {
 		case NB_MODE_DRAW:
 			sview.SetCursor(pen_cursor);
+			sview.set_cursor_visible(false);
 			break;
 		case NB_MODE_TEXT:
 			sview.SetCursor(text_cursor);
+			sview.set_cursor_visible(true);
 			break;
 		case NB_MODE_ERASE:
 			sview.SetCursor(eraser_cursor);
+			sview.set_cursor_visible(false);
 			break;
 		case NB_MODE_SELECT:
 			sview.SetCursor(selection_cursor);
+			sview.set_cursor_visible(false);
 			break;
 		}
 	}
