@@ -12,7 +12,8 @@ deps = [
 	dependency('gtkmm-3.0'),
 	dependency('gtksourceviewmm-3.0'),
 	dependency('zlib'),
-	dependency('fontconfig')
+	dependency('fontconfig'),
+	dependency('gdk-x11-3.0', required : false)
 ]
 
 if get_option('clatexmath')
