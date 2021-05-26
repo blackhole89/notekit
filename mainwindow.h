@@ -5,8 +5,7 @@
 
 #include <gtkmm.h>
 
-#include <json/json.h>
-
+#include "about.h"
 #include "notebook.h"
 #include "navigation.h"
 
@@ -14,7 +13,8 @@ enum {
 	WND_ACTION_COLOR,
 	WND_ACTION_NEXT_NOTE,
 	WND_ACTION_PREV_NOTE,
-	WND_ACTION_TOGGLE_SIDEBAR
+	WND_ACTION_TOGGLE_SIDEBAR,
+	WND_ACTION_TOGGLE_ZEN
 };
 
 class CMainWindow : public Gtk::ApplicationWindow
@@ -31,19 +31,21 @@ public:
 	void HardClose();
 	void FetchAndSave();
 	void OpenDocument(std::string filename);
-	void SetActiveFilename(std::string filename);
+	void SetupDocumentWindow(Glib::ustring filename);
 	
 	void FetchAndExport();
-	
+
 	void FocusDocument();
-	
-	void GetColor(int id, float &r, float &g, float &b);
-	void SetColor(int id, float r, float g, float b);
+
+	typedef std::tuple<double, double, double, double> color_t;
 protected:
+	/* low level window for csd check */
+	GdkWindow* window;
+
 	//Signal handlers:
 	bool on_close(GdkEventAny* any_event);
 	void on_action(std::string name,int type, int param);
-	bool on_click_color(GdkEventButton *btn, int num);
+	bool on_click_color(GdkEventButton *btn, unsigned int num);
 	bool on_motion_notify(GdkEventMotion* event);
 	
 	sigc::connection idle_timer;
@@ -53,14 +55,16 @@ protected:
 	//Gtk::Box filler;
 	
 	/* config */
-	std::string config_path;
 	std::string default_base_path;
 	std::string data_path;
 	void CalculatePaths();
-	Json::Value config;
-	void LoadConfig();
-	void SaveConfig();
-	void RunConfigWindow();
+	void RunPreferenceDiag();
+
+	/* settings */
+	Glib::RefPtr<Gio::Settings> settings = Gio::Settings::create("com.github.blackhole89.NoteKit");
+	void SettingChange(const Glib::ustring& key);
+	bool binit = true;
+	void UpdateBasePath();
 	
 	/* tree view on the left */
 	Gtk::ScrolledWindow nav_scroll;
@@ -79,27 +83,50 @@ protected:
 	Gtk::Toolbar *toolbar;
 	void InitToolbar();
 	void UpdateToolbarColors();
+	unsigned int active_color = 0;
 	
 	/* header */
-	bool use_hbar;
 	Gtk::HeaderBar hbar;
 	Gtk::MenuButton appbutton;
 	
+	Gtk::Button zenbtn;
+	bool zen = false;
+
+	AboutDiag about;
+	void RunAboutDiag();
 	/* menu */
+	bool navigation = true;
+	Glib::RefPtr<Gio::SimpleAction> export_action = add_action("export", sigc::mem_fun(this,&CMainWindow::FetchAndExport));
+	Glib::RefPtr<Gio::SimpleAction> pref_action = add_action("pref", sigc::mem_fun(this,&CMainWindow::RunPreferenceDiag));
+	Glib::RefPtr<Gio::SimpleAction> about_action = add_action("about", sigc::mem_fun(this,&CMainWindow::RunAboutDiag));
+	Glib::RefPtr<Gio::SimpleAction> sidebar_action = add_action_bool("sidebar", sigc::bind( sigc::mem_fun(this,&CMainWindow::on_action), "toggle-sidebar", WND_ACTION_TOGGLE_SIDEBAR, 1), &navigation);
+	Glib::RefPtr<Gio::SimpleAction> zen_action = add_action_bool("zen", sigc::bind( sigc::mem_fun(this,&CMainWindow::on_action), "toggle-zen", WND_ACTION_TOGGLE_ZEN, 1), zen);
+	Glib::RefPtr<Gio::Menu> menu = Gio::Menu::create();
 	Gtk::Menu appmenu;
-	struct {
-		Gtk::MenuItem prefs;
-		Gtk::SeparatorMenuItem sep;
-		Gtk::CheckMenuItem hide_sidebar;
-		Gtk::MenuItem exprt;
-	} am;
 	
 	/* classic menu */
 	struct {
 		Gtk::VBox menu_box;
 		Gtk::MenuBar mbar;
-		Gtk::MenuItem view;
 	} cm;
+
+	Gtk::FileChooserButton *dir;
+
+	void SettingBasepathUpdate();
+	void SettingDocumentUpdate();
+	void SettingCsdUpdate();
+	void SettingZenUpdate();
+	void SettingSidebarUpdate();
+
+	typedef std::map<const Glib::ustring, sigc::slot<void()>> settingmap_t;
+	settingmap_t settingmap {
+		{"base-path", sigc::mem_fun(this,&CMainWindow::SettingBasepathUpdate)},
+		{"active-document", sigc::mem_fun(this,&CMainWindow::SettingDocumentUpdate)},
+		{"colors", sigc::mem_fun(this,&CMainWindow::UpdateToolbarColors)},
+		{"csd", sigc::mem_fun(this,&CMainWindow::SettingCsdUpdate)},
+		{"zen", sigc::mem_fun(this,&CMainWindow::SettingZenUpdate)},
+		{"sidebar", sigc::mem_fun(this,&CMainWindow::SettingSidebarUpdate)}
+	};
 };
 
 #endif // MAINWINDOW_H

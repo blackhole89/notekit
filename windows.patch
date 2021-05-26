@@ -1,23 +1,23 @@
-From d2e775b07fe181905caa9af3c7a0ffb83b8c368c Mon Sep 17 00:00:00 2001
-From: sp1rit <sp1rit@disroot.org>
-Date: Tue, 4 May 2021 21:58:31 +0200
+From 180b03a31b2709c32b8c14ba881abbcf744158cc Mon Sep 17 00:00:00 2001
+From: "Florian \"sp1rit\"" <sp1rit@disroot.org>
+Date: Fri, 21 May 2021 16:32:47 +0200
 Subject: [PATCH] various changes that are required to build notekit
  with mingw
 
-Signed-off-by: sp1rit <sp1rit@disroot.org>
+Signed-off-by: Florian "sp1rit <sp1rit@disroot.org>
 ---
- drawing.cpp            | 6 +++---
+ drawing.cpp            | 4 ++--
  imagewidgets.cpp       | 4 ++--
  main.cpp               | 5 +++--
  mainwindow.cpp         | 3 ++-
  notebook_highlight.hpp | 4 ++--
- 5 files changed, 12 insertions(+), 10 deletions(-)
+ 5 files changed, 11 insertions(+), 9 deletions(-)
 
 diff --git a/drawing.cpp b/drawing.cpp
-index c4ee9f1..663198d 100644
+index c67acee..18a7ec0 100644
 --- a/drawing.cpp
 +++ b/drawing.cpp
-@@ -392,13 +392,13 @@ void CBoundDrawing::Unselect() {
+@@ -396,13 +396,13 @@ void CBoundDrawing::Unselect() {
  
  void CBoundDrawing::on_unrealize()
  {
@@ -33,13 +33,6 @@ index c4ee9f1..663198d 100644
  	strokes.~vector<CStroke>();
  }
  
-@@ -516,4 +516,4 @@ bool CStroke::Select(float x0, float x1, float y0, float y1)
- void CStroke::Unselect()
- {
- 	selected.clear();
--}
-\ No newline at end of file
-+}
 diff --git a/imagewidgets.cpp b/imagewidgets.cpp
 index 1c52a6b..45012af 100644
 --- a/imagewidgets.cpp
@@ -60,7 +53,7 @@ index 1c52a6b..45012af 100644
  
  void CImageWidget::SetSize(int x, int y)
 diff --git a/main.cpp b/main.cpp
-index 1fc7c32..9bbec94 100644
+index 61d25dd..3a46ad7 100644
 --- a/main.cpp
 +++ b/main.cpp
 @@ -1,13 +1,14 @@
@@ -81,18 +74,18 @@ index 1fc7c32..9bbec94 100644
  	app->signal_activate().connect( [app,&mainwindow]() {
  			mainwindow=new CMainWindow(app);
 diff --git a/mainwindow.cpp b/mainwindow.cpp
-index af65f5a..4e43c49 100644
+index 050cbc7..0829df8 100644
 --- a/mainwindow.cpp
 +++ b/mainwindow.cpp
-@@ -2,6 +2,7 @@
- #include "navigation.h"
- #include <iostream>
- #include <fontconfig/fontconfig.h>
+@@ -5,6 +5,7 @@
+ #include <locale.h>
+ 
+ #include <stdlib.h>
 +#include <windows.h>
  
  #ifdef HAVE_CLATEXMATH
  #define __OS_Linux__
-@@ -396,7 +397,7 @@ void CMainWindow::FetchAndSave()
+@@ -362,7 +363,7 @@ void CMainWindow::FetchAndSave()
  	fclose(fl);
  	
  	/* atomic replace */
@@ -100,7 +93,7 @@ index af65f5a..4e43c49 100644
 +	MoveFileExA(tmp_filename.c_str(), filename.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH);
  }
  
- void CMainWindow::OpenDocument(std::string filename)
+ void CMainWindow::FetchAndExport()
 diff --git a/notebook_highlight.hpp b/notebook_highlight.hpp
 index cf8569c..f1e846e 100644
 --- a/notebook_highlight.hpp

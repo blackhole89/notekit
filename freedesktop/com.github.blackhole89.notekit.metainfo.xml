@@ -86,7 +86,16 @@
 	</description>
 	<screenshots>
 		<screenshot type="default">
-			<image>https://raw.githubusercontent.com/blackhole89/notekit/master/screenshots/notekit-example.png</image>
+			<image>https://raw.githubusercontent.com/blackhole89/notekit/master/screenshots/notekit.png</image>
+		</screenshot>
+		<screenshot>
+			<image>https://raw.githubusercontent.com/blackhole89/notekit/master/screenshots/notekit-syntax_highlighting.png</image>
+		</screenshot>
+		<screenshot>
+			<image>https://raw.githubusercontent.com/blackhole89/notekit/master/screenshots/notekit_dark.png</image>
+		</screenshot>
+		<screenshot>
+			<image>https://raw.githubusercontent.com/blackhole89/notekit/master/screenshots/notekit_dark-syntax_highlighting.png</image>
 		</screenshot>
 	</screenshots>
 	<url type="homepage">https://github.com/blackhole89/notekit</url>

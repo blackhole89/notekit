@@ -1,4 +1,5 @@
 // global config
 
+#define NK_VERSION "0.1.0"
 #cmakedefine HAVE_LASEM
 #cmakedefine HAVE_CLATEXMATH

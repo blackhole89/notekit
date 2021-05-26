@@ -1,0 +1,6 @@
+[wrap-git]
+url = https://github.com/NanoMichael/cLaTeXMath.git
+revision = head
+
+[provide]
+dependency_names = clatexmath

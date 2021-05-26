@@ -1,20 +1,25 @@
 project('notekit', 'cpp',
-	version : '0.1',
+	version : '0.1.0',
 	default_options : ['warning_level=3', 'cpp_std=c++14']
 )
 
 conf_data = configuration_data()
+if get_option('version') != ''
+	conf_data.set('version', get_option('version'))
+else
+	conf_data.set('version', meson.project_version())
+endif
 
 deps = [
 	dependency('gtkmm-3.0'),
 	dependency('gtksourceviewmm-3.0'),
-	dependency('jsoncpp'),
 	dependency('zlib'),
-	dependency('fontconfig')
+	dependency('fontconfig'),
+	dependency('gdk-x11-3.0', required : false)
 ]
 
 if get_option('clatexmath')
-	deps += dependency('clatexmath', version: '>=0.0.3')
+	deps += dependency('clatexmath', version: '>=0.0.3', fallback: ['clatexmath', 'clatexmath_dep'])
 	conf_data.set('HAVE_CLATEXMATH', true)
 endif
 
@@ -28,11 +33,16 @@ subdir('freedesktop')
 install_subdir('data/', install_dir: get_option('datadir')/'notekit')
 install_subdir('sourceview/', install_dir: get_option('datadir')/'notekit')
 
+install_data('gnome/com.github.blackhole89.notekit.gschema.xml',
+  install_dir: join_paths(get_option('datadir'), 'glib-2.0/schemas')
+)
+
 #if get_option('clatexmath')
 #	meson.add_install_script('symlink-clatexmath.sh')
 #endif
 
 executable('notekit',
+	'about.cpp',
 	'drawing.cpp',
 	'imagewidgets.cpp',
 	'main.cpp',
@@ -42,3 +52,5 @@ executable('notekit',
 	dependencies: deps,
 	install : true
 )
+
+meson.add_install_script('build-aux/postinstall.py')
