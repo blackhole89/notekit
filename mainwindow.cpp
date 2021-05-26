@@ -11,6 +11,10 @@
 #include "latex.h"
 #endif
 
+#ifdef GDK_WINDOWING_X11
+#include <gdk/gdkx.h>
+#endif
+
 CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::ApplicationWindow(app), nav_model(), sview()
 {
 	// Determine paths to operate on.
@@ -135,8 +139,15 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 	add(cm.menu_box);
 	
 	settings->bind("csd", cm.mbar.property_visible(), Gio::SettingsBindFlags::SETTINGS_BIND_INVERT_BOOLEAN);
-	show_all();
+	settings->bind("csd", property_decorated());
+	cm.menu_box.show_all();
+	appbutton.show_all();
+	zenbtn.show_all();
+	show();
 	
+	window = gtk_widget_get_window(GTK_WIDGET(this->gobj()));
+
+	SettingCsdUpdate();
 	SettingSidebarUpdate();
 	SettingZenUpdate();
 
@@ -218,8 +229,8 @@ void CMainWindow::CalculatePaths()
 }
 
 void CMainWindow::RunAboutDiag() {
-    about.run();
-    about.hide();
+	about.run();
+	about.hide();
 }
 
 void CMainWindow::RunPreferenceDiag()
@@ -547,6 +558,19 @@ void CMainWindow::SettingDocumentUpdate() {
 	SetupDocumentWindow(filename);
 
 	g_free(buf);
+}
+
+void CMainWindow::SettingCsdUpdate() {
+	bool state = settings->get_boolean("csd");
+	#ifdef GDK_WINDOWING_X11
+		if (GDK_IS_X11_DISPLAY (gdk_window_get_display(window))) {
+			GdkAtom atom = gdk_atom_intern("_MOTIF_WM_HINTS", false);
+			long hints[5] = { 2, 0, (int)!state, 0, 0};
+			gdk_property_change(window, atom, atom, 32, GDK_PROP_MODE_REPLACE, (unsigned char *)hints, 5);
+		}
+	#endif
+	// TODO: here is space for xdg-decoration, any maybe support for w32 & cocoa
+	return;
 }
 
 void CMainWindow::SettingZenUpdate() {
