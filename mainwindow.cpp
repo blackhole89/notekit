@@ -14,6 +14,9 @@
 #ifdef GDK_WINDOWING_X11
 #include <gdk/gdkx.h>
 #endif
+#ifdef GDK_WINDOWING_WAYLAND
+#include <gdk/gdkwayland.h>
+#endif
 
 CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::ApplicationWindow(app), nav_model(), sview()
 {
@@ -87,7 +90,6 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 	hbar.pack_end(zenbtn);
 	set_titlebar(hbar);
 
-	settings->bind("csd", hbar.property_visible());
 	
 	/* install tree view */
 	nav.get_style_context()->add_class("sidebar");
@@ -138,12 +140,28 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 	cm.menu_box.pack_start(split);
 	add(cm.menu_box);
 	
+	settings->bind("csd", hbar.property_visible());
 	settings->bind("csd", cm.mbar.property_visible(), Gio::SettingsBindFlags::SETTINGS_BIND_INVERT_BOOLEAN);
 	settings->bind("csd", property_decorated());
-	cm.menu_box.show_all();
+	split.show_all();
+	cm.menu_box.show();
 	appbutton.show_all();
 	zenbtn.show_all();
 	show();
+	/*
+	 * Note to future developers: If you changed anything
+	 * regarding window construction and NoteKit is now
+	 * throwing an SEGV, make sure that the sview is actually
+	 * shown. (NoteKit segfaults when trying to render any
+	 * widget (LaTeX, drawing, etc.) onto an invisible view.
+	 * If set your current document to "" (empty string) and
+	 * start notekit (this empty page shouldn't have any widgets)
+	 * you should be able to see a transparent area where the
+	 * sview is supposed to be. Happy fixing :D
+	 *
+	 * We can't just call show_all(), as that would break the
+	 * bound visibility state of the hbar &| mbar.
+	 */
 	
 	window = gtk_widget_get_window(GTK_WIDGET(this->gobj()));
 
@@ -395,7 +413,6 @@ void CMainWindow::FetchAndExport()
 			fclose(fl);
 		} else if(d.get_filter() == filter_pdf) {
 			#ifdef _WIN32
-			// TODO: this doesn't work on microsoft, EDIT: maybe it does
 			char* filename = std::getenv("TMP");
 			strcat(filename, "/nkexportXXXXXX");
 			#elif __APPLE__
@@ -419,21 +436,6 @@ void CMainWindow::FetchAndExport()
 				printf("Exporting to PDF (temporary file: %s): success.\n",filename);
 				::remove(filename);
 			}
-
-			/*char *tempmd = tempnam(NULL,"nkexport");
-			FILE *fl = fopen(tempmd, "wb");
-			fwrite(str.c_str(),str.length(),1,fl);
-			fclose(fl);
-
-			char cmdbuf[1024];
-			snprintf(cmdbuf,1024,"pandoc -f markdown+hard_line_breaks+compact_definition_lists -t latex -o \"%s\" \"%s\"",d.get_filename().c_str(),tempmd);
-			int retval;
-			if((retval=system(cmdbuf))) {
-				printf("Exporting to PDF (temporary file: %s): failure (%d). Temporary file not deleted.\n",tempmd,retval);
-			} else {
-				printf("Exporting to PDF (temporary file: %s): success.\n",tempmd);
-				::remove(tempmd);
-			}*/
 		}
 
 	break; }
@@ -561,15 +563,63 @@ void CMainWindow::SettingDocumentUpdate() {
 }
 
 void CMainWindow::SettingCsdUpdate() {
+	/*
+	 * Due to differences in windowing protocols, there
+	 * is no standardized way in GTK to set if you want
+	 * server-side decorations (SSD) or client-side (CSD)
+	 * ones.
+	 * Note to future developers: If you see NoteKit throwing
+	 * a SEGV and gdb tells you it has something to do with
+	 * this, it's likely that `window` has not been initialized
+	 * yet. For debug purposes, you can wrap this whole block
+	 * in an if(window != 0x0) statement to prevent this. To
+	 * fix it properly, you'll have to move whatever you did
+	 * in the CMainWindow constructor further down.
+	 */
 	bool state = settings->get_boolean("csd");
+	/*
+	 * X11:
+	 * This checks if Gdk was build with X support and if so
+	 * determines if the current window is using the X protocol.
+	 * If this is the case, it adds sets the third [2] value of
+	 * _MOTIF_WM_HINTS (decorations) to the inverse state of the
+	 * current "csd" setting.
+	 */
 	#ifdef GDK_WINDOWING_X11
+		//
 		if (GDK_IS_X11_DISPLAY (gdk_window_get_display(window))) {
 			GdkAtom atom = gdk_atom_intern("_MOTIF_WM_HINTS", false);
 			long hints[5] = { 2, 0, (int)!state, 0, 0};
 			gdk_property_change(window, atom, atom, 32, GDK_PROP_MODE_REPLACE, (unsigned char *)hints, 5);
 		}
 	#endif
-	// TODO: here is space for xdg-decoration, any maybe support for w32 & cocoa
+	/*
+	 * Wayland:
+	 * Some Wayland compositors also allow outsourcing the drawing
+	 * of decorations to itself. This is defined in the xdg-decoration
+	 * spec, whose abstractions are part of Gdk.
+	 * However the Wayland compositor I tested against (Wayfire) was
+	 * unable to change the decorations after it's initial set, so
+	 * NoteKit had to be restarted in order to have proper decorations.
+	 */
+	#ifdef GDK_WINDOWING_WAYLAND
+		if (GDK_IS_WAYLAND_DISPLAY (gdk_window_get_display(window))) {
+			if (state) {
+				gdk_wayland_window_announce_csd(window);
+			} else {
+				gdk_wayland_window_announce_ssd(window);
+			}
+		}
+	#endif
+	/*
+	 * TODO: here is space for potential support of broadway, w32 & quartz:
+	 * IMO broadway support for SSD irrelevant, as it doesn't make much sense.
+	 * Both w32 & quartz appear unfeasible with gtk+3, as their integration is
+	 * lacking the features required to change CSD/SSD.
+	 * However gtk4 seems to have all required features.
+	 * - w32: get_effective_window_decorations(GdkSurface*, GdkWMDecoration*)
+	 * - osx: GdkMacosWindow -> setDecorated(bool)
+	 */
 	return;
 }
 
@@ -591,7 +641,7 @@ void CMainWindow::SettingZenUpdate() {
 
 void CMainWindow::SettingSidebarUpdate() {
 	bool state = settings->get_boolean("sidebar");
-	nav_scroll.set_visible(state);
+	if (!settings->get_boolean("zen")) nav_scroll.set_visible(state);
 	Glib::Variant<bool> mesh = Glib::Variant<bool>::create(state);
 	sidebar_action->set_state(mesh);
 }
