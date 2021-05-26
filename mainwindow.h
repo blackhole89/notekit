@@ -45,6 +45,9 @@ public:
 
 	typedef std::tuple<double, double, double, double> color_t;
 protected:
+	/* low level window for csd check */
+	GdkWindow* window;
+
 	//Signal handlers:
 	bool on_close(GdkEventAny* any_event);
 	void on_action(std::string name,int type, int param);
@@ -130,6 +133,7 @@ protected:
 
 	void SettingBasepathUpdate();
 	void SettingDocumentUpdate();
+	void SettingCsdUpdate();
 	void SettingProximityUpdate();
 	void SettingSidebarUpdate();
 	void SettingPresentationModeUpdate();
@@ -140,6 +144,7 @@ protected:
 		{"base-path", sigc::mem_fun(this,&CMainWindow::SettingBasepathUpdate)},
 		{"active-document", sigc::mem_fun(this,&CMainWindow::SettingDocumentUpdate)},
 		{"colors", sigc::mem_fun(this,&CMainWindow::UpdateToolbarColors)},
+		{"csd", sigc::mem_fun(this,&CMainWindow::SettingCsdUpdate)},
 		{"proximity-widgets", sigc::mem_fun(this,&CMainWindow::SettingProximityUpdate)},
 		{"sidebar", sigc::mem_fun(this,&CMainWindow::SettingSidebarUpdate)},
 		{"presentation-mode", sigc::mem_fun(this,&CMainWindow::SettingPresentationModeUpdate)}
