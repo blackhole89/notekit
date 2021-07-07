@@ -5,6 +5,7 @@
 #include "imagewidgets.h"
 
 #include <unordered_set>
+#include <wordexp.h>
 
 // #define _DEBUG_MOTION_
 
@@ -571,7 +572,16 @@ void CNotebook::RenderToWidget(Glib::ustring wtype, Gtk::TextBuffer::iterator &s
 			auto urlend = urlstart;
 			sbuffer->iter_forward_to_context_class_toggle(urlend,"url");
 			
-			Gtk::Image *d = new Gtk::Image(urlstart.get_text(urlend));
+			/* We expand the path to its full path without environment variables or `~` */
+			std::string url = urlstart.get_text(urlend);
+			wordexp_t result;
+			std::string expanded;
+			
+			wordexp(url.c_str(), &result, 0);
+			expanded.assign(*result.we_wordv);
+			wordfree(&result);
+
+			Gtk::Image *d = new Gtk::Image(expanded);
 			Gtk::manage(d); 
 			//sbuffer->apply_tag(GetBaselineTag(d->GetBaseline()),start,j);
 			add_child_at_anchor(*d,anch);
