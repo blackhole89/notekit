@@ -72,3 +72,12 @@
     background: red;
     border-color: blue;
 }
+
+/*.link-card frame {
+	box-shadow: 0 7px 14px rgba(0,0,0,0.25), 0 5px 5px rgba(0,0,0,0.22);
+}*/
+
+.link-card .large-title {
+	font-family: Cantarell;
+	font-size: 20pt;
+}

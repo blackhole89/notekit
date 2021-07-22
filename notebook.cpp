@@ -3,6 +3,7 @@
 #include "notebook_clipboard.hpp"
 #include "notebook_highlight.hpp"
 #include "imagewidgets.h"
+#include "link.h"
 
 #include <unordered_set>
 
@@ -19,6 +20,7 @@
 Glib::ustring CNotebook::renderable_classes[]
 	= { "checkbox", 
 		"image",
+		"link",
 #if defined (HAVE_LASEM) || defined (HAVE_CLATEXMATH)
 		"latex"
 #endif
@@ -578,7 +580,57 @@ void CNotebook::RenderToWidget(Glib::ustring wtype, Gtk::TextBuffer::iterator &s
 			d->show();
 		}
 		
-	} 
+	} else if(wtype=="link") {
+		Glib::RefPtr<Gtk::TextBuffer::ChildAnchor> anch;
+
+		if(!(anch=start.get_child_anchor())) {
+			/* we haven't set up a child anchor yet, so we need to queue the creation of one */
+			Glib::RefPtr<Gtk::TextMark> mstart = sbuffer->create_mark(start,true);
+			QueueChildAnchor(mstart);
+		} else {
+			//auto a = start; ++a;
+			//sbuffer->remove_tag(tag_hidden,start,a);
+
+			auto j = start; ++j;
+			sbuffer->remove_tag(tag_hidden,start,j);
+
+			auto altstart = j;
+			sbuffer->iter_forward_to_context_class_toggle(altstart,"link-text");
+			auto altend = altstart;
+			sbuffer->iter_forward_to_context_class_toggle(altend,"link-text");
+			/*
+			 * If altstart is larger than end (of the markdown defining the link),
+			 * it's almost certainly from the next the link-text class of the
+			 * sucessing widget to this one. To prevent the alt tag from having
+			 * any content, we'll just set the end the same as start. (No content
+			 * between them => empty string).
+			 * TODO: this hack could be cleaned fixed properly by calculating
+			 *       the resulting alt tag here already.
+			 */
+			if (altstart > end) altend = altstart;
+
+			auto attrstart = j;
+			sbuffer->iter_forward_to_context_class_toggle(attrstart,"attribute-value");
+			auto attrend = attrstart;
+			sbuffer->iter_forward_to_context_class_toggle(attrend,"attribute-value");
+			// see paragraph I've written above for more info
+			if (attrstart > end) attrend = attrstart;
+
+			/* the worst thing that could happen is that we go to the end and URL becomes empty */
+			auto urlstart = j;
+			sbuffer->iter_forward_to_context_class_toggle(urlstart,"url");
+			auto urlend = urlstart;
+			sbuffer->iter_forward_to_context_class_toggle(urlend,"url");
+
+			LinkButton *link = new LinkButton(urlstart.get_text(urlend), altstart.get_text(altend), attrstart.get_text(attrend));
+			Gtk::manage(link);
+
+			add_child_at_anchor(*link,anch);
+			link->show();
+		}
+
+
+	}
 #if defined (HAVE_LASEM) || defined (HAVE_CLATEXMATH)
 	else if(wtype=="latex") {
 		
