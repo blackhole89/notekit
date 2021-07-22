@@ -39,6 +39,7 @@ executable('notekit',
 	'mainwindow.cpp',
 	'navigation.cpp',
 	'notebook.cpp',
+	'link.cpp',
 	dependencies: deps,
 	install : true
 )
