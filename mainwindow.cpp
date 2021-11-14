@@ -434,30 +434,26 @@ void CMainWindow::FetchAndExport()
 			fwrite(str.c_str(),str.length(),1,fl);
 			fclose(fl);
 		} else if(d.get_filter() == filter_pdf) {
-			#ifdef _WIN32
-			char* filename = std::getenv("TMP");
-			strcat(filename, "/nkexportXXXXXX");
-			#elif __APPLE__
-			char* filename = std::getenv("TMPDIR");
-			strcat(filename, "/nkexportXXXXXX");
-			#else
-			char filename[] = "/tmp/nkexportXXXXXX";
-			#endif
-			int fd = mkstemp(filename);
-			printf("Export: %s, Desciptor: %d\n", filename, fd);
+			const gchar* tmpl = "nkexportXXXXXX";
+			gchar* name;
+			GError* err = nullptr;
+			gint fd = g_file_open_tmp(tmpl, &name, &err);
+			printf("Export: %s, Desciptor: %d\n", name, fd);
 			FILE *fl = fdopen(fd, "w");
 			fwrite(str.c_str(),str.length(),1,fl);
 			fclose(fl);
 
 			char cmdbuf[1024];
-			snprintf(cmdbuf,1024,"pandoc -f markdown -t latex -o \"%s\" \"%s\"",d.get_filename().c_str(),filename);
+			snprintf(cmdbuf,1024,"pandoc -f markdown+hard_line_breaks+compact_definition_lists -t latex -o \"%s\" \"%s\"",d.get_filename().c_str(),name);
 			int retval;
 			if((retval=system(cmdbuf))) {
-				printf("Exporting to PDF (temporary file: %s): failure (%d). Temporary file not deleted.\n",filename,retval);
+				printf("Exporting to PDF (temporary file: %s): failure (%d). Temporary file not deleted.\n",name,retval);
 			} else {
-				printf("Exporting to PDF (temporary file: %s): success.\n",filename);
-				::remove(filename);
+				printf("Exporting to PDF (temporary file: %s): success.\n",name);
+				::remove(name);
 			}
+
+			g_free(name);
 		}
 		
 	break; }

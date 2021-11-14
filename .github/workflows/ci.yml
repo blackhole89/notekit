@@ -85,7 +85,8 @@ jobs:
       - name: Download dependencies 📥
         run: |
           brew install meson ninja pkg-config
-          brew install fontconfig gtkmm3 gtksourceviewmm3 jsoncpp librsvg sp1ritCS/tap/clatexmath zlib
+          brew install fontconfig gtkmm3 gtksourceviewmm3 jsoncpp librsvg zlib
+          brew install -s sp1ritCS/tap/clatexmath
       - name: Patch NoteKit 🩹
         run: patch -p1 < Apple/llvm.patch
       - name: Configure 🔧
