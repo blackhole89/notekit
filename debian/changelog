@@ -1,3 +1,11 @@
+notekit (0.2) unstable; urgency=medium
+  
+  * Various bugfixes.
+  * Add support for inline images and image pasting.
+  * Misc improvements.
+
+ -- Matvey Soloviev <blackhole89@gmail.com>  Tue, 23 Nov 2021 16:20:00 -0500
+
 notekit (0.1-1) unstable; urgency=medium
 
   * Initial release
