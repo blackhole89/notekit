@@ -12,7 +12,7 @@ index 9654360..a070437 100644
              # needs extra lib to use std::filesystem
              target_link_libraries(LaTeX PUBLIC "stdc++fs")
          endif ()
--        if ("${CMAKE_CXX_COMPILER_VERSION}" VERSION_LESS 8)
+-        if ("\${CMAKE_CXX_COMPILER_VERSION}" VERSION_LESS 8)
 -            # dose not have full c++17 features
 -            set(COMPILER_SUPPORTS_CXX17 OFF)
 -        endif ()
