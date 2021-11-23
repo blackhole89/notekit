@@ -25,5 +25,5 @@ jobs:
         automatic_release_tag: "latest-deb"
         prerelease: true
         title: "Ubuntu 18.04 package for development version"
-        files: ../notekit_0.1-1_amd64.deb
+        files: ../notekit_0.2_amd64.deb
 
