@@ -477,7 +477,25 @@ void CMainWindow::OpenDocument(std::string filename)
 	char *buf; gsize length;
 	try {
 		Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(nav_model.base + "/" + filename);
-		file->load_contents(buf, length); 
+		file->load_contents(buf, length);
+		
+		sbuffer->begin_not_undoable_action();
+		sbuffer->set_text("");
+		
+		if(file->has_parent()) {
+			sview.SetDocumentPath(file->get_parent()->get_path());
+		} else {
+			sview.SetDocumentPath("");
+		}
+		
+		Gtk::TextBuffer::iterator i = sbuffer->begin();
+		if(length)
+			sbuffer->deserialize(sbuffer,"text/notekit-markdown",i,(guint8*)buf,length);
+		sbuffer->end_not_undoable_action();
+		
+		SetActiveFilename(filename);
+
+		g_free(buf);
 	} catch(Gio::Error &e) {
 		sview.set_editable(false);
 		sview.set_can_focus(false);
@@ -493,21 +511,6 @@ void CMainWindow::OpenDocument(std::string filename)
 		
 		return;
 	}
-	
-	sbuffer->begin_not_undoable_action();
-	sbuffer->set_text("");
-	Gtk::TextBuffer::iterator i = sbuffer->begin();
-	if(length) sbuffer->deserialize(sbuffer,"text/notekit-markdown",i,(guint8*)buf,length);
-	//sbuffer->set_text(buf);
-	sbuffer->end_not_undoable_action();
-	
-	SetActiveFilename(filename);
-	
-	/*Glib::RefPtr<Gtk::TextBuffer::ChildAnchor> anch = sbuffer->create_child_anchor(sbuffer->begin());
-	testbutton.set_text("hello world");
-	sview.add_child_at_anchor(testbutton,anch);
-	testbutton.show();*/
-	g_free(buf);
 }
 
 /* set apparent opened document filename without actually loading/unload anything */

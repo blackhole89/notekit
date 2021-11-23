@@ -105,6 +105,9 @@ public:
 	
 	/* embedded widget handling */
 	
+	std::string document_path; // base path for relative URLs
+	void SetDocumentPath(std::string);
+	
 	// list of Gsv language spec context classes that can be rendered with RenderToWidget
 	static Glib::ustring renderable_classes[];
 	

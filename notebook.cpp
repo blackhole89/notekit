@@ -360,6 +360,13 @@ bool CNotebook::on_redraw_overlay(const Cairo::RefPtr<Cairo::Context> &ctx)
 	return true;
 }
 
+void CNotebook::SetDocumentPath(std::string newpath)
+{
+	document_path = newpath;
+	// todo?: rerender all image widgets.
+	// We can get away without doing that for now, since the document path will only be set before loading.
+}
+
 void CNotebook::on_highlight_updated(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end)
 {
 	//printf("relight %d %d\n",start.get_offset(),end.get_offset());
@@ -568,14 +575,25 @@ void CNotebook::RenderToWidget(Glib::ustring wtype, Gtk::TextBuffer::iterator &s
 			/* the worst thing that could happen is that we go to the end and URL becomes empty */
 			auto urlstart = j;
 			sbuffer->iter_forward_to_context_class_toggle(urlstart,"url");
-			auto urlend = urlstart;
-			sbuffer->iter_forward_to_context_class_toggle(urlend,"url");
 			
-			Gtk::Image *d = new Gtk::Image(urlstart.get_text(urlend));
-			Gtk::manage(d); 
-			//sbuffer->apply_tag(GetBaselineTag(d->GetBaseline()),start,j);
-			add_child_at_anchor(*d,anch);
-			d->show();
+			if(urlstart < end) { 
+				auto urlend = urlstart;
+				sbuffer->iter_forward_to_context_class_toggle(urlend,"url");
+				
+				Gtk::Image *d = new Gtk::Image(document_path + "/" + urlstart.get_text(urlend));
+				Gtk::manage(d); 
+				//sbuffer->apply_tag(GetBaselineTag(d->GetBaseline()),start,j);
+				add_child_at_anchor(*d,anch);
+				d->show();
+			} else {
+				// condition fails if url was empty, vis. () 
+				Gtk::Image *d = new Gtk::Image(); 
+				d->set_from_icon_name("action-unavailable",Gtk::ICON_SIZE_BUTTON);
+				Gtk::manage(d); 
+				
+				add_child_at_anchor(*d,anch);
+				d->show();
+			}
 		}
 		
 	} 

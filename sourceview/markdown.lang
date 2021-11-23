@@ -569,7 +569,7 @@
         <context ref="3-backticks-code-span"/>
         <context ref="blockquote"/>
         <context ref="automatic-link"/>
-        <context ref="inline-link"/> 
+        <context ref="inline-link"/>
         <context ref="reference-link"/>
         <context ref="link-definition"/>
         <context ref="inline-image"/>
