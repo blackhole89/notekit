@@ -105,6 +105,8 @@ void CNotebook::Init(std::string data_path, bool use_highlight_proxy)
 	k->copy_clipboard = notebook_copy_clipboard;
 	k->cut_clipboard = notebook_cut_clipboard;
 	k->paste_clipboard = notebook_paste_clipboard;
+	/* save a pointer to the C++ object so we can call back from the clipboard functions */
+	g_object_set_data((GObject*)gobj(),"cppobj",this);
 	/* DIRTY HACK: GtkSourceView's cursor movement methods loop forever in the presence of invisible text sometimes */
 	GtkWidget *text_view = gtk_text_view_new();
 	GtkTextViewClass *plain = GTK_TEXT_VIEW_GET_CLASS(text_view);
@@ -365,6 +367,41 @@ void CNotebook::SetDocumentPath(std::string newpath)
 	document_path = newpath;
 	// todo?: rerender all image widgets.
 	// We can get away without doing that for now, since the document path will only be set before loading.
+}
+
+std::string CNotebook::DepositImage(GdkPixbuf *pixbuf)
+{
+	guchar *buf = gdk_pixbuf_get_pixels(pixbuf);
+
+	/* walk through the pixbuf buffer, hashing the image pixels. */
+	/* this convoluted way is necessary because sometimes stride>3*width, and the padding bytes can contain random noise, breaking deduplication. */
+	int stride = gdk_pixbuf_get_rowstride(pixbuf);
+	int height = gdk_pixbuf_get_height(pixbuf);
+	int width = gdk_pixbuf_get_width(pixbuf);
+	GChecksum *cs = g_checksum_new(G_CHECKSUM_SHA1);
+	for(int y=0;y<height;++y)
+		g_checksum_update(cs,buf+y*stride,width);
+	const gchar *checksum = g_checksum_get_string(cs);
+
+	// gchar *checksum = g_compute_checksum_for_data(G_CHECKSUM_SHA1,buf,buf_length);
+	
+	std::string filename = ".images/"+std::string(checksum,16)+".png";
+	std::string real_path = document_path + "/" + filename;
+	
+	Glib::RefPtr<Gio::File> f = Gio::File::create_for_path(document_path+"/.images");
+	try {
+		f->make_directory();
+	} catch(Gio::Error &e) {
+		// already exists
+	}
+	
+	GError *err = NULL;
+	
+	gdk_pixbuf_save(pixbuf,real_path.c_str(),"png",&err,NULL);
+	
+	g_checksum_free(cs);	
+	
+	return "![]("+filename+") ";
 }
 
 void CNotebook::on_highlight_updated(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end)

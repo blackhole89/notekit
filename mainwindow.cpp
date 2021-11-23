@@ -153,11 +153,12 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 
 int mkdirp(std::string dir)
 {
-	std::string cmd;
-	cmd = "mkdir -p \"";
-	cmd += dir;
-	cmd += "\"";
-	return system(cmd.c_str());
+	Glib::RefPtr<Gio::File> f = Gio::File::create_for_path(dir);
+	try {
+		return f->make_directory_with_parents();
+	} catch(Gio::Error &e) {
+		return false;
+	}
 }
 
 /* Half-baked interpretation of XDG spec */

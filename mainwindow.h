@@ -17,6 +17,8 @@ enum {
 	WND_ACTION_TOGGLE_SIDEBAR
 };
 
+int mkdirp(std::string dir);
+
 class CMainWindow : public Gtk::ApplicationWindow
 {
 public:

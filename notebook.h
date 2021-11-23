@@ -108,6 +108,8 @@ public:
 	std::string document_path; // base path for relative URLs
 	void SetDocumentPath(std::string);
 	
+	std::string DepositImage(GdkPixbuf *pixbuf);
+	
 	// list of Gsv language spec context classes that can be rendered with RenderToWidget
 	static Glib::ustring renderable_classes[];
 	

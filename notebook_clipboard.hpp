@@ -99,6 +99,7 @@ void notebook_cut_clipboard (GtkTextView *text_view)
 typedef struct
 {
   GtkTextBuffer *buffer;
+  GtkTextView *widget;
   guint interactive : 1;
   guint default_editable : 1;
   guint replace_selection : 1;
@@ -231,7 +232,30 @@ clipboard_image_received (GtkClipboard *clipboard,
                          gpointer data)
 {
 	ClipboardRequest *request_data = (ClipboardRequest*)data;
+	GtkTextBuffer *buffer = request_data->buffer;
 	
+	CNotebook *nb = (CNotebook*)g_object_get_data(G_OBJECT(request_data->widget),"cppobj");
+
+	if (pixbuf)
+	{
+		GtkTextIter insert_point;
+      
+		if (request_data->interactive) 
+			gtk_text_buffer_begin_user_action (buffer);
+
+		pre_paste_prep (request_data, &insert_point);
+      
+		if (request_data->interactive) 
+			gtk_text_buffer_insert_interactive (buffer, &insert_point,
+											   nb->DepositImage(pixbuf).c_str(), -1, request_data->default_editable);
+		else
+			gtk_text_buffer_insert (buffer, &insert_point,
+									nb->DepositImage(pixbuf).c_str(), -1);
+
+		if (request_data->interactive) 
+			gtk_text_buffer_end_user_action (buffer);
+	}
+
 	free_clipboard_request (request_data);
 }
 
@@ -246,6 +270,7 @@ void notebook_paste_clipboard (GtkTextView *text_view)
 	GtkTextIter start, end;
 	
 	data->buffer = (GtkTextBuffer*)g_object_ref (buffer);
+	data->widget = text_view;
 	data->interactive = true;
 	data->default_editable = gtk_text_view_get_editable(text_view);
 	
@@ -259,15 +284,14 @@ void notebook_paste_clipboard (GtkTextView *text_view)
 	   gtk_text_iter_equal (&paste_point, &end)))
 		data->replace_selection = true;
 	
-	if (gtk_clipboard_wait_is_rich_text_available (clipboard,buffer))
-	{
-	  /* Request rich text */
-	  gtk_clipboard_request_rich_text (clipboard,buffer,clipboard_rich_text_received,data);
-	}  else if(gtk_clipboard_wait_is_text_available (clipboard)) {
-	  /* Request plain text instead */
-	  gtk_clipboard_request_text (clipboard,clipboard_text_received,data);
-	} else if(gtk_clipboard_wait_is_image_available(clipboard)) {
+	if(gtk_clipboard_wait_is_image_available(clipboard)) {
 	  /* Pasting image */
 	  gtk_clipboard_request_image (clipboard,clipboard_image_received,data);
-	}
+	} else if (gtk_clipboard_wait_is_rich_text_available (clipboard,buffer)) {
+	  /* Request rich text */
+	  gtk_clipboard_request_rich_text (clipboard,buffer,clipboard_rich_text_received,data);
+	} else if(gtk_clipboard_wait_is_text_available (clipboard)) {
+	  /* Request plain text instead */
+	  gtk_clipboard_request_text (clipboard,clipboard_text_received,data);
+	} 
 }
