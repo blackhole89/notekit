@@ -34,6 +34,7 @@ index b43a395..d8aabe5 100644
 -#endif
  
  #endif  // CONFIG_H_INCLUDED
+EOF
 ) | patch -p1
 cmake -DCMAKE_BUILD_TYPE=Release -DHAVE_LOG=OFF -DGRAPHICS_DEBUG=OFF .
 make
