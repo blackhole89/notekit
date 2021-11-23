@@ -17,7 +17,7 @@ git reset --hard HEAD
  
      if (COMPILER_SUPPORTS_CXX17)
 EOF
-) | patch -p1 -
+) | patch -p1
 cmake -DCMAKE_BUILD_TYPE=Release -DHAVE_LOG=OFF -DGRAPHICS_DEBUG=OFF .
 make
 cp -r res ../data/latex
