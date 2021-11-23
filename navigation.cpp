@@ -593,6 +593,8 @@ void CNavigationView::ExpandDirectory(std::string path, const Gtk::TreeNodeChild
 		{
 			std::string fname = file_info->get_name(); 
 			Glib::ustring order = file_info->get_attribute_as_string("xattr::nkorder");
+			
+			if(fname.length() && fname[0]=='.') continue; // skip dotfiles/-folders
 
 			bool is_dir = file_info->get_file_type()==Gio::FILE_TYPE_DIRECTORY;
 			
@@ -618,7 +620,7 @@ void CNavigationView::ExpandDirectory(std::string path, const Gtk::TreeNodeChild
 				}
 			} else {
 				size_t pos;
-				if((pos = fname.find(".md"))!=std::string::npos) {
+				if((pos = fname.find(".md"))==fname.length()-3) {
 					if(node) r=store->prepend(*node);
 					else r=store->prepend();
 					
