@@ -386,7 +386,7 @@ std::string CNotebook::DepositImage(GdkPixbuf *pixbuf)
 	// gchar *checksum = g_compute_checksum_for_data(G_CHECKSUM_SHA1,buf,buf_length);
 	
 	std::string filename = ".images/"+std::string(checksum,16)+".png";
-	std::string real_path = document_path + "/" + filename;
+	std::string real_path = Glib::canonicalize_filename(filename, document_path);
 	
 	Glib::RefPtr<Gio::File> f = Gio::File::create_for_path(document_path+"/.images");
 	try {
@@ -617,7 +617,7 @@ void CNotebook::RenderToWidget(Glib::ustring wtype, Gtk::TextBuffer::iterator &s
 				auto urlend = urlstart;
 				sbuffer->iter_forward_to_context_class_toggle(urlend,"url");
 				
-				Gtk::Image *d = new Gtk::Image(document_path + "/" + urlstart.get_text(urlend));
+				Gtk::Image *d = new Gtk::Image(Glib::canonicalize_filename((std::string)urlstart.get_text(urlend), document_path));
 				Gtk::manage(d); 
 				//sbuffer->apply_tag(GetBaselineTag(d->GetBaseline()),start,j);
 				add_child_at_anchor(*d,anch);

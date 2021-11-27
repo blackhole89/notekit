@@ -73,25 +73,25 @@ include_directories(
 
 
 # Compiler options
-execute_process(COMMAND
+execute_process(COMMAND 
     pkg-config --cflags gtkmm-3.0
     OUTPUT_VARIABLE
     CL_TMP_VAR
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 string(STRIP ${CL_TMP_VAR} CL_VAR_1)
-execute_process(COMMAND
+execute_process(COMMAND 
     pkg-config --cflags gtksourceviewmm-3.0
     OUTPUT_VARIABLE
     CL_TMP_VAR
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 string(STRIP ${CL_TMP_VAR} CL_VAR_2)
-execute_process(COMMAND
+execute_process(COMMAND 
     pkg-config --cflags jsoncpp
     OUTPUT_VARIABLE
     CL_TMP_VAR
     OUTPUT_STRIP_TRAILING_WHITESPACE)
-string(STRIP "${CL_TMP_VAR}" CL_VAR_3)
-execute_process(COMMAND
+string(STRIP ${CL_TMP_VAR} CL_VAR_3)
+execute_process(COMMAND 
     pkg-config --cflags fontconfig
     OUTPUT_VARIABLE
     CL_TMP_VAR
@@ -101,6 +101,7 @@ add_definitions(${CL_VAR_1})
 add_definitions(${CL_VAR_2})
 add_definitions(${CL_VAR_3})
 add_definitions(${CL_VAR_4})
+add_definitions(-std=c++17)
 add_definitions(-O2)
 add_definitions(-Wall)
 add_definitions(
@@ -109,19 +110,19 @@ add_definitions(
 
 
 # Linker options
-execute_process(COMMAND
+execute_process(COMMAND 
     pkg-config --libs gtkmm-3.0
     OUTPUT_VARIABLE
     CL_TMP_VAR
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 string(STRIP ${CL_TMP_VAR} CL_VAR_5)
-execute_process(COMMAND
+execute_process(COMMAND 
     pkg-config --libs gtksourceviewmm-3.0
     OUTPUT_VARIABLE
     CL_TMP_VAR
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 string(STRIP ${CL_TMP_VAR} CL_VAR_6)
-execute_process(COMMAND
+execute_process(COMMAND 
     pkg-config --libs jsoncpp
     OUTPUT_VARIABLE
     CL_TMP_VAR
@@ -141,17 +142,17 @@ set(CMAKE_LDFLAGS "${CMAKE_LDFLAGS} -L. ")
 
 # Define the CXX sources
 set ( CXX_SRCS
+    ${CMAKE_CURRENT_LIST_DIR}/mainwindow.cpp
     ${CMAKE_CURRENT_LIST_DIR}/imagewidgets.cpp
     ${CMAKE_CURRENT_LIST_DIR}/notebook.cpp
     ${CMAKE_CURRENT_LIST_DIR}/drawing.cpp
     ${CMAKE_CURRENT_LIST_DIR}/main.cpp
     ${CMAKE_CURRENT_LIST_DIR}/navigation.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/mainwindow.cpp
 )
 
 set_source_files_properties(
-    ${CXX_SRCS} PROPERTIES COMPILE_FLAGS
-    " -pthread -pthread -O2 -Wall -std=c++17")
+    ${CXX_SRCS} PROPERTIES COMPILE_FLAGS 
+    " -std=c++17 -pthread -pthread -O2 -Wall")
 
 if(WIN32)
     enable_language(RC)
