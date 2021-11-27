@@ -386,7 +386,9 @@ std::string CNotebook::DepositImage(GdkPixbuf *pixbuf)
 	// gchar *checksum = g_compute_checksum_for_data(G_CHECKSUM_SHA1,buf,buf_length);
 	
 	std::string filename = ".images/"+std::string(checksum,16)+".png";
-	std::string real_path = Glib::canonicalize_filename(filename, document_path);
+	// workaround for canonicalize_filename not being supported in glibmm<2.64
+	Glib::RefPtr<Gio::File> file = Glib::wrap(g_file_new_for_commandline_arg_and_cwd(filename.c_str(), document_path.c_str()));
+	std::string real_path = file->get_path();
 	
 	Glib::RefPtr<Gio::File> f = Gio::File::create_for_path(document_path+"/.images");
 	try {
@@ -617,7 +619,10 @@ void CNotebook::RenderToWidget(Glib::ustring wtype, Gtk::TextBuffer::iterator &s
 				auto urlend = urlstart;
 				sbuffer->iter_forward_to_context_class_toggle(urlend,"url");
 				
-				Gtk::Image *d = new Gtk::Image(Glib::canonicalize_filename((std::string)urlstart.get_text(urlend), document_path));
+				// workaround for canonicalize_filename not being supported in glibmm<2.64
+				Glib::RefPtr<Gio::File> file = Glib::wrap(g_file_new_for_commandline_arg_and_cwd(urlstart.get_text(urlend).c_str(), document_path.c_str()));
+				Gtk::Image *d = new Gtk::Image(file->get_path());
+
 				Gtk::manage(d); 
 				//sbuffer->apply_tag(GetBaselineTag(d->GetBaseline()),start,j);
 				add_child_at_anchor(*d,anch);
