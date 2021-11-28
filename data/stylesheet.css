@@ -62,7 +62,7 @@
 
 
 #mainView {
-    font: 16px Charter;
+    font: 16px Charter, Bitstream Charter, Noto Serif, Noto Serif CJK JP, Noto Naskh Arabic, serif;
     padding-top: 16px;
     padding-right: 16px;
     padding-bottom: 16px;
