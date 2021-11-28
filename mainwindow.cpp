@@ -14,6 +14,7 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 	CalculatePaths();
 	
 	// Load config.
+	std::setlocale(LC_NUMERIC, "C"); // workaround for old jsoncpp on German (decimal comma) systems
 	LoadConfig();
 	
 	printf("== This is notekit, built at " __TIMESTAMP__ ". ==\n");
