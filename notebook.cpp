@@ -345,6 +345,24 @@ bool CNotebook::on_redraw_overlay(const Cairo::RefPtr<Cairo::Context> &ctx)
 		}
 	}while(sbuffer->iter_forward_to_context_class_toggle(i, "hline") && i<end);
 	
+	get_iter_at_location(i,rect.get_x(),rect.get_y());
+	do{
+		if(sbuffer->iter_has_context_class(i, "bullet0")) {
+			int y, height;
+			get_line_yrange(i,y,height);
+			int linex0,liney0;
+			buffer_to_window_coords(Gtk::TEXT_WINDOW_WIDGET,0,y+height,linex0,liney0);
+			
+			ctx->set_line_width(1.0);
+			ctx->set_source_rgba(1,1,1,1);
+			ctx->arc(linex0+margin_x+18,liney0-height/2+1,6,0,2*3.14159265);
+			ctx->fill();
+			ctx->set_source_rgba(.627,.659,.75,1);
+			ctx->arc(linex0+margin_x+18,liney0-height/2+1,3,0,2*3.14159265);
+			ctx->fill();
+		}
+	}while(sbuffer->iter_forward_to_context_class_toggle(i, "bullet0") && i<end);
+	
 	/* draw selection rect, if there is any */
 	if(active_state == NB_MODE_SELECT) {
 		int bx, by;

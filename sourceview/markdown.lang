@@ -151,22 +151,24 @@
       </match>
     </context> -->
 
-    <context id="list" end-at-line-end="true" class="list">
+    <context id="list" class="list blockquote-text">
       <start extended="true">
-        ^[ ]{0,3}  # Maximum 3 spaces at the beginning of the line.
+        ^([ ]{0,3})  # Maximum 3 spaces at the beginning of the line.
         (
           \*|\+|-| # Asterisk, plus or hyphen for unordered list.
           [0-9]+\. # Number followed by period for ordered list.
         )
-        [ \t]+     # Must be followed by at least 1 space or 1 tab.
+        ([ \t]+)     # Must be followed by at least 1 space or 1 tab.
         (?!
           (&#xFFFC;?)
           (\[[x|X]\]|\[[\s]\]) # checkbox
         )
       </start>
+      <end>^(?=(?!\%{1@start}\s\%{3@start})[\s]*\S)</end>
 
       <include>
-        <context sub-pattern="1" where="start" style-ref="list-marker"/>
+        <context sub-pattern="1" where="start" class="bullet0"/>
+        <context sub-pattern="2" where="start" style-ref="list-marker" class="bullet0"/>
 
         <context ref="1-backtick-code-span"/>
         <context ref="2-backticks-code-span"/>
@@ -319,6 +321,17 @@
       <start>^```$</start>
       <end>^```$</end>
     </context>
+
+<!--
+    <context id="latex-span" class="no-spell-check mono prox latex invisible" style-ref="list-marker">
+      <start>(&#xFFFC;?)\\\[</start>
+      <end>\\\]</end>
+      <include>
+        <context sub-pattern="1" where="start" class-disabled="invisible"/>
+      </include>
+    </context>
+-->
+
 
     <!-- Example:
          > Quoted text.
@@ -583,7 +596,6 @@
         <context ref="escape"/>
 
         <context ref="latex"/>
-
       </include>
     </context>
 

@@ -42,7 +42,9 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 	set_default_size(900,600);
 	
 	// load additional fonts
-	FcConfigAppFontAddDir(NULL, (FcChar8*)(data_path+"/data/fonts").c_str());
+	FcConfig *cfg = FcInitLoadConfigAndFonts();
+	FcConfigAppFontAddDir(cfg, (FcChar8*)(data_path+"/data/fonts").c_str());
+	FcConfigSetCurrent(cfg);
 	
 	/* load stylesheet */
 	Glib::RefPtr<Gtk::CssProvider> sview_css = Gtk::CssProvider::create();
