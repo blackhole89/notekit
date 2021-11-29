@@ -3,6 +3,7 @@
 #include "notebook_clipboard.hpp"
 #include "notebook_highlight.hpp"
 #include "imagewidgets.h"
+#include "notebook_widgets.hpp"
 
 #include <unordered_set>
 
@@ -14,13 +15,13 @@
 #define DMPRINTF(...)
 #endif
 
-/* list of Gsv syntax highlighting classes that can be rendered as widgets */
-/* TODO: this probably would be more elegant as a list of pairs (class,rendering function) */
-Glib::ustring CNotebook::renderable_classes[]
-	= { "checkbox", 
-		"image",
+/* list of Gsv syntax highlighting classes that can be rendered as widgets */	
+std::unordered_map<std::string, std::function<Gtk::Widget *(CNotebook*, Gtk::TextBuffer::iterator, Gtk::TextBuffer::iterator)> > 
+	CNotebook::widget_classes {
+			{ "checkbox", widgets::RenderCheckbox },
+			{ "image", widgets::RenderImage }, 
 #if defined (HAVE_LASEM) || defined (HAVE_CLATEXMATH)
-		"latex"
+			{ "latex", widgets::RenderLatex },
 #endif
 	};
 
@@ -548,126 +549,21 @@ void CNotebook::RenderToWidget(Glib::ustring wtype, Gtk::TextBuffer::iterator &s
 	DebugTags(s1,e1);
 	#endif
 	
-	if(wtype=="checkbox") {
-		Gtk::TextIter i=start;
-		++i;
-		if(i.get_char()=='[') ++i;
-		
-		bool is_checked = (i.get_char()=='x'||i.get_char()=='X');
-		
-		/* create a mark to save the control's starting position */
+	Glib::RefPtr<Gtk::TextBuffer::ChildAnchor> anch;
+	if(!(anch=start.get_child_anchor())) {
+		/* we haven't set up a child anchor yet, so we need to queue the creation of one */
 		Glib::RefPtr<Gtk::TextMark> mstart = sbuffer->create_mark(start,true);
-		PushIter(end);
+		QueueChildAnchor(mstart);
+	} else {
+		auto j = start; ++j;
+		sbuffer->remove_tag(tag_hidden,start,j);
 		
-		Glib::RefPtr<Gtk::TextBuffer::ChildAnchor> anch;
-		if(!(anch=start.get_child_anchor())) {
-			/* we haven't set up a child anchor yet, so we need to queue the creation of one */
-			QueueChildAnchor(mstart);
-		} else {
-			auto j = start; ++j;
-			sbuffer->remove_tag(tag_hidden,start,j);
-			// shift baseline for gtk checkbox widget
-			sbuffer->apply_tag(GetBaselineTag(2),start,j);
-			
-			Gtk::CheckButton *b = new Gtk::CheckButton();
-			if(is_checked) b->set_active(true);
-			b->property_can_focus().set_value(false);
-			
-			b->property_active().signal_changed().connect(sigc::slot<void>( [b,mstart,this]() {
-				Gtk::TextIter i = sbuffer->get_iter_at_mark(mstart);
-				++i; ++i;
-				if(b->get_active())
-					i=sbuffer->insert(i,"x");
-				else
-					i=sbuffer->insert(i," ");
-				Gtk::TextIter j=i; ++j;
-				sbuffer->erase(i,j);
-			} ));
-			
-			/* set appropriate cursor when checkbox hovered */
-			b->signal_enter().connect(sigc::slot<void>( [mstart,this]() { SetCursor(pointer_cursor); } ));
-			b->signal_leave().connect(sigc::slot<void>( [mstart,this]() { update_cursor = true; } ));
-			
-			/* destroy the mark if the widget is unmapped */
-			b->signal_unmap().connect(sigc::slot<void>( [mstart,this]() {
-				/* need to defer the destruction due to mysterious interactions with signal chain */
-				auto s = Glib::IdleSource::create();
-				s->connect(sigc::slot<bool>( [mstart,this]() {
-					sbuffer->delete_mark(mstart);
-					return false;
-				})); 
-				s->attach();
-			}));
-			
-			Gtk::manage(b);
-			add_child_at_anchor(*b,anch);
-			b->show(); 
-		}
+		Gtk::Widget *b = widget_classes[wtype](this, start, end);
 		
-		end=PopIter();
-		start=sbuffer->get_iter_at_mark(mstart);
-	} else if(wtype=="image") {
-		
-		Glib::RefPtr<Gtk::TextBuffer::ChildAnchor> anch;
-		
-		if(!(anch=start.get_child_anchor())) {
-			/* we haven't set up a child anchor yet, so we need to queue the creation of one */
-			Glib::RefPtr<Gtk::TextMark> mstart = sbuffer->create_mark(start,true);
-			QueueChildAnchor(mstart);
-		} else {
-			auto j = start; ++j;
-			sbuffer->remove_tag(tag_hidden,start,j);
-			
-			/* the worst thing that could happen is that we go to the end and URL becomes empty */
-			auto urlstart = j;
-			sbuffer->iter_forward_to_context_class_toggle(urlstart,"url");
-			
-			if(urlstart < end) { 
-				auto urlend = urlstart;
-				sbuffer->iter_forward_to_context_class_toggle(urlend,"url");
-				
-				// workaround for canonicalize_filename not being supported in glibmm<2.64
-				Glib::RefPtr<Gio::File> file = Glib::wrap(g_file_new_for_commandline_arg_and_cwd(urlstart.get_text(urlend).c_str(), document_path.c_str()));
-				Gtk::Image *d = new Gtk::Image(file->get_path());
-
-				Gtk::manage(d); 
-				//sbuffer->apply_tag(GetBaselineTag(d->GetBaseline()),start,j);
-				add_child_at_anchor(*d,anch);
-				d->show();
-			} else {
-				// condition fails if url was empty, vis. () 
-				Gtk::Image *d = new Gtk::Image(); 
-				d->set_from_icon_name("action-unavailable",Gtk::ICON_SIZE_BUTTON);
-				Gtk::manage(d); 
-				
-				add_child_at_anchor(*d,anch);
-				d->show();
-			}
-		}
-		
-	} 
-#if defined (HAVE_LASEM) || defined (HAVE_CLATEXMATH)
-	else if(wtype=="latex") {
-		
-		Glib::RefPtr<Gtk::TextBuffer::ChildAnchor> anch;
-		
-		if(!(anch=start.get_child_anchor())) {
-			/* we haven't set up a child anchor yet, so we need to queue the creation of one */
-			Glib::RefPtr<Gtk::TextMark> mstart = sbuffer->create_mark(start,true);
-			QueueChildAnchor(mstart);
-		} else {
-			auto j = start; ++j;
-			sbuffer->remove_tag(tag_hidden,start,j);
-			
-			CLatexWidget *d = new CLatexWidget(get_window(Gtk::TEXT_WINDOW_TEXT),sbuffer->get_text(start,end,true),get_style_context()->get_color());
-			Gtk::manage(d); 
-			sbuffer->apply_tag(GetBaselineTag(d->GetBaseline()),start,j);
-			add_child_at_anchor(*d,anch);
-			d->show();
-		}
-		
+		Gtk::manage(b);
+		add_child_at_anchor(*b,anch);
+		b->show(); 
 	}
-#endif
 }
 
 Glib::RefPtr<Gtk::TextTag> CNotebook::GetBaselineTag(int baseline)
@@ -778,7 +674,7 @@ void CNotebook::on_enter_region(Gtk::TextBuffer::iterator &start, Gtk::TextBuffe
 		sbuffer->remove_tag(ttag, start, end);
 	}
 
-	for(auto &s : renderable_classes) {
+	for(auto &[s,f] : widget_classes) {
 		if(sbuffer->iter_has_context_class(start, s)) {
 			UnrenderWidgets(start,end);
 		}
@@ -806,7 +702,7 @@ void CNotebook::on_leave_region(Gtk::TextBuffer::iterator &start, Gtk::TextBuffe
 		} while(i<end);
 	}
 	
-	for(auto &s : renderable_classes) {
+	for(auto &[s,f] : widget_classes) {
 		if(sbuffer->iter_has_context_class(start, s)) {
 			UnrenderWidgets(start,end); // just in case
 			RenderToWidget(s,start,end);

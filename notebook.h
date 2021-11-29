@@ -112,8 +112,8 @@ public:
 	
 	std::string DepositImage(GdkPixbuf *pixbuf);
 	
-	// list of Gsv language spec context classes that can be rendered with RenderToWidget
-	static Glib::ustring renderable_classes[];
+	// list of Gsv language spec context classes that can be rendered to widgets
+	static std::unordered_map<std::string, std::function<Gtk::Widget *(CNotebook*, Gtk::TextBuffer::iterator, Gtk::TextBuffer::iterator)> > widget_classes;
 	
 	void QueueChildAnchor(Glib::RefPtr<Gtk::TextMark> mstart);
 	void RenderToWidget(Glib::ustring wtype, Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);

@@ -8,13 +8,14 @@ project(notekit)
 # This setting is useful for providing JSON file used by CodeLite for code completion
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
+set(CONFIGURATION_NAME "Release")
+
+set(CL_WORKSPACE_DIRECTORY .)
 # Set default locations
-set(CL_OUTPUT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}//cmake-build-Release/output)
+set(CL_OUTPUT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/${CL_WORKSPACE_DIRECTORY}/cmake-build-${CONFIGURATION_NAME}/output)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CL_OUTPUT_DIRECTORY})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CL_OUTPUT_DIRECTORY})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CL_OUTPUT_DIRECTORY})
-
-set(CONFIGURATION_NAME "Release")
 
 # Projects
 
@@ -138,7 +139,9 @@ if(WIN32)
 endif(WIN32)
 
 # Library path
-set(CMAKE_LDFLAGS "${CMAKE_LDFLAGS} -L. ")
+link_directories(
+    .
+)
 
 # Define the CXX sources
 set ( CXX_SRCS

@@ -17,6 +17,7 @@
     <File Name="mainwindow.h"/>
   </VirtualDirectory>
   <VirtualDirectory Name="src">
+    <File Name="notebook_widgets.hpp"/>
     <File Name="notebook_highlight.hpp"/>
     <File Name="imagewidgets.cpp"/>
     <File Name="drawing.cpp"/>
