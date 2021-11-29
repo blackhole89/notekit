@@ -124,6 +124,9 @@ void CNotebook::Init(std::string data_path, bool use_highlight_proxy)
 	update_cursor=false;
 	attention_ewma=0.0;
 	
+	/* load cursor. Why don't we actually do all the cursor handling here? */
+	pointer_cursor = Gdk::Cursor::create(Gdk::Display::get_default(),"default");
+	
 	/* create tags for style aspects that the syntax highlighter doesn't handle */
 	tag_extra_space = sbuffer->create_tag();
 	tag_extra_space->property_pixels_below_lines().set_value(8);
@@ -580,6 +583,10 @@ void CNotebook::RenderToWidget(Glib::ustring wtype, Gtk::TextBuffer::iterator &s
 				Gtk::TextIter j=i; ++j;
 				sbuffer->erase(i,j);
 			} ));
+			
+			/* set appropriate cursor when checkbox hovered */
+			b->signal_enter().connect(sigc::slot<void>( [mstart,this]() { SetCursor(pointer_cursor); } ));
+			b->signal_leave().connect(sigc::slot<void>( [mstart,this]() { update_cursor = true; } ));
 			
 			/* destroy the mark if the widget is unmapped */
 			b->signal_unmap().connect(sigc::slot<void>( [mstart,this]() {

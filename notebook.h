@@ -57,6 +57,8 @@ public:
 	bool update_cursor; // signal to main window to update cursor
 	std::map<GdkDevice*,int> devicemodes; // current input modes, per device
 	
+	Glib::RefPtr<Gdk::Cursor> pointer_cursor; // default pointer cursor
+	
 	void SetCursor(Glib::RefPtr<Gdk::Cursor> c);
 	
 	Glib::RefPtr<Gsv::Buffer> sbuffer;
