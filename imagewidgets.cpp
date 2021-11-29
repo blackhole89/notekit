@@ -137,10 +137,10 @@ CLatexWidget::CLatexWidget(Glib::RefPtr<Gdk::Window> wnd, Glib::ustring text, Gd
 			
 		SetSize(w+4,h+2);
 		
-		baseline=(int)(round((2.5+(h)*(1.0f-r->getBaseline()))));
+		baseline=(int)(round((0+(h)*(1.0f-r->getBaseline()))));
 		
 		// workaround for not entirely correct baseline arithmetic
-		if(h<12) baseline-=1;
+		if(h>12) baseline+=1;
 		
 		Graphics2D_cairo g2(image_ctx);
 		r->draw(g2,2,1);
