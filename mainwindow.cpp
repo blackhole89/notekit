@@ -51,6 +51,9 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 
 	get_style_context()->add_class("notekit");
 	override_background_color(Gdk::RGBA("rgba(0,0,0,0)"));
+	if( GdkVisual *vrgba = gdk_screen_get_rgba_visual( get_screen()->gobj() ) ) {
+		gtk_widget_set_visual(GTK_WIDGET(gobj()), vrgba );
+	}
 	
 	/* set up menu */
 	am.prefs.set_label("Preferences");
@@ -89,6 +92,7 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 	/* install tree view */
 	nav_model.AttachView(this,&nav);
 	nav.get_style_context()->add_class("sidebar");
+	nav.get_style_context()->add_class("nemo-window");
 	
 	nav_scroll.add(nav);
 	nav_scroll.set_size_request(200,-1);

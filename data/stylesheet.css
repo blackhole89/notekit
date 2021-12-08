@@ -1,65 +1,7 @@
-.notekit .background,
-.notekit .sidebar list {
-  background-color: transparent; }
-
-.notekit .sidebar {
-  color: #BAC3CF;
-  background-color: rgba(53, 57, 69, 0.95); }
-
 .notekit .sidebar .view, .notekit .sidebar iconview,
  .notekit .sidebar row {
-    color: #BAC3CF; border-color: rgba(186, 195, 207, 0.6); /* border-width: 0px;  */
+    border-color: rgba(186, 195, 207, 0.6); 
  }
-
-.notekit .sidebar .view.cell:selected, .notekit .sidebar iconview.cell:selected, .notekit .sidebar row.cell:selected {
-      background-color: #5294e2;
-      color: #ffffff; }
-
-.notekit .sidebar .view.expander, .notekit .sidebar iconview.expander, .notekit .sidebar row.expander {
-      color: rgba(123, 129, 141, 0.975); }
-
-.notekit .sidebar .view.expander:hover, .notekit .sidebar iconview.expander:hover, .notekit .sidebar row.expander:hover {
-      color: #BAC3CF; } 
-
-.notekit .sidebar row .sidebar-icon {
-    color: rgba(186, 195, 207, 0.6); }
-
-.notekit .sidebar row:hover { 
-    background-color: rgba(186, 195, 207, 0.15); }
-
-.notekit .sidebar row:disabled, .notekit .sidebar row:disabled label, .notekit .sidebar row:disabled image {
-      color: rgba(186, 195, 207, 0.4); }
-   
-.notekit .sidebar row:not(:selected) button {
-   color: #BAC3CF; }
-
-.notekit .sidebar row:not(:selected) button:hover {
-        color: #BAC3CF;
-        border-color: rgba(26, 28, 34, 0.35);
-        background-color: rgba(119, 127, 151, 0.45); }
-
-.notekit .sidebar row:not(:selected) button:active {
-        color: #ffffff;
-        border-color: #2b2e39;
-        background-color: #5294e2; }
-
-.notekit .sidebar row:drop(active):not(:disabled),
-.notekit .sidebar row:drop(active):not(:disabled) label {
-        color: #F08437;
-}
-
-.notekit .sidebar row:drop(active):not(:disabled):selected {
-      background-color: #F08437; }
-
-.notekit .sidebar row:drop(active):not(:disabled):selected,
-.notekit .sidebar row:drop(active):not(:disabled):selected label
-{
-        color: #ffffff; }
-
-.notekit .sidebar separator {
-    background-color: transparent; }
-
-
 
 #mainView {
     font: 16px Charter, Bitstream Charter, Noto Serif, Noto Serif CJK JP, Noto Naskh Arabic, serif;
