@@ -19,10 +19,16 @@ I figured it would be nice to have a free-software, platform-independent OneNote
 
 ![automated build](https://github.com/blackhole89/notekit/workflows/automated%20build/badge.svg)
 
-You can download the following binary builds:
+The automated builds are by far the most up-to-date and should generally be as stable as any of the builds, although they are naturally less tested.
 
-* [Linux x86_64](http://twilightro.kafuka.org/%7Eblackhole89/files/notekit-20210403.tar.gz) (Git version of 2021-04-03), or download the possibly unstable [automated build](https://github.com/blackhole89/notekit/releases).
-* [Windows x86_64](http://twilightro.kafuka.org/~blackhole89/files/notekit-20210422.zip) (Git version of 2020-04-22). The Windows version is less tested and incapable of remembering which folders are opened due to mingw-w64's lack of support for xattrs.
+* [Linux x86_64 deb](https://github.com/blackhole89/notekit/releases/tag/latest-deb) (compatible with Ubuntu 18.04 and likely later versions)
+* [Linux x86_64 generic tar.gz](https://github.com/blackhole89/notekit/releases/tag/latest) (untested on non-Debian systems; for those, the distro-specific repositories below might be better)
+* [Windows x86_64](https://github.com/blackhole89/notekit/actions/workflows/windows.yml) (select the top entry and download the artifact; may require you to log into Github)
+
+The following older binary builds are also available:
+
+* [Linux x86_64](http://twilightro.kafuka.org/%7Eblackhole89/files/notekit-20210403.tar.gz) (Git version of 2021-04-03)
+* [Windows x86_64](http://twilightro.kafuka.org/~blackhole89/files/notekit-20210422.zip) (Git version of 2020-04-22)
 
 Moreover, there is also
 
