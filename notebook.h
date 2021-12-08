@@ -61,7 +61,13 @@ public:
 	
 	void SetCursor(Glib::RefPtr<Gdk::Cursor> c);
 	
+	/* the buffer */
 	Glib::RefPtr<Gsv::Buffer> sbuffer;
+	Glib::RefPtr<Gsv::LanguageManager> langman;
+	
+	/* toggle raw display */
+	void DisableProximityRendering();
+	void EnableProximityRendering();
 	
 	/* menu-related events */
 	void on_action(std::string name, int type, int param);

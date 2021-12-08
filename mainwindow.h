@@ -14,7 +14,8 @@ enum {
 	WND_ACTION_COLOR,
 	WND_ACTION_NEXT_NOTE,
 	WND_ACTION_PREV_NOTE,
-	WND_ACTION_TOGGLE_SIDEBAR
+	WND_ACTION_TOGGLE_SIDEBAR,
+	WND_ACTION_TOGGLE_MARKDOWN_RENDERING
 };
 
 int mkdirp(std::string dir);
@@ -93,6 +94,7 @@ protected:
 		Gtk::MenuItem prefs;
 		Gtk::SeparatorMenuItem sep;
 		Gtk::CheckMenuItem hide_sidebar;
+		Gtk::CheckMenuItem render_markdown;
 		Gtk::MenuItem exprt;
 	} am;
 	

@@ -57,7 +57,7 @@ void CNotebook::Init(std::string data_path, bool use_highlight_proxy)
 	the_scheme = styleman->get_scheme("notekit");
 	sbuffer->set_style_scheme(the_scheme);
 	
-	Glib::RefPtr<Gsv::LanguageManager> langman = Gsv::LanguageManager::create();
+	langman = Gsv::LanguageManager::create();
 	
 	/* make our custom markdown definition override the system gtksourceview defaults,
 	 * but retain access to them for other language defs */
@@ -161,6 +161,18 @@ void CNotebook::Init(std::string data_path, bool use_highlight_proxy)
 	//tag_proximity->property_background_rgba().set_value(Gdk::RGBA("rgb(255,128,128)"));
 	
 	set_wrap_mode(Gtk::WRAP_WORD_CHAR);
+}
+
+void CNotebook::DisableProximityRendering()
+{
+	sbuffer->set_language(langman->get_language("markdown-basic"));
+	Gtk::TextIter begin = sbuffer->begin(), end = sbuffer->end();
+	CleanUpSpan(begin,end);
+}
+
+void CNotebook::EnableProximityRendering()
+{
+	sbuffer->set_language(langman->get_language("markdown"));
 }
 
 void CNotebook::SetCursor(Glib::RefPtr<Gdk::Cursor> c)

@@ -64,6 +64,12 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 	// this should probably use Gio::Menu actions instead...? documentation is an unholy mess on this
 	am.hide_sidebar.signal_activate().connect( sigc::bind( sigc::mem_fun(this,&CMainWindow::on_action), "toggle-sidebar", WND_ACTION_TOGGLE_SIDEBAR, 1)); 
 	appmenu.append(am.hide_sidebar);
+	
+	am.render_markdown.set_label("Full markdown rendering");
+	am.render_markdown.set_active(true);
+	am.render_markdown.signal_activate().connect( sigc::bind( sigc::mem_fun(this,&CMainWindow::on_action), "toggle-markdown-rendering", WND_ACTION_TOGGLE_MARKDOWN_RENDERING, 1)); 
+	appmenu.append(am.render_markdown);
+	
 	appmenu.show_all();
 	
 	/* set up header bar */
@@ -562,6 +568,13 @@ void CMainWindow::on_action(std::string name, int type, int param)
 			nav_scroll.set_visible(false);
 		} else {
 			nav_scroll.set_visible(true);
+		}
+		break;
+	case WND_ACTION_TOGGLE_MARKDOWN_RENDERING:
+		if(am.render_markdown.get_active()) {
+			sview.EnableProximityRendering();
+		} else {
+			sview.DisableProximityRendering();
 		}
 		break;
 	}
