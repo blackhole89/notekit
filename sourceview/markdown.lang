@@ -319,7 +319,21 @@
       <start>^```$</start>
       <end>^```$</end>
     </context>
+   
+    <!-- Examples:
+         Here's a literal HTML tag: ``<p>``.
+         ``The grave accent (`) is used in Markdown to indicate a code span.``
+         ``Here's another code span containing enter and four space before every lines of coded content
+    -->
+    <context id="2-backticks-code-span" class="no-spell-check mono" style-ref="code">
+      <match>(?&lt;!`)``[^`]+((`|`{3,})[^`]+)*``(?!`)</match>
+    </context>
 
+    <context id="3-backticks-code-span" class="no-spell-check mono" style-ref="code">
+      <start>^(\r){2,}(\s){4,}$</start>
+      <end>^(\r){2,}$</end>
+    </context>
+   
     <!-- Example:
          > Quoted text.
          > Quoted text with `code span`.
