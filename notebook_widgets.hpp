@@ -62,13 +62,14 @@ std::string urldecode(std::string in)
 	std::size_t len = in.length(), p=0, nextp;
 	std::string out;
 	out.reserve(len); // reserve space to prevent costly reallocs on +=
+	char hexcode[3]={0}; // memory to hold extracted hex codes without allocations
 	
 	while(p<len && (nextp = in.find("%",p))!=std::string::npos) {
 		out += std::string(in, p, nextp-p); // copy in everything up to the %
 		
-		std::string hexval = std::string(in, nextp+1, 2); // get the hex code 
+		strncpy(hexcode, in.c_str()+nextp+1, 2); // get the hex code 
 		int cc, nread=0;
-		if(sscanf(hexval.c_str(), "%02X%n", &cc, &nread) && nread>0 && (unsigned char)cc)
+		if(sscanf(hexcode, "%02X%n", &cc, &nread) && nread>0 && (unsigned char)cc)
 			out += (unsigned char)cc; // seems like we got a hex code, append
 		p=nextp+nread+1; // skip the % and however many characters we successfully read as hex
 	}
