@@ -29,6 +29,10 @@
 			<default>false</default>
 			<summary>Enables presentation / hide-everything mode</summary>
 		</key>
+		<key name="classic-sidebar" type="b">
+			<default>false</default>
+			<summary>If NoteKit should use the "classic" sidebar style, used upto the 8th Dec 2021 or a "slightly more theme-agnostic way".</summary>
+		</key>
 		<key name="colors" type="a(dddd)">
 			<default>[
 				(0.0,0.0,0.0,1.0),
