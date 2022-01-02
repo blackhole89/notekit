@@ -136,8 +136,8 @@ protected:
 	void SettingCsdUpdate();
 	void SettingProximityUpdate();
 	void SettingSidebarUpdate();
+	void SettingClassicSidebarUpdate();
 	void SettingPresentationModeUpdate();
-	
 
 	typedef std::map<const Glib::ustring, sigc::slot<void()>> settingmap_t;
 	settingmap_t settingmap {
@@ -147,6 +147,7 @@ protected:
 		{"csd", sigc::mem_fun(this,&CMainWindow::SettingCsdUpdate)},
 		{"proximity-widgets", sigc::mem_fun(this,&CMainWindow::SettingProximityUpdate)},
 		{"sidebar", sigc::mem_fun(this,&CMainWindow::SettingSidebarUpdate)},
+		{"classic-sidebar", sigc::mem_fun(this,&CMainWindow::SettingClassicSidebarUpdate)},
 		{"presentation-mode", sigc::mem_fun(this,&CMainWindow::SettingPresentationModeUpdate)}
 	};
 };

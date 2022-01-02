@@ -97,7 +97,6 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 
 	/* install tree view */
 	nav.get_style_context()->add_class("sidebar");
-	nav.get_style_context()->add_class("nemo-window");
 	
 	nav_scroll.add(nav);
 	nav_scroll.set_size_request(200,-1);
@@ -187,6 +186,7 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 	SettingCsdUpdate();
 	SettingProximityUpdate();
 	SettingSidebarUpdate();
+	SettingClassicSidebarUpdate();
 	SettingPresentationModeUpdate();
 
 	/* workaround to make sure the right pen width is selected at start */
@@ -279,14 +279,17 @@ void CMainWindow::RunPreferenceDiag()
 	config_builder = Gtk::Builder::create_from_file(data_path+"/data/preferences.glade");
 	Gtk::Dialog *dlg;
 	config_builder->get_widget("preferences",dlg); 
-	Gtk::CheckButton *use_headerbar, *use_highlight_proxy;
+	Gtk::CheckButton *use_headerbar, *use_highlight_proxy, *use_classic_sidebar;
 	config_builder->get_widget("base_path",dir); 
 	config_builder->get_widget("use_headerbar",use_headerbar);
 	config_builder->get_widget("use_highlight_proxy",use_highlight_proxy);
+	config_builder->get_widget("use_classic_sidebar", use_classic_sidebar);
 	dir->set_filename(settings->get_string("base-path"));
 	dir->signal_file_set().connect(sigc::mem_fun(this,&CMainWindow::UpdateBasePath));
 	settings->bind("csd", use_headerbar->property_active());
 	settings->bind("syntax-highlighting", use_highlight_proxy->property_active());
+	settings->bind("classic-sidebar", use_classic_sidebar->property_active());
+
 	dlg->run();
 	dlg->hide();
 }
@@ -695,6 +698,17 @@ void CMainWindow::SettingSidebarUpdate() {
 	if (!settings->get_boolean("presentation-mode")) nav_scroll.set_visible(state);
 	Glib::Variant<bool> mesh = Glib::Variant<bool>::create(state);
 	sidebar_action->set_state(mesh);
+}
+
+void CMainWindow::SettingClassicSidebarUpdate() {
+	bool state = settings->get_boolean("classic-sidebar");
+	if (state) {
+		nav.get_style_context()->remove_class("nemo-window");
+		nav.get_style_context()->add_class("classic");
+	} else {
+		nav.get_style_context()->remove_class("classic");
+		nav.get_style_context()->add_class("nemo-window");
+	}
 }
 
 void CMainWindow::SettingPresentationModeUpdate() {
