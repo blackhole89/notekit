@@ -1068,6 +1068,15 @@ void CNotebook::SelectBox(float x0, float x1, float y0, float y1)
 
 void CNotebook::CommitStroke()
 {
+	Gtk::TextBuffer::iterator i,k;
+	Gdk::Rectangle r;
+
+	/* clip the stroke to the document area */ 
+	get_iter_at_location(i,0,0);
+	get_iter_location(i,r);
+	active.ForceMinXY(r.get_x(), r.get_y());
+	
+	/* get current bounding box */
 	float x0,y0,x1,y1;
 	active.GetBBox(x0,x1,y0,y1);
 	
@@ -1082,7 +1091,6 @@ void CNotebook::CommitStroke()
 	overlay_ctx->restore();
 	
 	/* search for preceding regions we can merge with */
-	Gtk::TextBuffer::iterator i,k;
 	get_iter_at_location(i,x0,y0);
 	k=i; // for later
 	do {
@@ -1109,9 +1117,11 @@ void CNotebook::CommitStroke()
 		 * but that's relative to the text body, so need to fixup */
 		int bx, by;
 		window_to_buffer_coords(Gtk::TEXT_WINDOW_TEXT,0,0,bx,by);
-		//printf("fix: %d %d\n",bx,by);
-		d->AddStroke(active,-(d->get_allocation().get_x())-bx,-(d->get_allocation().get_y())-by);
+		
+		if(!d->AddStroke(active,-(d->get_allocation().get_x())-bx,-(d->get_allocation().get_y())-by))
+			goto commit_stroke_try_merge_down;
 	} else {
+commit_stroke_try_merge_down:
 		/* can't merge up, but maybe there's a region further down that can be expanded? */
 		do {
 			if(k.get_child_anchor()) {
@@ -1134,7 +1144,6 @@ void CNotebook::CommitStroke()
 			
 			/* find where the drawing should start */
 			get_iter_at_location(i,x0,y0);
-			Gdk::Rectangle r;
 			get_iter_location(i,r);
 			
 			//printf("get rect: %d %d %d %d\n",r.get_x(),r.get_y(),r.get_width(),r.get_height());
@@ -1146,43 +1155,47 @@ void CNotebook::CommitStroke()
 			int dx = -d->get_allocation().get_x()-bx + r.get_x(),
 				dy = -d->get_allocation().get_y()-by + r.get_y();
 			
-			d->UpdateSize(d->w, d->h, dx, dy);
+			if(!d->UpdateSize(d->w, d->h, dx, dy)) goto commit_stroke_new_drawing;
 			
-			d->AddStroke(active,-(r.get_x()),-(r.get_y()));
+			if(!d->AddStroke(active,-(r.get_x()),-(r.get_y()))) goto commit_stroke_new_drawing;
 			
 			/* eat intermittent spaces */
 			sbuffer->erase(i,k);
-		} else {
-			/* couldn't find a region to merge with; create a new image */
-			d = new CBoundDrawing(get_window(Gtk::TEXT_WINDOW_TEXT));
-			Gtk::manage(d); 
-			get_iter_at_location(i,x0,y0);
-			if(i.has_tag(tag_hidden)) {
-				i.forward_to_tag_toggle(tag_hidden);
-				++i; // TODO: Is this safe?
-			}
-			
-			/* figure out where it got anchored in the text, so we can translate the stroke correctly */
-			Gdk::Rectangle r;
-			get_iter_location(i,r);
-			
-			if(r.get_x() > x0) {
-				/* end of document, line too far to the right; add a new line */
-				/* TODO: check this logic */
-				sbuffer->insert(i,"\n");
-				get_iter_at_location(i,x0,y0);
-				get_iter_location(i,r);
-			}
-			
-			auto anch = sbuffer->create_child_anchor(i);
-			add_child_at_anchor(*d,anch);
-			
-			//printf("anchoring: %f %f -> %d %d\n",x0,y0,r.get_x(),r.get_y());
-		
-			d->AddStroke(active,-(r.get_x()),-(r.get_y()));
-		}
+		} else goto commit_stroke_new_drawing;
 	}
+	goto commit_stroke_done;
 	
+commit_stroke_new_drawing:
+	{
+		/* couldn't find a region to merge with; create a new image */
+		d = new CBoundDrawing(get_window(Gtk::TEXT_WINDOW_TEXT));
+		Gtk::manage(d); 
+		get_iter_at_location(i,x0,y0);
+		if(i.has_tag(tag_hidden)) {
+			i.forward_to_tag_toggle(tag_hidden);
+			++i; // TODO: Is this safe?
+		}
+		
+		/* figure out where it got anchored in the text, so we can translate the stroke correctly */
+		get_iter_location(i,r);
+		
+		if(r.get_x() > x0) {
+			/* end of document, line too far to the right; add a new line */
+			/* TODO: check this logic */
+			sbuffer->insert(i,"\n");
+			get_iter_at_location(i,x0,y0);
+			get_iter_location(i,r);
+		}
+		
+		auto anch = sbuffer->create_child_anchor(i);
+		add_child_at_anchor(*d,anch);
+		
+		//printf("anchoring: %f %f -> %d %d\n",x0,y0,r.get_x(),r.get_y());
+
+		d->AddStroke(active,-(r.get_x()),-(r.get_y()),true);
+	}
+
+commit_stroke_done:
 	d->show();
 	
 	floats.insert(d);

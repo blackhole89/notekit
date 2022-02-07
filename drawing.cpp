@@ -25,11 +25,21 @@ CBoundDrawing *CBoundDrawing::TryUpcast(Gtk::Widget *w)
 
 /* Change the drawing's size, possibly resizing the internal buffer in the process */
 /* dx, dy move the top left corner; neww, newh are relative to the OLD top left corner */
-void CBoundDrawing::UpdateSize(int neww, int newh, int dx, int dy)
+/* returns false if the resizing would result in some strokes falling off the edge */
+bool CBoundDrawing::UpdateSize(int neww, int newh, int dx, int dy)
 {
 	neww-=dx; newh-=dy;
 	
 	if(dx!=0 || dy!=0) {
+		// check that the new size is positive and that no strokes fell off the left
+		if(neww<0 || newh<0)
+			return false;
+		for(auto &str : strokes) {
+			for(unsigned int i=0;i<str.xcoords.size();++i) {
+				if(str.xcoords[i]<dx || str.ycoords[i]<dy)
+					return false;
+			}
+		}
 		// origin changed; need to move strokes
 		for(auto &str : strokes) {
 			for(unsigned int i=0;i<str.xcoords.size();++i) {
@@ -58,6 +68,8 @@ void CBoundDrawing::UpdateSize(int neww, int newh, int dx, int dy)
 	
 	w=neww; h=newh;
 	set_size_request(w,h);
+	
+	return true;
 }
 
 /* iterate over all the strokes and determine the minimum size to fit them */
@@ -87,8 +99,18 @@ void CBoundDrawing::RebuildStrokefinder()
 }
 
 /* push and draw a new stroke, shifting it by (dx,dy) to accommodate the local coordinate system */
-void CBoundDrawing::AddStroke(CStroke &s, float dx, float dy)
+/* if force is false, then return false if some of the new stroke would wind up to the left of the left boundary */
+bool CBoundDrawing::AddStroke(CStroke &s, float dx, float dy, bool force)
 {
+	// validate that incoming stroke is entirely in positive coordinate space, either by rejecting it or by changing offending entries
+	if(!force) for(unsigned int i=0;i<s.xcoords.size();++i) {
+		if(s.xcoords[i]<-dx || s.ycoords[i]<-dy)
+			return false;
+	} else for(unsigned int i=0;i<s.xcoords.size();++i) {
+		if(s.xcoords[i]<-dx) s.xcoords[i]=-dx;
+		if(s.ycoords[i]<-dy) s.ycoords[i]=-dy;
+	}
+	
 	int neww=w, newh=h;
 	strokes.push_back(s);
 	for(unsigned int i=0;i<s.xcoords.size();++i) {
@@ -105,6 +127,8 @@ void CBoundDrawing::AddStroke(CStroke &s, float dx, float dy)
 	UpdateSize(neww, newh);
 	
 	strokes.back().Render(image_ctx,0,0);
+	
+	return true;
 }
 
 void CBoundDrawing::EraseAt(float x, float y, float radius, bool whole_stroke)
@@ -490,6 +514,14 @@ void CStroke::GetBBox(float &x0, float &x1, float &y0, float &y1, int start_inde
 		if(xcoords[i]+pcoords[i]>x1) x1 = xcoords[i]+pcoords[i];
 		if(ycoords[i]-pcoords[i]<y0) y0 = ycoords[i]-pcoords[i];
 		if(ycoords[i]+pcoords[i]>y1) y1 = ycoords[i]+pcoords[i];
+	}
+}
+
+void CStroke::ForceMinXY(float x, float y)
+{
+	for(unsigned int i=0;i<xcoords.size();++i) {
+		if(xcoords[i]-pcoords[i]<x) xcoords[i]=x+pcoords[i];
+		if(ycoords[i]-pcoords[i]<y) ycoords[i]=y+pcoords[i];
 	}
 }
 

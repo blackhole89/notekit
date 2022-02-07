@@ -25,6 +25,7 @@ public:
 	void Simplify();
 	void Render(const Cairo::RefPtr<Cairo::Context> &ctx, float basex, float basey, int start_index=1);
 	void GetBBox(float &x0, float &x1, float &y0, float &y1, int start_index=0);
+	void ForceMinXY(float x, float y);
 	
 	void RenderSelectionGlow(const Cairo::RefPtr<Cairo::Context> &ctx, float basex, float basey);
 	bool Select(float x0, float x1, float y0, float y1);
@@ -55,12 +56,12 @@ public:
 	Glib::RefPtr<Gdk::Window> target_window;
 	Cairo::RefPtr<Cairo::Surface> image;
 	Cairo::RefPtr<Cairo::Context> image_ctx;
-	void UpdateSize(int w, int h, int dx=0, int dy=0);
+	bool UpdateSize(int w, int h, int dx=0, int dy=0);
 	void Redraw();
 	void RebuildStrokefinder();
 	
 	void RecalculateSize();
-	void AddStroke(CStroke &s, float dx, float dy);
+	bool AddStroke(CStroke &s, float dx, float dy, bool force=false);
 	void EraseAt(float x, float y, float radius, bool whole_stroke);
 	
 	void Select(float x0, float x1, float y0, float y1);

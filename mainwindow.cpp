@@ -85,6 +85,8 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 		appbutton.set_menu(appmenu);
 		set_icon_name("accessories-text-editor");
 	
+		get_style_context()->add_class("csd");
+	
 		hbar.pack_start(appbutton);
 		set_titlebar(hbar);
 	}
