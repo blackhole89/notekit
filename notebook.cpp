@@ -36,10 +36,14 @@ CNotebook::CNotebook()
  * at the beginning of events. */
 extern "C" bool gtk_text_layout_is_valid(void*);
 
-bool CNotebook::on_event(GdkEvent*)
+bool CNotebook::on_event(GdkEvent* e)
 {
+	// never block key events, as this can gum up text entry
+	if(e->type == Gdk::KEY_PRESS || e->type == Gdk::KEY_RELEASE)
+		return false;
+	// but otherwise, do block if the layout is not valid
 	if(!gtk_text_layout_is_valid(*(void**)GTK_TEXT_VIEW(gobj())->priv)) {
-		//printf("event blocked\n");
+		//printf("event %d blocked\n", e->type);
 		return true;
 	}
 	return false;
@@ -1118,51 +1122,50 @@ void CNotebook::CommitStroke()
 		int bx, by;
 		window_to_buffer_coords(Gtk::TEXT_WINDOW_TEXT,0,0,bx,by);
 		
-		if(!d->AddStroke(active,-(d->get_allocation().get_x())-bx,-(d->get_allocation().get_y())-by))
-			goto commit_stroke_try_merge_down;
-	} else {
-commit_stroke_try_merge_down:
-		/* can't merge up, but maybe there's a region further down that can be expanded? */
-		do {
-			if(k.get_child_anchor()) {
-				auto w = k.get_child_anchor()->get_widgets();
-				if(w.size()) {
-					//printf("match below?\n");
-					d = CBoundDrawing::TryUpcast(w[0]);
-					break;
-				}
-			}
-			gunichar next_char = k.get_char();
-			if(!g_unichar_isspace(next_char) && next_char!=0xFFFC) {
+		if(d->AddStroke(active,-(d->get_allocation().get_x())-bx,-(d->get_allocation().get_y())-by))
+			goto commit_stroke_done;
+	} 
+	
+	/* can't merge up, but maybe there's a region further down that can be expanded? */
+	do {
+		if(k.get_child_anchor()) {
+			auto w = k.get_child_anchor()->get_widgets();
+			if(w.size()) {
+				//printf("match below?\n");
+				d = CBoundDrawing::TryUpcast(w[0]);
 				break;
 			}
-			++k;
-		} while(k!=sbuffer->end());
+		}
+		gunichar next_char = k.get_char();
+		if(!g_unichar_isspace(next_char) && next_char!=0xFFFC) {
+			break;
+		}
+		++k;
+	} while(k!=sbuffer->end());
+	
+	if(d!=NULL) {
+		/* found a region to merge with below; we need to expand it before adding this stroke */
 		
-		if(d!=NULL) {
-			/* found a region to merge with below; we need to expand it before adding this stroke */
-			
-			/* find where the drawing should start */
-			get_iter_at_location(i,x0,y0);
-			get_iter_location(i,r);
-			
-			//printf("get rect: %d %d %d %d\n",r.get_x(),r.get_y(),r.get_width(),r.get_height());
-			
-			/* once again, need to correct allocation to be in buffer coords */
-			int bx, by;
-			window_to_buffer_coords(Gtk::TEXT_WINDOW_TEXT,0,0,bx,by);
-			
-			int dx = -d->get_allocation().get_x()-bx + r.get_x(),
-				dy = -d->get_allocation().get_y()-by + r.get_y();
-			
-			if(!d->UpdateSize(d->w, d->h, dx, dy)) goto commit_stroke_new_drawing;
-			
-			if(!d->AddStroke(active,-(r.get_x()),-(r.get_y()))) goto commit_stroke_new_drawing;
-			
-			/* eat intermittent spaces */
-			sbuffer->erase(i,k);
-		} else goto commit_stroke_new_drawing;
-	}
+		/* find where the drawing should start */
+		get_iter_at_location(i,x0,y0);
+		get_iter_location(i,r);
+		
+		//printf("get rect: %d %d %d %d\n",r.get_x(),r.get_y(),r.get_width(),r.get_height());
+		
+		/* once again, need to correct allocation to be in buffer coords */
+		int bx, by;
+		window_to_buffer_coords(Gtk::TEXT_WINDOW_TEXT,0,0,bx,by);
+		
+		int dx = -d->get_allocation().get_x()-bx + r.get_x(),
+			dy = -d->get_allocation().get_y()-by + r.get_y();
+		
+		if(!d->UpdateSize(d->w, d->h, dx, dy)) goto commit_stroke_new_drawing;
+		
+		if(!d->AddStroke(active,-(r.get_x()),-(r.get_y()))) goto commit_stroke_new_drawing;
+		
+		/* eat intermittent spaces */
+		sbuffer->erase(i,k);
+	} else goto commit_stroke_new_drawing;
 	goto commit_stroke_done;
 	
 commit_stroke_new_drawing:
@@ -1175,6 +1178,10 @@ commit_stroke_new_drawing:
 			i.forward_to_tag_toggle(tag_hidden);
 			++i; // TODO: Is this safe?
 		}
+		
+		/* figure where the bottom right goes, so we can chomp spaces that we painted over */
+		get_iter_at_location(k,x1,y1);
+		/* TODO */
 		
 		/* figure out where it got anchored in the text, so we can translate the stroke correctly */
 		get_iter_location(i,r);
