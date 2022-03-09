@@ -39,7 +39,7 @@ extern "C" bool gtk_text_layout_is_valid(void*);
 bool CNotebook::on_event(GdkEvent* e)
 {
 	// never block key events, as this can gum up text entry
-	if(e->type == Gdk::KEY_PRESS || e->type == Gdk::KEY_RELEASE)
+	if(e->type == GDK_KEY_PRESS || e->type == GDK_KEY_RELEASE)
 		return false;
 	// but otherwise, do block if the layout is not valid
 	if(!gtk_text_layout_is_valid(*(void**)GTK_TEXT_VIEW(gobj())->priv)) {
