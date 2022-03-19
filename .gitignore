@@ -10,3 +10,4 @@ data/fonts/.uuid
 
 cmake-build-debug
 cmake-build-Release
+.idea
