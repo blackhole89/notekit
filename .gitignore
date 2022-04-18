@@ -7,3 +7,7 @@ config.h
 
 # protection against over-aggresive fontconfig
 data/fonts/.uuid
+
+cmake-build-debug
+cmake-build-Release
+.idea

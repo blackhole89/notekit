@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "navigation.h"
+#include <clocale>
 #include <iostream>
 #include <fontconfig/fontconfig.h>
 
