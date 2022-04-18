@@ -120,9 +120,21 @@ jobs:
       - name: Patch NoteKit 🩹
         run: patch -p1 < Apple/llvm.patch
       - name: Configure 🔧
+        if: ${{ matrix.os.triplet == 'x86_64-apple-darwin' }}
         run: meson ${{ matrix.os.triplet }}
       - name: Compile 🎲
+        if: ${{ matrix.os.triplet == 'x86_64-apple-darwin' }}
         run: ninja -C ${{ matrix.os.triplet }}
+      - name: Build in Brew shell 🧮
+        if: ${{ matrix.os.triplet == 'x86_64-linux-gnu' }}
+        run: |
+          brew sh <<EOF
+            export HOMEBREW_CC=$(brew list gcc | grep "/bin/gcc-[0-9]*$" | head -n1)
+            export HOMEBREW_CXX=$(brew list gcc | grep "/bin/g++-[0-9]*$" | head -n1)
+            meson ${{ matrix.os.triplet }}
+            $(brew list ninja | grep "bin/ninja$" | head -n1) -C ${{ matrix.os.triplet }}
+            exit
+          EOF
       - name: Compress build artifacts 📦
         run: |
           pushd ${{ matrix.os.triplet }}
