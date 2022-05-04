@@ -65,6 +65,9 @@ public:
 	Glib::RefPtr<Gsv::Buffer> sbuffer;
 	Glib::RefPtr<Gsv::LanguageManager> langman;
 	
+	/* text search */
+	bool Find(Glib::ustring text, bool forward, bool skip);
+	
 	/* toggle raw display */
 	void DisableProximityRendering();
 	void EnableProximityRendering();
@@ -91,6 +94,7 @@ public:
 	Glib::RefPtr<Gtk::TextTag> tag_proximity;
 	Glib::RefPtr<Gtk::TextMark> last_position;
 	void on_move_cursor();
+	void update_prox_to_cursor();
 	
 	void on_highlight_updated(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
 	void on_leave_region(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);

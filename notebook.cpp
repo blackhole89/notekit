@@ -179,6 +179,34 @@ void CNotebook::EnableProximityRendering()
 	sbuffer->set_language(langman->get_language("markdown"));
 }
 
+bool CNotebook::Find(Glib::ustring text, bool forward, bool skip)
+{
+	Gtk::TextIter st, ed, ins, sel;
+	ins = sbuffer->get_iter_at_mark(sbuffer->get_insert());
+	sel = sbuffer->get_iter_at_mark(sbuffer->get_selection_bound());
+	
+	bool found=false;
+	
+	if( forward && !skip ) {
+		if(ins.forward_search(text,Gtk::TEXT_SEARCH_CASE_INSENSITIVE,st,ed)) found=true;
+		else if(sbuffer->begin().forward_search(text,Gtk::TEXT_SEARCH_CASE_INSENSITIVE,st,ed,ins)) found=true;
+	} else if(forward && skip) {
+		if(sel.forward_search(text,Gtk::TEXT_SEARCH_CASE_INSENSITIVE,st,ed)) found=true;
+		else if(sbuffer->begin().forward_search(text,Gtk::TEXT_SEARCH_CASE_INSENSITIVE,st,ed,sel)) found=true;
+	} else if(!forward) {
+		if(ins.backward_search(text,Gtk::TEXT_SEARCH_CASE_INSENSITIVE,st,ed)) found=true;
+		else if(sbuffer->begin().backward_search(text,Gtk::TEXT_SEARCH_CASE_INSENSITIVE,st,ed,ins)) found=true;
+	}
+	
+	if(found) {
+		sbuffer->select_range(st,ed);
+		update_prox_to_cursor();
+		scroll_to(st, 0.1);
+	}
+	
+	return found;
+}
+
 void CNotebook::SetCursor(Glib::RefPtr<Gdk::Cursor> c)
 {
 	if(auto w=get_window(Gtk::TEXT_WINDOW_TEXT)) w->set_cursor(c);
@@ -757,6 +785,11 @@ void CNotebook::on_move_cursor()
 	 * changes due to hiding/unhiding while doing it */
 	if(sbuffer->get_has_selection()) return;
 	
+	update_prox_to_cursor();
+}
+	
+void CNotebook::update_prox_to_cursor()
+{	
 	auto s = Glib::IdleSource::create();
 	s->connect(sigc::slot<bool>( [this]() { 
 		Gtk::TextIter new_iter = sbuffer->get_iter_at_mark(sbuffer->get_insert());

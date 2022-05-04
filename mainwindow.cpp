@@ -121,7 +121,19 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 	sview_scroll.add( sview);
 	sview.margin_x=32;
 	sview.property_left_margin().set_value(32);
-	split.pack_start( sview_scroll );
+	doc_view_box.pack_start( sview_scroll );
+	
+	/* install search bar */
+	search_entry.signal_search_changed().connect( sigc::mem_fun(this, &CMainWindow::on_search_text_changed) );
+	search_entry.signal_next_match().connect( sigc::mem_fun(this, &CMainWindow::on_search_next) );
+	search_entry.signal_key_press_event().connect( sigc::mem_fun(this, &CMainWindow::on_search_key_press), false );
+	search_entry.signal_previous_match().connect( sigc::mem_fun(this, &CMainWindow::on_search_prev) );
+	search_entry.signal_stop_search().connect( sigc::mem_fun(this, &CMainWindow::on_search_stop) );
+	search_entry.signal_focus_out_event().connect( sigc::mem_fun(this, &CMainWindow::on_search_lost_focus) ); 
+	search_bar.add( search_entry );
+	doc_view_box.pack_start( search_bar, Gtk::PACK_SHRINK );
+	
+	split.pack_start( doc_view_box );
 	
 	/* install tool palette */
 	InitToolbar();
@@ -134,6 +146,7 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 	#define ACTION(name,param1,param2) sview.actions->add_action(name, sigc::bind( sigc::mem_fun(this,&CMainWindow::on_action), std::string(name), param1, param2 ) )
 	ACTION("next-note",WND_ACTION_NEXT_NOTE,1);
 	ACTION("prev-note",WND_ACTION_PREV_NOTE,1);
+	ACTION("show-find",WND_ACTION_SHOW_FIND,1);
 	
 	/* add the top-level layout */
 	if(use_hbar) {
@@ -570,6 +583,11 @@ void CMainWindow::on_action(std::string name, int type, int param)
 	case WND_ACTION_PREV_NOTE:
 		nav_model.PrevDoc();
 		break;
+	case WND_ACTION_SHOW_FIND:
+		search_entry.set_text("");
+		search_bar.set_search_mode();
+		search_entry.grab_focus();
+		break;
 	case WND_ACTION_TOGGLE_SIDEBAR:
 		if(am.hide_sidebar.get_active()) {
 			nav_scroll.set_visible(false);
@@ -596,6 +614,64 @@ bool CMainWindow::on_idle()
 	}
 	
 	return true;
+}
+
+void CMainWindow::on_search_text_changed()
+{
+	const Glib::ustring text = search_entry.get_text();
+	
+	if(!text.empty()) {
+		if(sview.Find(text, true, false))
+			search_entry.set_icon_from_icon_name("emblem-ok-symbolic",Gtk::ENTRY_ICON_SECONDARY);
+		else
+			search_entry.set_icon_from_icon_name("window-close-symbolic",Gtk::ENTRY_ICON_SECONDARY);
+	}
+}
+
+/* intercept (shift)-return here, easier than figuring out how to set up a hotkey \neq the default ctrl-g */
+bool CMainWindow::on_search_key_press(GdkEventKey* event)
+{
+	if(event->keyval == GDK_KEY_Return) {
+		if(event->state & GDK_SHIFT_MASK) 
+			on_search_prev();
+		else on_search_next();
+	}
+	return false;
+}
+
+void CMainWindow::on_search_next()
+{
+	const Glib::ustring text = search_entry.get_text();
+	
+	if(!text.empty()) {
+		if(sview.Find(text, true, true))
+			search_entry.set_icon_from_icon_name("emblem-ok-symbolic",Gtk::ENTRY_ICON_SECONDARY);
+		else
+			search_entry.set_icon_from_icon_name("window-close-symbolic",Gtk::ENTRY_ICON_SECONDARY);
+	}
+}
+
+void CMainWindow::on_search_prev()
+{
+	const Glib::ustring text = search_entry.get_text();
+	
+	if(!text.empty()) {
+		if(sview.Find(text, false, true))
+			search_entry.set_icon_from_icon_name("emblem-ok-symbolic",Gtk::ENTRY_ICON_SECONDARY);
+		else
+			search_entry.set_icon_from_icon_name("window-close-symbolic",Gtk::ENTRY_ICON_SECONDARY);
+	}
+}
+
+void CMainWindow::on_search_stop()
+{
+	sview.grab_focus();
+}
+
+bool CMainWindow::on_search_lost_focus(GdkEventFocus* e)
+{
+	search_bar.set_search_mode(false);
+	return false;
 }
 
 bool CMainWindow::on_click_color(GdkEventButton* e, int number)

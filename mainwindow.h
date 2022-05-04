@@ -14,6 +14,7 @@ enum {
 	WND_ACTION_COLOR,
 	WND_ACTION_NEXT_NOTE,
 	WND_ACTION_PREV_NOTE,
+	WND_ACTION_SHOW_FIND,
 	WND_ACTION_TOGGLE_SIDEBAR,
 	WND_ACTION_TOGGLE_MARKDOWN_RENDERING
 };
@@ -48,6 +49,12 @@ protected:
 	void on_action(std::string name,int type, int param);
 	bool on_click_color(GdkEventButton *btn, int num);
 	bool on_motion_notify(GdkEventMotion* event);
+	void on_search_text_changed();
+	void on_search_next();
+	void on_search_prev();
+	void on_search_stop();
+	bool on_search_lost_focus(GdkEventFocus *event);
+	bool on_search_key_press(GdkEventKey *event);
 	
 	sigc::connection idle_timer;
 	bool on_idle();
@@ -71,10 +78,15 @@ protected:
 	CNavigationView nav_model;
 	
 	/* document view */
+	Gtk::VBox doc_view_box;
 	Gtk::ScrolledWindow sview_scroll;
 	CNotebook sview;
 	Glib::RefPtr<Gsv::Buffer> sbuffer;
 	Glib::RefPtr<Gdk::Cursor> pen_cursor, text_cursor, eraser_cursor, selection_cursor;
+	
+	/* search bar */
+	Gtk::SearchBar search_bar;
+	Gtk::SearchEntry search_entry;
 	
 	/* tool palette */
 	Glib::RefPtr<Gtk::Builder> toolbar_builder;
