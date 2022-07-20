@@ -29,7 +29,7 @@ std::string CNotebook::GetHighlightProxyDir()
 	/* one context for every language detected */
 	for(std::string &l : langs_supported) {
 		fprintf(fl,"  <context id=\"proxy-%s\" class=\"no-spell-check mono\">\n",l.c_str());
-		fprintf(fl,"   <start>^(```%s)$</start>\n",l.c_str());
+		fprintf(fl,"   <start>^(```\\s*)(%s(\\s.*)?)$</start>\n",l.c_str());
 		fprintf(fl,"   <end>^(```)$</end>\n");
 		fprintf(fl,"   <include>\n    <context id=\"proxy-%s-contents\" extend-parent=\"false\">\n",l.c_str());
 		fprintf(fl,"    <start></start>\n");
