@@ -36,6 +36,7 @@ std::string CNotebook::GetHighlightProxyDir()
 		fprintf(fl,"    <include>\n     <context ref=\"%s:%s\" />\n    </include>\n",l.c_str(),l.c_str());
 		fprintf(fl,"    </context>\n"
 				   "    <context sub-pattern=\"1\" where=\"start\" style-ref=\"markdown:tag\" class=\"hline\" />\n"
+				   "    <context sub-pattern=\"2\" where=\"start\" style-ref=\"def:statement\" />\n"
 				   "    <context sub-pattern=\"1\" where=\"end\" style-ref=\"markdown:tag\" class=\"hline\" />\n"
 				   "   </include>\n"
 		           "  </context>\n");
@@ -43,10 +44,11 @@ std::string CNotebook::GetHighlightProxyDir()
 	
 	/* and one context to fallback when language not found */
 	fprintf(fl,"  <context id=\"proxy-fallback\" class=\"no-spell-check mono\" style-ref=\"markdown:code\">\n"
-			   "   <start>^(```)(.*)$</start>\n"
+			   "   <start>^(```\\s*)(.*)$</start>\n"
 			   "   <end>^(```)$</end>\n"
 			   "   <include>\n"
 			   "     <context sub-pattern=\"1\" where=\"start\" style-ref=\"markdown:tag\" class=\"hline\" />\n"
+			   "     <context sub-pattern=\"2\" where=\"start\" style-ref=\"def:statement\" />\n"
 			   "     <context sub-pattern=\"1\" where=\"end\" style-ref=\"markdown:tag\" class=\"hline\" />\n"
 			   "   </include>\n"
 	           "  </context>\n");
