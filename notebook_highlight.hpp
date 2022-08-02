@@ -41,11 +41,22 @@ std::string CNotebook::GetHighlightProxyDir()
 		           "  </context>\n");
 	}
 	
+	/* and one context to fallback when language not found */
+	fprintf(fl,"  <context id=\"proxy-fallback\" class=\"no-spell-check mono\" style-ref=\"markdown:code\">\n"
+			   "   <start>^(```)(.*)$</start>\n"
+			   "   <end>^(```)$</end>\n"
+			   "   <include>\n"
+			   "     <context sub-pattern=\"1\" where=\"start\" style-ref=\"markdown:tag\" class=\"hline\" />\n"
+			   "     <context sub-pattern=\"1\" where=\"end\" style-ref=\"markdown:tag\" class=\"hline\" />\n"
+			   "   </include>\n"
+	           "  </context>\n");
+	
 	/* finally, export every context as part of this "language" */
 	fprintf(fl,"  <context id=\"markdownlisting\">\n   <include>\n");
 	for(std::string &l : langs_supported) {
 		fprintf(fl,"    <context ref=\"proxy-%s\"/>\n",l.c_str());
 	}
+	fprintf(fl,"    <context ref=\"proxy-fallback\"/>\n");
 	fprintf(fl,"   </include>\n  </context>");
 	
 	fprintf(fl," </definitions>\n</language>\n");
