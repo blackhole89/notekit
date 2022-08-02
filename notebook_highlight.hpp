@@ -52,4 +52,5 @@ std::string CNotebook::GetHighlightProxyDir()
 	
 	fclose(fl);
 	
-	return "/tmp/notekit.gsv";}
+	return "/tmp/notekit.gsv";
+}
