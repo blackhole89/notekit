@@ -35,7 +35,7 @@ Moreover, there is also
 * a [Launchpad PPA](https://launchpad.net/~msoloviev/+archive/ubuntu/notekit) with a DEB package for Ubuntu 18.04 and many other modern Debian-family systems;
 * a [Fedora COPR repository](https://copr.fedorainfracloud.org/coprs/lyessaadi/notekit/) (thanks to @LyesSaadi); 
 * an [OpenSUSE Build Service package](https://software.opensuse.org/download.html?project=home%3Asp1rit&package=notekit), and
-* an [Arch User Repository](https://aur.archlinux.org/packages/notekit-clatexmath-git/) (both thanks to @sp1ritCS).
+* an [Arch User Repository](https://aur.archlinux.org/packages/notekit) (thanks to @starsareintherose).
 
 To run the binary, you will in addition require at least the following packages: `libgtkmm-3.0-1v5 libgtksourceviewmm-3.0-0v5 libjsoncpp1 zlib1g libxml2`, where the version of `libgtkmm-3.0-1v5` is at least 3.20. (In particular, this means that Ubuntu 16.04 LTS (xenial) and derived distributions are too old.) If the binary does not work for you, it is recommended that you build from source, as described below.
 
