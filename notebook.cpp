@@ -445,7 +445,9 @@ void CNotebook::on_redraw_underlay(const Cairo::RefPtr<Cairo::Context> &ctx)
 			int blockx0,blocky0;
 			buffer_to_window_coords(Gtk::TEXT_WINDOW_WIDGET,0,y0+height0,blockx0,blocky0);
 			
+			// try to find end of code block
 			sbuffer->iter_forward_to_context_class_toggle(i, "cbend");
+			
 			int y1, height1;
 			get_line_yrange(i,y1,height1);
 			int blockx1,blocky1;
@@ -460,8 +462,19 @@ void CNotebook::on_redraw_underlay(const Cairo::RefPtr<Cairo::Context> &ctx)
 			ctx->set_line_width(1.0);
 			ctx->rectangle(blockx0+margin_x-height0/2,blocky0-height0/2,rect.get_width()-margin_x*2+height0, blocky1-blocky0);
 			ctx->stroke();
+			
+			// skip forward to after the end of the code block
+			sbuffer->iter_forward_to_context_class_toggle(i, "cbend");
 		}
-	}while(sbuffer->iter_forward_to_context_class_toggle(i, "cbstart") && i<end);
+		
+		// jump to the end of the next code block...
+		sbuffer->iter_forward_to_context_class_toggle(i, "cbend");
+		// ...and back to its beginning, if possible
+		if(i<sbuffer->end()) {
+			if(!sbuffer->iter_backward_to_context_class_toggle(i, "cbstart")) break;
+			if(!sbuffer->iter_backward_to_context_class_toggle(i, "cbstart")) break;
+		}
+	}while(i<end);
 }
 
 void CNotebook::SetDocumentPath(std::string newpath)
