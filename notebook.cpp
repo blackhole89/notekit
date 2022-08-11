@@ -409,13 +409,18 @@ bool CNotebook::on_redraw_overlay(const Cairo::RefPtr<Cairo::Context> &ctx)
 /* redraw widget background: lines, background of code blocks, etc. */
 void CNotebook::on_redraw_underlay(const Cairo::RefPtr<Cairo::Context> &ctx)
 {
-	/* make sure we redraw everything */
-	//ctx->reset_clip();
+	/* redrawing logic may force us to paint some parts of the control before they enter
+	 * the visible region, and we don't get another chance after they do */
+	double x1,y1,x2,y2;
+	ctx->get_clip_extents(x1,y1,x2,y2);
+	
+	int x1b,y1b;
+	window_to_buffer_coords(Gtk::TEXT_WINDOW_WIDGET,x1,y1,x1b,y1b);
+	Gdk::Rectangle rect(x1b,y1b,x2-x1,y2-y1),vrect;
+	get_visible_rect(vrect);
+	rect.join(vrect);
 	
 	/* draw horizontal rules */
-	Gdk::Rectangle rect;
-	get_visible_rect(rect);
-	
 	Gsv::Buffer::iterator i, end;
 	get_iter_at_location(i,rect.get_x(),rect.get_y());
 	get_iter_at_location(end,rect.get_x()+rect.get_width(),rect.get_y()+rect.get_height());
@@ -438,6 +443,16 @@ void CNotebook::on_redraw_underlay(const Cairo::RefPtr<Cairo::Context> &ctx)
 	/* draw code block background */
 	get_iter_at_location(i,rect.get_x(),rect.get_y());
 	get_iter_at_location(end,rect.get_x()+rect.get_width(),rect.get_y()+rect.get_height());
+		
+	// we may have started inside a running code block. Try to find the first relevant end...
+	auto save_i=i;
+	sbuffer->iter_forward_to_context_class_toggle(i, "cbend");
+	if(i<sbuffer->end()) {
+		// ...and go back to the corresponding beginning, if possible
+		sbuffer->iter_backward_to_context_class_toggle(i, "cbstart");
+		sbuffer->iter_backward_to_context_class_toggle(i, "cbstart");
+	} else i=save_i;
+	
 	do{
 		if(sbuffer->iter_has_context_class(i, "cbstart")) {
 			int y0, height0;
@@ -463,18 +478,11 @@ void CNotebook::on_redraw_underlay(const Cairo::RefPtr<Cairo::Context> &ctx)
 			ctx->rectangle(blockx0+margin_x-height0/2,blocky0-height0/2,rect.get_width()-margin_x*2+height0, blocky1-blocky0);
 			ctx->stroke();
 			
-			// skip forward to after the end of the code block
+			// skip forward to the end of the code block end tag
 			sbuffer->iter_forward_to_context_class_toggle(i, "cbend");
 		}
-		
-		// jump to the end of the next code block...
-		sbuffer->iter_forward_to_context_class_toggle(i, "cbend");
-		// ...and back to its beginning, if possible
-		if(i<sbuffer->end()) {
-			if(!sbuffer->iter_backward_to_context_class_toggle(i, "cbstart")) break;
-			if(!sbuffer->iter_backward_to_context_class_toggle(i, "cbstart")) break;
-		}
-	}while(i<end);
+		// try jumping forward to the start of the next code block;
+	}while(sbuffer->iter_forward_to_context_class_toggle(i, "cbstart") && i<end);
 }
 
 void CNotebook::SetDocumentPath(std::string newpath)
