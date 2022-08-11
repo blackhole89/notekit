@@ -380,23 +380,28 @@
          [link text](<http://www.example.com/>)
          [link text]( /folder/page.html "Title" )
     -->
-    <context id="inline-link">
+    <context id="inline-link" class="prox">
       <match extended="true">
-        \[(.*?)\]          # Link text.
-        \(                 # Literal opening parenthesis.
-          [ \t]*           # Optional spaces or tabs after the opening parenthesis.
-          (&lt;(.*?)&gt; | # URL with brackets.
-          (.*?))           # URL without brackets.
-          ([ \t]+(".*?"))? # Optional title.
-          [ \t]*           # Optional spaces or tabs before the closing parenthesis.
-        \)                 # Literal closing parenthesis.
+        (\[)(.*?)
+        (
+         \]          # Link text.
+         \(                 # Literal opening parenthesis.
+           [ \t]*           # Optional spaces or tabs after the opening parenthesis.
+           (&lt;(.*?)&gt; | # URL with brackets.
+           (.*?))           # URL without brackets.
+           ([ \t]+(".*?"))? # Optional title.
+           [ \t]*           # Optional spaces or tabs before the closing parenthesis.
+         \)                 # Literal closing parenthesis.
+        )
       </match>
 
       <include>
-        <context sub-pattern="1" style-ref="link-text"/>
-        <context sub-pattern="3" class="no-spell-check" style-ref="url"/>
-        <context sub-pattern="4" class="no-spell-check" style-ref="url"/>
-        <context sub-pattern="6" style-ref="attribute-value"/>
+        <context sub-pattern="1" class="invisible" />
+        <context sub-pattern="3" class="invisible" />
+        <context sub-pattern="2" style-ref="link-text" class="link" />
+        <context sub-pattern="5" class="no-spell-check url" style-ref="url"/>
+        <context sub-pattern="6" class="no-spell-check url" style-ref="url"/>
+        <context sub-pattern="7" style-ref="attribute-value"/>
       </include>
     </context>
 

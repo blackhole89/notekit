@@ -121,6 +121,7 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 	sview_scroll.add( sview);
 	sview.margin_x=32;
 	sview.property_left_margin().set_value(32);
+	sview.signal_link.connect( sigc::mem_fun(this, &CMainWindow::FollowLink) );
 	doc_view_box.pack_start( sview_scroll );
 	
 	/* install search bar */
@@ -552,6 +553,30 @@ void CMainWindow::SetActiveFilename(std::string filename)
 		set_title(active_document + " - NoteKit");
 	}
 	config["active_document"]=filename;
+}
+
+/* follow a link clicked in a document */
+void CMainWindow::FollowLink(Glib::ustring url)
+{
+	Glib::RefPtr<Gio::File> f = Gio::File::create_for_uri(url);
+	std::string scheme = f->get_uri_scheme();
+	printf("clicked link '%s'; scheme is '%s'\n",url.c_str(), scheme.c_str());
+	if(scheme=="") {
+		// might be another document?
+		if(url.size()<1) return;
+		if(url.at(0)=='/') {
+			OpenDocument(url);
+		} else {
+			Glib::RefPtr<Gio::File> f = Gio::File::create_for_path(active_document);
+			Glib::RefPtr<Gio::File> dir = f->get_parent();
+			Glib::RefPtr<Gio::File> greal  = dir->resolve_relative_path(url);
+			printf("resolved to: %s\n", greal->get_path().c_str());
+			OpenDocument(greal->get_path());
+		}
+		
+	} else { // proper URL, the DE should know how to handle it
+		show_uri(url, GDK_CURRENT_TIME);
+	}
 }
 
 CMainWindow::~CMainWindow()

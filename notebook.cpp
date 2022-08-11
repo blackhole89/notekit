@@ -146,6 +146,7 @@ void CNotebook::Init(std::string data_path, bool use_highlight_proxy)
 	
 	/* load cursor. Why don't we actually do all the cursor handling here? */
 	pointer_cursor = Gdk::Cursor::create(Gdk::Display::get_default(),"default");
+	hand_cursor = Gdk::Cursor::create(Gdk::Display::get_default(),"pointer");
 	
 	/* create tags for style aspects that the syntax highlighter doesn't handle */
 	tag_extra_space = sbuffer->create_tag();
@@ -971,8 +972,18 @@ bool CNotebook::on_button_press(GdkEventButton *e)
 		}
 	}
 	switch(devicemodes[d]) {
-		case NB_MODE_TEXT:
+		case NB_MODE_TEXT: {
+			/* click link, unless we were holding CTRL */
+			if(!(e->state & GDK_CONTROL_MASK)) {
+				double x,y;
+				Widget2Doc(e->x,e->y,x,y);
+				if(IsLinkAt(x,y)) {
+					signal_link.emit(GetLinkAt(x,y));
+					return true;
+				}
+			}
 			return false;
+		}
 		case NB_MODE_DRAW: {
 			double x,y;
 			Widget2Doc(e->x,e->y,x,y);
@@ -1045,6 +1056,26 @@ bool CNotebook::on_button_release(GdkEventButton *e)
 	return false;
 }
 
+bool CNotebook::IsLinkAt(int x, int y)
+{
+	Gtk::TextBuffer::iterator i;
+	get_iter_at_location(i,x,y);
+
+	return sbuffer->iter_has_context_class(i,"link");
+}
+
+Glib::ustring CNotebook::GetLinkAt(int x, int y)
+{
+	Gtk::TextBuffer::iterator i;
+	get_iter_at_location(i,x,y);
+	
+	if(!sbuffer->iter_has_context_class(i,"link")) return "";
+	if(!sbuffer->iter_forward_to_context_class_toggle(i,"url")) return "";
+	Gtk::TextBuffer::iterator start=i;
+	if(!sbuffer->iter_forward_to_context_class_toggle(i,"url")) return "";
+	return sbuffer->get_text(start,i,true);
+}
+
 bool CNotebook::on_motion_notify(GdkEventMotion *e)
 {
 	if(active_state==NB_STATE_DRAW) {
@@ -1104,6 +1135,24 @@ bool CNotebook::on_motion_notify(GdkEventMotion *e)
 		overlay.queue_draw_area(rex0,rey0,rex1-rex0,rey1-rey0);
 		
 		sel_x1=x; sel_y1=y;
+	} else if (active_state==NB_STATE_NOTHING) {
+		if(!(e->state & GDK_CONTROL_MASK)) {
+			double x,y;
+			Widget2Doc(e->x,e->y,x,y);
+
+			if(IsLinkAt(x,y)) {
+				SetCursor(hand_cursor);
+				using_hand_cursor=true;
+			} else {
+				if(using_hand_cursor) {
+					update_cursor=true;
+					using_hand_cursor=false;
+				}
+			}
+		} else if(using_hand_cursor) {
+			update_cursor=true;
+			using_hand_cursor=false;
+		}
 	}
 	return false;
 }

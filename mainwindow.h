@@ -43,6 +43,8 @@ public:
 	
 	void GetColor(int id, float &r, float &g, float &b);
 	void SetColor(int id, float r, float g, float b);
+	
+	void FollowLink(Glib::ustring url);
 protected:
 	//Signal handlers:
 	bool on_close(GdkEventAny* any_event);

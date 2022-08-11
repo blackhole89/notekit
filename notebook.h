@@ -58,8 +58,15 @@ public:
 	std::map<GdkDevice*,int> devicemodes; // current input modes, per device
 	
 	Glib::RefPtr<Gdk::Cursor> pointer_cursor; // default pointer cursor
+	Glib::RefPtr<Gdk::Cursor> hand_cursor; // cursor for links
+	bool using_hand_cursor; // if we need to reset the cursor from hand state
 	
 	void SetCursor(Glib::RefPtr<Gdk::Cursor> c);
+	
+	/* link-related functions and signal */
+	bool IsLinkAt(int x, int y);
+	Glib::ustring GetLinkAt(int x, int y);
+	sigc::signal< void(Glib::ustring) > signal_link;
 	
 	/* the buffer */
 	Glib::RefPtr<Gsv::Buffer> sbuffer;
