@@ -91,7 +91,7 @@ execute_process(COMMAND
     OUTPUT_VARIABLE
     CL_TMP_VAR
     OUTPUT_STRIP_TRAILING_WHITESPACE)
-string(STRIP ${CL_TMP_VAR} CL_VAR_3)
+string(STRIP "${CL_TMP_VAR}" CL_VAR_3)
 execute_process(COMMAND 
     pkg-config --cflags fontconfig
     OUTPUT_VARIABLE
