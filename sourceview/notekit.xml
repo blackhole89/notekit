@@ -153,4 +153,7 @@
   <style name="markdown:list-marker" foreground="#A0A8C0" bold="true"/>
   <style name="markdown:invisible"             foreground="#FFFFFF"/>
   <style name="markdown:strong-emphasis" bold="true"/>
+
+  <style name="markdown:known-lang"               foreground="gunjou" bold="true"/> 
+  <style name="markdown:unknown-lang"               foreground="tokiha" bold="true"/> 
 </style-scheme>

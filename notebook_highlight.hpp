@@ -35,9 +35,9 @@ std::string CNotebook::GetHighlightProxyDir()
 		fprintf(fl,"    <start></start>\n");
 		fprintf(fl,"    <include>\n     <context ref=\"%s:%s\" />\n    </include>\n",l.c_str(),l.c_str());
 		fprintf(fl,"    </context>\n"
-				   "    <context sub-pattern=\"1\" where=\"start\" style-ref=\"markdown:tag\" class=\"hline\" />\n"
-				   "    <context sub-pattern=\"2\" where=\"start\" style-ref=\"def:statement\" />\n"
-				   "    <context sub-pattern=\"1\" where=\"end\" style-ref=\"markdown:tag\" class=\"hline\" />\n"
+				   "    <context sub-pattern=\"1\" where=\"start\" style-ref=\"markdown:tag\" class=\"cbstart invis\" />\n"
+				   "    <context sub-pattern=\"2\" where=\"start\" style-ref=\"markdown:known-lang\" class=\"cbtag\" />\n"
+				   "    <context sub-pattern=\"1\" where=\"end\" style-ref=\"markdown:tag\" class=\"cbend invis\" />\n"
 				   "   </include>\n"
 		           "  </context>\n");
 	}
@@ -47,9 +47,9 @@ std::string CNotebook::GetHighlightProxyDir()
 			   "   <start>^(```\\s*)(.*)$</start>\n"
 			   "   <end>^(```)$</end>\n"
 			   "   <include>\n"
-			   "     <context sub-pattern=\"1\" where=\"start\" style-ref=\"markdown:tag\" class=\"hline\" />\n"
-			   "     <context sub-pattern=\"2\" where=\"start\" style-ref=\"def:statement\" />\n"
-			   "     <context sub-pattern=\"1\" where=\"end\" style-ref=\"markdown:tag\" class=\"hline\" />\n"
+			   "     <context sub-pattern=\"1\" where=\"start\" style-ref=\"markdown:tag\" class=\"cbstart invis\" />\n"
+			   "     <context sub-pattern=\"2\" where=\"start\" style-ref=\"markdown:unknown-lang\" class=\"cbtag\" />\n"
+			   "     <context sub-pattern=\"1\" where=\"end\" style-ref=\"markdown:tag\" class=\"cbend invis\" />\n"
 			   "   </include>\n"
 	           "  </context>\n");
 	

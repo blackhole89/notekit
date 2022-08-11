@@ -35,6 +35,8 @@
     <style id="header2" name="Header 2" map-to="def:heading3"/>
     <style id="header3" name="Header 3" map-to="def:heading6"/>
     <style id="invisible" name="Invisible"/>
+    <style id="known-lang" name="Known highlight language"/>
+    <style id="unknown-lang" name="Unknown highlight language"/>
     <style id="tag" name="Tag"/>
     <style id="horizontal-rule" name="Horizontal Rule" map-to="markdown:invisible"/>
     <style id="list-marker" name="List Marker" map-to="def:statement"/>
@@ -99,7 +101,7 @@
          **  **  **  **  **
          _____
     -->
-    <context id="horizontal-rule" style-ref="horizontal-rule" class="hline">
+    <context id="horizontal-rule" style-ref="horizontal-rule" class="hline invis">
       <match extended="true">
         ^[ ]{0,3}            # Maximum 3 spaces at the beginning of the line.
         (
@@ -315,10 +317,10 @@
       <match>(?&lt;!`)``[^`]+((`|`{3,})[^`]+)*``(?!`)</match>
     </context>
 
-    <context id="3-backticks-code-span" class="no-spell-check mono" style-ref="code">
+    <!-- <context id="3-backticks-code-span" class="no-spell-check mono" style-ref="code">
       <start>^```$</start>
       <end>^```$</end>
-    </context>
+    </context> -->
 
     <!-- Example:
          > Quoted text.
@@ -335,7 +337,7 @@
         <context sub-pattern="1" where="start" style-ref="blockquote-marker"/>
         <context ref="1-backtick-code-span"/>
         <context ref="2-backticks-code-span"/>
-        <context ref="3-backticks-code-span"/>
+        <!-- <context ref="3-backticks-code-span"/> -->
         <context ref="automatic-link"/>
         <context ref="inline-link"/>
         <context ref="reference-link"/>
@@ -566,7 +568,7 @@
 <!--        <context ref="code-block"/> -->
         <context ref="1-backtick-code-span"/>
         <context ref="2-backticks-code-span"/>
-        <context ref="3-backticks-code-span"/>
+<!--        <context ref="3-backticks-code-span"/> -->
         <context ref="blockquote"/>
         <context ref="automatic-link"/>
         <context ref="inline-link"/>
