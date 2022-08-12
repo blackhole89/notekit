@@ -572,6 +572,7 @@ void CMainWindow::FollowLink(Glib::ustring url)
 			Glib::RefPtr<Gio::File> greal  = dir->resolve_relative_path(url);
 			printf("resolved to: %s\n", greal->get_path().c_str());
 			OpenDocument(greal->get_path());
+			nav_model.ExpandAndSelect(greal->get_path());
 		}
 		
 	} else { // proper URL, the DE should know how to handle it
