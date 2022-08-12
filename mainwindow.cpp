@@ -566,6 +566,7 @@ void CMainWindow::FollowLink(Glib::ustring url)
 		if(url.size()<1) return;
 		if(url.at(0)=='/') {
 			OpenDocument(url);
+			nav_model.ExpandAndSelect(url);
 		} else {
 			Glib::RefPtr<Gio::File> f = Gio::File::create_for_path(active_document);
 			Glib::RefPtr<Gio::File> dir = f->get_parent();
