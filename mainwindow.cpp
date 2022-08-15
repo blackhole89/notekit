@@ -7,7 +7,9 @@
 #include <locale.h>
 
 #include <stdlib.h>
-#include <optional>
+#ifdef MIGRATE_LEGACY_SETTINGS
+#include <json/json.h>
+#endif // MIGRATE_LEGACY_SETTINGS
 
 #ifdef HAVE_CLATEXMATH
 #define __OS_Linux__
@@ -230,6 +232,9 @@ void CMainWindow::CalculatePaths()
 		fprintf(stderr,"INFO: Debug mode set! Will operate in %s.\n", dbg);
 		data_path=dbg;
 		json_config_path = g_strdup_printf("%s/notesbase", dbg);
+#ifdef MIGRATE_LEGACY_SETTINGS
+		legacy_config_path = data_path + "/notesbase";
+#endif // MIGRATE_LEGACY_SETTINGS
 		default_base_path= data_path + "/notesbase";
 		return;
 	}
@@ -239,10 +244,19 @@ void CMainWindow::CalculatePaths()
 		fprintf(stderr,"WARNING: Could not determine user's home directory! Will operate in current working directory.\n");
 		default_base_path="notesbase";
 		json_config_path = g_strdup("notesbase");
+#ifdef MIGRATE_LEGACY_SETTINGS
+		legacy_config_path = "notesbase";
+#endif // MIGRATE_LEGACY_SETTINGS
 		data_path=".";
 		return;
 	}	
 	
+#ifdef MIGRATE_LEGACY_SETTINGS
+	char *config_home = getenv("XDG_CONFIG_HOME");
+	if(!config_home || !*config_home) legacy_config_path=std::string(home)+"/.config/notekit";
+	else legacy_config_path=std::string(config_home)+"/notekit";
+#endif // MIGRATE_LEGACY_SETTINGS
+
 	char *data_home = getenv("XDG_DATA_HOME");
 	if(!data_home || !*data_home) default_base_path=std::string(home)+"/.local/share/notekit";
 	else default_base_path=std::string(data_home)+"/notekit";
@@ -293,6 +307,43 @@ skip_default:
 	} else {
 		settings = Gio::Settings::create("com.github.blackhole89.NoteKit");
 	}
+
+#ifdef MIGRATE_LEGACY_SETTINGS
+	Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(legacy_config_path+"/config.json");
+	if (file->query_exists()) {
+		gchar* buf; gsize length;
+		try {
+			file->load_contents(buf, length);
+
+			Json::Value config;
+			Json::CharReaderBuilder rbuilder;
+			std::istringstream i(buf);
+			std::string errs;
+			Json::parseFromStream(rbuilder, i, &config, &errs);
+
+			settings->set_string("base-path", config["base_path"].asString());
+			settings->set_string("active-document", config["active_document"].asString());
+			settings->set_boolean("csd", config["use_headerbar"].asBool());
+			settings->set_boolean("syntax-highlighting", config["use_highlight_proxy"].asBool());
+
+			GVariantBuilder builder;
+			g_variant_builder_init(&builder, G_VARIANT_TYPE ("a(dddd)"));
+			for(Json::Value::ArrayIndex i = 0; i < config["colors"].size(); i++) {
+				Json::Value color = config["colors"][i];
+				g_variant_builder_add(&builder, "(dddd)", color["r"].asDouble(), color["g"].asDouble(), color["b"].asDouble(), 1.0);
+			}
+			GVariant* variant = g_variant_builder_end(&builder);
+			g_settings_set_value(settings->gobj(), "colors", variant);
+
+			g_free(buf);
+
+			file->remove();
+			printf("NoteKit: successfully migrated configuration\n");
+		} catch(Gio::Error &e) {
+			g_warning("Unable to load/remove legacy config file. Please migrate settings manually.");
+		}
+	}
+#endif // MIGRATE_LEGACY_SETTINGS
 
 	return provider;
 }

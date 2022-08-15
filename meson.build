@@ -23,6 +23,7 @@ if get_option('clatexmath')
 endif
 
 conf_data.set('settings_provider', get_option('settings_provider'))
+conf_data.set('MIGRATE_LEGACY_SETTINGS', get_option('migrate_legacy_settings'))
 
 configure_file(input : 'config.h.meson.in',
 	output : 'config.h',
