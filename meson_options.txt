@@ -1,2 +1,3 @@
 option('clatexmath', type : 'boolean', value : true, description : 'Use cLaTeXMath')
 option('settings_provider', type: 'combo', choices: ['json', 'gio'], value: 'gio', description: 'Default settings provider')
+option('migrate_legacy_settings', type: 'boolean', value: true, description: 'Should NoteKit migrate legacy settings to the new settings format')

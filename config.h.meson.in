@@ -2,4 +2,5 @@
 
 #define NK_VERSION "@version@"
 #define DEFAULT_SETTINGS_PROVIDER "@settings_provider@"
+#mesondefine MIGRATE_LEGACY_SETTINGS
 #mesondefine HAVE_CLATEXMATH
