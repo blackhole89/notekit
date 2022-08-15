@@ -1,11 +1,13 @@
 #include "mainwindow.h"
 #include "navigation.h"
+#include "settings.h"
 #include <clocale>
 #include <iostream>
 #include <fontconfig/fontconfig.h>
 #include <locale.h>
 
 #include <stdlib.h>
+#include <optional>
 
 #ifdef HAVE_CLATEXMATH
 #define __OS_Linux__
@@ -23,10 +25,12 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 {
 	// Determine paths to operate on.
 	CalculatePaths();
+	
+	const gchar* provider = InitializeSettings();
 
 	printf("== This is notekit, built at " __TIMESTAMP__ ". ==\n");
+	printf("Settings provider: %s\n", provider);
 	printf("Detected paths:\n");
-	//printf("Config: %s\n",config_path.c_str());
 	printf("Active notes path: %s\n",settings->get_string("base-path").c_str());
 	printf("Default notes path: %s\n",default_base_path.c_str());
 	printf("Resource path: %s\n",data_path.c_str());
@@ -225,6 +229,7 @@ void CMainWindow::CalculatePaths()
 	if(dbg != NULL) {
 		fprintf(stderr,"INFO: Debug mode set! Will operate in %s.\n", dbg);
 		data_path=dbg;
+		json_config_path = g_strdup_printf("%s/notesbase", dbg);
 		default_base_path= data_path + "/notesbase";
 		return;
 	}
@@ -233,6 +238,7 @@ void CMainWindow::CalculatePaths()
 	if(!home || !*home) {
 		fprintf(stderr,"WARNING: Could not determine user's home directory! Will operate in current working directory.\n");
 		default_base_path="notesbase";
+		json_config_path = g_strdup("notesbase");
 		data_path=".";
 		return;
 	}	
@@ -265,6 +271,30 @@ void CMainWindow::CalculatePaths()
 		}
 	} while( (next = strtok(NULL,":")) );
 	free(data_dirs);
+}
+
+const gchar* CMainWindow::InitializeSettings() {
+	const gchar* provider; // TODO: this could probably be an enum instead
+
+	const gchar* settings_provider = g_getenv("NK_SETTINGS");
+	if (settings_provider && *settings_provider) {
+		if (g_strcmp0(settings_provider, "json") == 0 || g_strcmp0(settings_provider, "gio") == 0) {
+			provider = settings_provider;
+			goto skip_default;
+		}
+	}
+	provider = DEFAULT_SETTINGS_PROVIDER;
+skip_default:
+
+	if (g_strcmp0(provider, "json") == 0) {
+		GSettingsBackend* nkjson = nk_json_settings_backend_new(json_config_path);
+		settings = Glib::wrap(g_settings_new_with_backend("com.github.blackhole89.NoteKit", nkjson), false);
+		g_object_unref(nkjson);
+	} else {
+		settings = Gio::Settings::create("com.github.blackhole89.NoteKit");
+	}
+
+	return provider;
 }
 
 void CMainWindow::RunAboutDiag() {
@@ -509,6 +539,8 @@ void CMainWindow::FollowLink(Glib::ustring url)
 
 CMainWindow::~CMainWindow()
 {
+	if (json_config_path)
+		g_free(g_steal_pointer(&json_config_path));
 }
 
 bool CMainWindow::on_close(GdkEventAny* any_event)

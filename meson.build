@@ -13,13 +13,16 @@ deps = [
 	dependency('gtksourceviewmm-3.0'),
 	dependency('zlib'),
 	dependency('fontconfig'),
-	dependency('gdk-x11-3.0', required : false)
+	dependency('gdk-x11-3.0', required : false),
+	dependency('jsoncpp')
 ]
 
 if get_option('clatexmath')
 	deps += dependency('clatexmath', version: '>=0.0.3', fallback: ['clatexmath', 'clatexmath_dep'])
 	conf_data.set('HAVE_CLATEXMATH', true)
 endif
+
+conf_data.set('settings_provider', get_option('settings_provider'))
 
 configure_file(input : 'config.h.meson.in',
 	output : 'config.h',
@@ -41,6 +44,7 @@ executable('notekit',
 	'mainwindow.cpp',
 	'navigation.cpp',
 	'notebook.cpp',
+	'settings.cpp',
 	dependencies: deps,
 	install : true
 )
