@@ -14,7 +14,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Downloading dependencies 📥
-      run: sudo apt-get install build-essential meson libfontconfig1-dev zlib1g-dev libgtksourceviewmm-3.0-dev libgtkmm-3.0-dev libtinyxml2-dev
+      run: sudo apt-get install build-essential meson libfontconfig1-dev zlib1g-dev libgtksourceviewmm-3.0-dev libgtkmm-3.0-dev libtinyxml2-dev libjsoncpp-dev
     - name: Configure 🔧
       run: meson _build --default-library static
     - name: Compile 🎲
