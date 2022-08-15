@@ -8,6 +8,7 @@
 #include "about.h"
 #include "notebook.h"
 #include "navigation.h"
+#include "settings.h"
 
 enum {
 	WND_ACTION_COLOR,
@@ -69,11 +70,13 @@ protected:
 	/* config */
 	std::string default_base_path;
 	std::string data_path;
+	gchar* json_config_path = NULL;
 	void CalculatePaths();
+	const gchar* InitializeSettings();
 	void RunPreferenceDiag();
 
 	/* settings */
-	Glib::RefPtr<Gio::Settings> settings = Gio::Settings::create("com.github.blackhole89.NoteKit");
+	Glib::RefPtr<Gio::Settings> settings;
 	void SettingChange(const Glib::ustring& key);
 	bool binit = true;
 	void UpdateBasePath();

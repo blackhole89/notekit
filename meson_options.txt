@@ -1,1 +1,2 @@
 option('clatexmath', type : 'boolean', value : true, description : 'Use cLaTeXMath')
+option('settings_provider', type: 'combo', choices: ['json', 'gio'], value: 'gio', description: 'Default settings provider')
