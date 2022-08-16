@@ -37,14 +37,40 @@ static const gchar* get_key_from_path(const gchar* path) {
 
 	return &path[32];
 }
+static GVariant* jsonvalue_to_gvariant_with_numeric(const Json::Value* value, const GVariantType* expected_type) {
+	if (g_variant_type_equal(expected_type, G_VARIANT_TYPE_BYTE))
+		return g_variant_new_byte((guchar)value->asUInt());
+	else if (g_variant_type_equal(expected_type, G_VARIANT_TYPE_INT16))
+		return g_variant_new_int16((gint16)value->asInt());
+	else if (g_variant_type_equal(expected_type, G_VARIANT_TYPE_UINT16))
+		return g_variant_new_uint16((guint16)value->asUInt());
+	else if (g_variant_type_equal(expected_type, G_VARIANT_TYPE_INT32))
+		return g_variant_new_int32(value->asInt());
+	else if (g_variant_type_equal(expected_type, G_VARIANT_TYPE_UINT32))
+		return g_variant_new_uint32(value->asUInt());
+	else if (g_variant_type_equal(expected_type, G_VARIANT_TYPE_INT64))
+		return g_variant_new_int64(value->asInt64());
+	else if (g_variant_type_equal(expected_type, G_VARIANT_TYPE_UINT64))
+		return g_variant_new_uint64(value->asUInt64());
+	else if (g_variant_type_equal(expected_type, G_VARIANT_TYPE_DOUBLE))
+		return g_variant_new_uint64(value->asDouble());
+	else
+		return NULL;
+}
 static GVariant* jsonvalue_to_gvariant(const Json::Value* value, const GVariantType* expected_type) {
 	switch (value->type()) {
 		case Json::ValueType::nullValue:
 			return NULL;
-		case Json::ValueType::intValue:
-			return g_variant_new_int32(value->asInt());
-		case Json::ValueType::uintValue:
-			return g_variant_new_int32(value->asUInt());
+		case Json::ValueType::intValue: {
+			GVariant* conv = jsonvalue_to_gvariant_with_numeric(value, expected_type);
+			if (!conv)
+				conv = g_variant_new_int32(value->asInt());
+			return conv; }
+		case Json::ValueType::uintValue: {
+			GVariant* conv = jsonvalue_to_gvariant_with_numeric(value, expected_type);
+			if (!conv)
+				conv = g_variant_new_uint32(value->asUInt());
+			return conv; }
 		case Json::ValueType::realValue:
 			return g_variant_new_double(value->asDouble());
 		case Json::ValueType::stringValue:
