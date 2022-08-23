@@ -94,6 +94,32 @@
     <!--A primitive data type: int, long, char, etc. -->
     <style id="type"                name="Data type"/>
 
+    <!-- Markup group -->
+    <!-- Emphasis, usually rendered with italics -->
+    <style id="emphasis"            name="Emphasis"/>
+    <!-- Strong emphasis, usually rendered as bold -->
+    <style id="strong-emphasis"     name="Strong emphasis"/>
+    <!-- Inline code, usually rendered with a monospace font -->
+    <style id="inline-code"         name="Inline code"/>
+    <!-- Insertion, usually rendered with an underline -->
+    <style id="insertion"           name="Insertion"/>
+    <!-- Deletion, usually rendered with a strikethrough -->
+    <style id="deletion"            name="Deletion"/>
+    <!-- Link text, usually rendered with an underline -->
+    <style id="link-text"           name="Link text"/>
+    <!-- Link symbol, a part of the markup syntax for links -->
+    <style id="link-symbol"         name="Link symbol"/>
+    <!-- Link destination, not usually visible -->
+    <style id="link-destination"    name="Link destination"/>
+    <!-- Heading, usually rendered in a larger font (using h1, h2, etc. tags) -->
+    <style id="heading"             name="Heading"/>
+    <!-- Thematic break, usually rendered as a horizontal rule (line) -->
+    <style id="thematic-break"      name="Thematic break"/>
+    <!-- Preformatted section, usually rendered with a monospace font -->
+    <style id="preformatted-section" name="Preformatted section"/>
+    <!-- List marker, usually rendered as a bullet or number -->
+    <style id="list-marker"         name="List marker"/>
+
     <!-- Others -->
     <!-- This one is for '#include <foo.h>' and "#pragma blah", or 'use foobar', etc.. -->
     <style id="preprocessor"        name="Preprocessor directive"/>
@@ -105,8 +131,10 @@
     <style id="reserved"            name="Reserved keyword" map-to="def:error" />
     <!-- Anything that needs extra attention; mostly the keywords TODO, FIXME and XXX -->
     <style id="note"                name="Note (FIXME, TODO, XXX, etc.)"/>
-    <!-- Text that stands out, HTML links, e-mail addresses, etc. -->
-    <style id="underlined"          name="Underlined"/>
+    <!-- Internet address: URLs, email addresses, etc. -->
+    <style id="net-address"         name="Net address (URL, email address, etc.)"/>
+    <!-- Deprecated: will be removed in a future version -->
+    <style id="underlined"          name="Underlined (DEPRECATED)" map-to="def:net-address"/>
     <!-- Text that acts as some kind of heading, such as h1, h2, ... in html. -->
     <style id="heading0"            name="Heading 0"/>
     <style id="heading1"            name="Heading 1"/>
@@ -123,6 +151,33 @@
 
     <!-- $^ never matches. -->
     <define-regex id="never-match">$^</define-regex>
+
+    <!-- Unicode lexical classes for identifiers
+
+         Descriptions from:
+         https://www.unicode.org/reports/tr31/#Table_Lexical_Classes_for_Identifiers
+         Code point data from:
+         https://www.unicode.org/Public/13.0.0/ucd/DerivedCoreProperties.txt
+         https://www.unicode.org/Public/13.0.0/ucd/PropList.txt
+
+         U+2E2F VERTICAL TILDE is the only applicable code point in
+         Pattern_Syntax (and Pattern_White_Space) to subtract to form
+         ID_Start and ID_Continue
+    -->
+    <define-regex id="unicode-id-start" extended="true">
+      (?!\x{2E2F}) [\p{L}\p{Nl}\x{1885}-\x{1886}\x{2118}\x{212E}\x{309B}-\x{309C}]
+    </define-regex>
+    <define-regex id="unicode-id-continue" extended="true">
+      (?!\x{2E2F}) [\p{L}\p{Nl}\x{1885}-\x{1886}\x{2118}\x{212E}\x{309B}-\x{309C}\p{Mn}\p{Mc}\p{Nd}\p{Pc}\x{00B7}\x{0387}\x{1369}-\x{1371}\x{19DA}]
+    </define-regex>
+    <define-regex id="unicode-xid-start" extended="true">
+      (?![\x{037A}\x{0E33}\x{0EB3}\x{309B}-\x{309C}\x{FC5E}-\x{FC63}\x{FDFA}-\x{FDFB}\x{FE70}\x{FE72}\x{FE74}\x{FE76}\x{FE78}\x{FE7A}\x{FE7C}\x{FE7E}\x{FF9E}-\x{FF9F}])
+      \%{unicode-id-start}
+    </define-regex>
+    <define-regex id="unicode-xid-continue" extended="true">
+      (?![\x{037A}\x{309B}-\x{309C}\x{FC5E}-\x{FC63}\x{FDFA}-\x{FDFB}\x{FE70}\x{FE72}\x{FE74}\x{FE76}\x{FE78}\x{FE7A}\x{FE7C}\x{FE7E}])
+      \%{unicode-id-continue}
+    </define-regex>
 
     <define-regex id="decimal" extended="true">
       (?&lt;![\w\.]) ([1-9][0-9]* | 0) (?![\w\.])
@@ -173,10 +228,10 @@
 
     <context id="in-comment" class-disabled="no-spell-check">
       <include>
-        <context id="net-address" extend-parent="false" style-ref="underlined" class="no-spell-check">
+        <context id="net-address" extend-parent="false" style-ref="net-address" class="no-spell-check">
           <match>\%{net-address}</match>
         </context>
-        <context id="email-address" extend-parent="false" style-ref="underlined" class="no-spell-check">
+        <context id="email-address" extend-parent="false" style-ref="net-address" class="no-spell-check">
           <match>\%{email-address}</match>
         </context>
         <context id="comment-note" extend-parent="false" style-ref="note" class="no-spell-check comment-note">

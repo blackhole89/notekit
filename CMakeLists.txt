@@ -81,7 +81,7 @@ execute_process(COMMAND
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 string(STRIP ${CL_TMP_VAR} CL_VAR_1)
 execute_process(COMMAND 
-    pkg-config --cflags gtksourceviewmm-3.0
+    pkg-config --cflags gtksourceviewmm-4.0
     OUTPUT_VARIABLE
     CL_TMP_VAR
     OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -91,7 +91,7 @@ execute_process(COMMAND
     OUTPUT_VARIABLE
     CL_TMP_VAR
     OUTPUT_STRIP_TRAILING_WHITESPACE)
-string(STRIP "${CL_TMP_VAR}" CL_VAR_3)
+string(STRIP ${CL_TMP_VAR} CL_VAR_3)
 execute_process(COMMAND 
     pkg-config --cflags fontconfig
     OUTPUT_VARIABLE
@@ -118,7 +118,7 @@ execute_process(COMMAND
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 string(STRIP ${CL_TMP_VAR} CL_VAR_5)
 execute_process(COMMAND 
-    pkg-config --libs gtksourceviewmm-3.0
+    pkg-config --libs gtksourceviewmm-4.0
     OUTPUT_VARIABLE
     CL_TMP_VAR
     OUTPUT_STRIP_TRAILING_WHITESPACE)
