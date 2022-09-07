@@ -58,8 +58,15 @@ public:
 	std::map<GdkDevice*,int> devicemodes; // current input modes, per device
 	
 	Glib::RefPtr<Gdk::Cursor> pointer_cursor; // default pointer cursor
+	Glib::RefPtr<Gdk::Cursor> hand_cursor; // cursor for links
+	bool using_hand_cursor; // if we need to reset the cursor from hand state
 	
 	void SetCursor(Glib::RefPtr<Gdk::Cursor> c);
+	
+	/* link-related functions and signal */
+	bool IsLinkAt(int x, int y);
+	Glib::ustring GetLinkAt(int x, int y);
+	sigc::signal< void(Glib::ustring) > signal_link;
 	
 	/* the buffer */
 	Glib::RefPtr<Gsv::Buffer> sbuffer;
@@ -81,6 +88,7 @@ public:
 	Cairo::RefPtr<Cairo::Context> overlay_ctx;
 	void on_allocate(Gtk::Allocation &a);
 	bool on_redraw_overlay(const Cairo::RefPtr<Cairo::Context> &ctx);
+	void on_redraw_underlay(const Cairo::RefPtr<Cairo::Context> &ctx);
 	
 	float attention_ewma;
     bool on_button_press(GdkEventButton* event);
@@ -110,7 +118,7 @@ public:
 	
 	// additional Gtk::TextTags for metadata and formatting unsupported by Gsv language spec
 	void DebugTags(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
-	Glib::RefPtr<Gtk::TextTag> tag_extra_space, tag_blockquote, tag_invisible, tag_hidden, tag_mono, tag_is_anchor;
+	Glib::RefPtr<Gtk::TextTag> tag_extra_space, tag_blockquote, tag_invisible, tag_override_bg, tag_hidden, tag_mono, tag_is_anchor;
 	
 	std::map<int, Glib::RefPtr<Gtk::TextTag> > baseline_tags;
 	Glib::RefPtr<Gtk::TextTag> GetBaselineTag(int baseline);

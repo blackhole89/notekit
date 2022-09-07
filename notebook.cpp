@@ -49,6 +49,18 @@ bool CNotebook::on_event(GdkEvent* e)
 	return false;
 }
 
+void (*draw_layer_real)(GtkTextView *text_view, GtkTextViewLayer  layer, cairo_t *cr);
+
+void notebook_draw_layer(GtkTextView *text_view, GtkTextViewLayer  layer, cairo_t *cr)
+{
+	draw_layer_real(text_view,layer,cr);
+	
+	if(layer == GTK_TEXT_VIEW_LAYER_BELOW) {
+		CNotebook *nb = (CNotebook*)g_object_get_data(G_OBJECT(text_view), "cppobj");
+		if(nb) nb->on_redraw_underlay(Cairo::RefPtr<Cairo::Context>(new Cairo::Context(cr,false)));
+	}
+}
+
 /* Initialise notebook widget, loading style files etc. from data_path. */
 void CNotebook::Init(std::string data_path, bool use_highlight_proxy)
 {
@@ -110,6 +122,9 @@ void CNotebook::Init(std::string data_path, bool use_highlight_proxy)
 	k->copy_clipboard = notebook_copy_clipboard;
 	k->cut_clipboard = notebook_cut_clipboard;
 	k->paste_clipboard = notebook_paste_clipboard;
+	/* also overwrite layer drawing function */
+	draw_layer_real = k->draw_layer;
+	k->draw_layer = notebook_draw_layer;
 	/* save a pointer to the C++ object so we can call back from the clipboard functions */
 	g_object_set_data((GObject*)gobj(),"cppobj",this);
 	/* DIRTY HACK: GtkSourceView's cursor movement methods loop forever in the presence of invisible text sometimes */
@@ -131,6 +146,7 @@ void CNotebook::Init(std::string data_path, bool use_highlight_proxy)
 	
 	/* load cursor. Why don't we actually do all the cursor handling here? */
 	pointer_cursor = Gdk::Cursor::create(Gdk::Display::get_default(),"default");
+	hand_cursor = Gdk::Cursor::create(Gdk::Display::get_default(),"pointer");
 	
 	/* create tags for style aspects that the syntax highlighter doesn't handle */
 	tag_extra_space = sbuffer->create_tag();
@@ -145,8 +161,12 @@ void CNotebook::Init(std::string data_path, bool use_highlight_proxy)
 	fg.set_alpha(0.75);
 	tag_blockquote->property_foreground_rgba().set_value(fg);
 	
+	tag_override_bg = sbuffer->create_tag();
+	Gdk::RGBA bg = get_style_context()->get_background_color();
+	tag_override_bg->property_background_rgba().set_value(bg);
+	
 	tag_invisible = sbuffer->create_tag();
-	tag_invisible->property_foreground_rgba().set_value(Gdk::RGBA("rgba(0,0,0,0)"));
+	tag_invisible->property_foreground_rgba().set_value(bg); //Gdk::RGBA("rgba(0,0,0,0)"));
 	
 	tag_hidden = sbuffer->create_tag();
 	tag_hidden->property_invisible().set_value(true);
@@ -356,7 +376,7 @@ void CNotebook::on_insert(const Gtk::TextBuffer::iterator &iter,const Glib::ustr
 	/* TODO: we really should fix up the iterator, but this version of gtkmm erroneously sets iter to const */
 }
 
-/* redraw cairo overlay: active stroke, special widgets like lines, etc. */
+/* redraw cairo overlay: active stroke, some special widgets, etc. */
 bool CNotebook::on_redraw_overlay(const Cairo::RefPtr<Cairo::Context> &ctx)
 {
 	/* it seems that this can theoretically be called before the first on_allocate; 
@@ -369,11 +389,39 @@ bool CNotebook::on_redraw_overlay(const Cairo::RefPtr<Cairo::Context> &ctx)
 	ctx->paint();
 	//ctx->rectangle(0,0,get_width(),get_height());
 	//ctx->fill();
+
+	/* draw selection rect, if there is any */
+	if(active_state == NB_MODE_SELECT) {
+		int bx, by;
+		window_to_buffer_coords(Gtk::TEXT_WINDOW_WIDGET,0,0,bx,by);
+		
+		ctx->save();
+		ctx->set_line_width(2.0);
+		ctx->set_source_rgba(.627,.659,.75,1);
+		ctx->rectangle(sel_x0-bx,sel_y0-by,sel_x1-sel_x0,sel_y1-sel_y0);
+		ctx->set_dash(std::valarray<double>({2.0,2.0}),0.0);
+		ctx->stroke();
+		ctx->restore();
+	}
+	
+	return true;
+}
+
+/* redraw widget background: lines, background of code blocks, etc. */
+void CNotebook::on_redraw_underlay(const Cairo::RefPtr<Cairo::Context> &ctx)
+{
+	/* redrawing logic may force us to paint some parts of the control before they enter
+	 * the visible region, and we don't get another chance after they do */
+	double x1,y1,x2,y2;
+	ctx->get_clip_extents(x1,y1,x2,y2);
+	
+	int x1b,y1b;
+	window_to_buffer_coords(Gtk::TEXT_WINDOW_WIDGET,x1,y1,x1b,y1b);
+	Gdk::Rectangle rect(x1b,y1b,x2-x1,y2-y1),vrect;
+	get_visible_rect(vrect);
+	rect.join(vrect);
 	
 	/* draw horizontal rules */
-	Gdk::Rectangle rect;
-	get_visible_rect(rect);
-	
 	Gsv::Buffer::iterator i, end;
 	get_iter_at_location(i,rect.get_x(),rect.get_y());
 	get_iter_at_location(end,rect.get_x()+rect.get_width(),rect.get_y()+rect.get_height());
@@ -393,21 +441,49 @@ bool CNotebook::on_redraw_overlay(const Cairo::RefPtr<Cairo::Context> &ctx)
 		}
 	}while(sbuffer->iter_forward_to_context_class_toggle(i, "hline") && i<end);
 	
-	/* draw selection rect, if there is any */
-	if(active_state == NB_MODE_SELECT) {
-		int bx, by;
-		window_to_buffer_coords(Gtk::TEXT_WINDOW_WIDGET,0,0,bx,by);
+	/* draw code block background */
+	get_iter_at_location(i,rect.get_x(),rect.get_y());
+	get_iter_at_location(end,rect.get_x()+rect.get_width(),rect.get_y()+rect.get_height());
 		
-		ctx->save();
-		ctx->set_line_width(2.0);
-		ctx->set_source_rgba(.627,.659,.75,1);
-		ctx->rectangle(sel_x0-bx,sel_y0-by,sel_x1-sel_x0,sel_y1-sel_y0);
-		ctx->set_dash(std::valarray<double>({2.0,2.0}),0.0);
-		ctx->stroke();
-		ctx->restore();
-	}
+	// we may have started inside a running code block. Try to find the first relevant end...
+	auto save_i=i;
+	sbuffer->iter_forward_to_context_class_toggle(i, "cbend");
+	if(i<sbuffer->end()) {
+		// ...and go back to the corresponding beginning, if possible
+		sbuffer->iter_backward_to_context_class_toggle(i, "cbstart");
+		sbuffer->iter_backward_to_context_class_toggle(i, "cbstart");
+	} else i=save_i;
 	
-	return true;
+	do{
+		if(sbuffer->iter_has_context_class(i, "cbstart")) {
+			int y0, height0;
+			get_line_yrange(i,y0,height0);
+			int blockx0,blocky0;
+			buffer_to_window_coords(Gtk::TEXT_WINDOW_WIDGET,0,y0+height0,blockx0,blocky0);
+			
+			// try to find end of code block
+			sbuffer->iter_forward_to_context_class_toggle(i, "cbend");
+			
+			int y1, height1;
+			get_line_yrange(i,y1,height1);
+			int blockx1,blocky1;
+			buffer_to_window_coords(Gtk::TEXT_WINDOW_WIDGET,0,y1+height1,blockx1,blocky1);
+			
+			/*ctx->set_source_rgba(.627,.659,.75,0.3);
+			ctx->rectangle(blockx0+margin_x-height0/2,blocky0-height0/2,rect.get_width()-margin_x*2+height0, blocky1-blocky0);
+			ctx->set_operator(Cairo::OPERATOR_OVER);
+			ctx->fill();*/
+			
+			ctx->set_source_rgba(.627,.659,.75,1);
+			ctx->set_line_width(1.0);
+			ctx->rectangle(blockx0+margin_x-height0/2,blocky0-height0/2,rect.get_width()-margin_x*2+height0, blocky1-blocky0);
+			ctx->stroke();
+			
+			// skip forward to the end of the code block end tag
+			sbuffer->iter_forward_to_context_class_toggle(i, "cbend");
+		}
+		// try jumping forward to the start of the next code block;
+	}while(sbuffer->iter_forward_to_context_class_toggle(i, "cbstart") && i<end);
 }
 
 void CNotebook::SetDocumentPath(std::string newpath)
@@ -460,7 +536,8 @@ void CNotebook::on_highlight_updated(Gtk::TextBuffer::iterator &start, Gtk::Text
 	std::pair<Glib::ustring,Glib::RefPtr<Gtk::TextTag> > extratags[]
 		= { {"extra-space", tag_extra_space},
 			{"blockquote-text", tag_blockquote},
-			{"hline", tag_invisible},
+			{"invis", tag_invisible},
+			{"cbtag", tag_override_bg},
 			{"mono", tag_mono} };
 	for(auto &[cclass,ttag] : extratags) {
 		Gtk::TextBuffer::iterator i = start;
@@ -895,8 +972,18 @@ bool CNotebook::on_button_press(GdkEventButton *e)
 		}
 	}
 	switch(devicemodes[d]) {
-		case NB_MODE_TEXT:
+		case NB_MODE_TEXT: {
+			/* click link, unless we were holding CTRL */
+			if(!(e->state & GDK_CONTROL_MASK)) {
+				double x,y;
+				Widget2Doc(e->x,e->y,x,y);
+				if(IsLinkAt(x,y)) {
+					signal_link.emit(GetLinkAt(x,y));
+					return true;
+				}
+			}
 			return false;
+		}
 		case NB_MODE_DRAW: {
 			double x,y;
 			Widget2Doc(e->x,e->y,x,y);
@@ -969,6 +1056,26 @@ bool CNotebook::on_button_release(GdkEventButton *e)
 	return false;
 }
 
+bool CNotebook::IsLinkAt(int x, int y)
+{
+	Gtk::TextBuffer::iterator i;
+	get_iter_at_location(i,x,y);
+
+	return sbuffer->iter_has_context_class(i,"link");
+}
+
+Glib::ustring CNotebook::GetLinkAt(int x, int y)
+{
+	Gtk::TextBuffer::iterator i;
+	get_iter_at_location(i,x,y);
+	
+	if(!sbuffer->iter_has_context_class(i,"link")) return "";
+	if(!sbuffer->iter_forward_to_context_class_toggle(i,"url")) return "";
+	Gtk::TextBuffer::iterator start=i;
+	if(!sbuffer->iter_forward_to_context_class_toggle(i,"url")) return "";
+	return sbuffer->get_text(start,i,true);
+}
+
 bool CNotebook::on_motion_notify(GdkEventMotion *e)
 {
 	if(active_state==NB_STATE_DRAW) {
@@ -1028,6 +1135,24 @@ bool CNotebook::on_motion_notify(GdkEventMotion *e)
 		overlay.queue_draw_area(rex0,rey0,rex1-rex0,rey1-rey0);
 		
 		sel_x1=x; sel_y1=y;
+	} else if (active_state==NB_STATE_NOTHING) {
+		if(!(e->state & GDK_CONTROL_MASK)) {
+			double x,y;
+			Widget2Doc(e->x,e->y,x,y);
+
+			if(IsLinkAt(x,y)) {
+				SetCursor(hand_cursor);
+				using_hand_cursor=true;
+			} else {
+				if(using_hand_cursor) {
+					update_cursor=true;
+					using_hand_cursor=false;
+				}
+			}
+		} else if(using_hand_cursor) {
+			update_cursor=true;
+			using_hand_cursor=false;
+		}
 	}
 	return false;
 }

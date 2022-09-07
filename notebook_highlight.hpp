@@ -29,27 +29,41 @@ std::string CNotebook::GetHighlightProxyDir()
 	/* one context for every language detected */
 	for(std::string &l : langs_supported) {
 		fprintf(fl,"  <context id=\"proxy-%s\" class=\"no-spell-check mono\">\n",l.c_str());
-		fprintf(fl,"   <start>^(```%s)$</start>\n",l.c_str());
+		fprintf(fl,"   <start>^(```\\s*)(%s(\\s.*)?)$</start>\n",l.c_str());
 		fprintf(fl,"   <end>^(```)$</end>\n");
 		fprintf(fl,"   <include>\n    <context id=\"proxy-%s-contents\" extend-parent=\"false\">\n",l.c_str());
 		fprintf(fl,"    <start></start>\n");
 		fprintf(fl,"    <include>\n     <context ref=\"%s:%s\" />\n    </include>\n",l.c_str(),l.c_str());
 		fprintf(fl,"    </context>\n"
-				   "    <context sub-pattern=\"1\" where=\"start\" style-ref=\"markdown:tag\" class=\"hline\" />\n"
-				   "    <context sub-pattern=\"1\" where=\"end\" style-ref=\"markdown:tag\" class=\"hline\" />\n"
+				   "    <context sub-pattern=\"1\" where=\"start\" style-ref=\"markdown:tag\" class=\"cbstart invis\" />\n"
+				   "    <context sub-pattern=\"2\" where=\"start\" style-ref=\"markdown:known-lang\" class=\"cbtag\" />\n"
+				   "    <context sub-pattern=\"1\" where=\"end\" style-ref=\"markdown:tag\" class=\"cbend invis\" />\n"
 				   "   </include>\n"
 		           "  </context>\n");
 	}
+	
+	/* and one context to fallback when language not found */
+	fprintf(fl,"  <context id=\"proxy-fallback\" class=\"no-spell-check mono\" style-ref=\"markdown:code\">\n"
+			   "   <start>^(```\\s*)(.*)$</start>\n"
+			   "   <end>^(```)$</end>\n"
+			   "   <include>\n"
+			   "     <context sub-pattern=\"1\" where=\"start\" style-ref=\"markdown:tag\" class=\"cbstart invis\" />\n"
+			   "     <context sub-pattern=\"2\" where=\"start\" style-ref=\"markdown:unknown-lang\" class=\"cbtag\" />\n"
+			   "     <context sub-pattern=\"1\" where=\"end\" style-ref=\"markdown:tag\" class=\"cbend invis\" />\n"
+			   "   </include>\n"
+	           "  </context>\n");
 	
 	/* finally, export every context as part of this "language" */
 	fprintf(fl,"  <context id=\"markdownlisting\">\n   <include>\n");
 	for(std::string &l : langs_supported) {
 		fprintf(fl,"    <context ref=\"proxy-%s\"/>\n",l.c_str());
 	}
+	fprintf(fl,"    <context ref=\"proxy-fallback\"/>\n");
 	fprintf(fl,"   </include>\n  </context>");
 	
 	fprintf(fl," </definitions>\n</language>\n");
 	
 	fclose(fl);
 	
-	return "/tmp/notekit.gsv";}
+	return "/tmp/notekit.gsv";
+}

@@ -113,13 +113,5 @@ index cf8569c..f1e846e 100644
  		printf("Failed to create a temporary directory for syntax highlighting data.\n");
  		return "";
  	}
-@@ -52,4 +52,4 @@ std::string CNotebook::GetHighlightProxyDir()
- 	
- 	fclose(fl);
- 	
--	return "/tmp/notekit.gsv";}
-\ No newline at end of file
-+	return "/tmp/notekit.gsv";}
--- 
 2.31.1
 

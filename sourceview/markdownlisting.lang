@@ -5,12 +5,13 @@
 <language id="markdownlisting" name="Markdown Code Listing" version="2.0" hidden="true">
  <definitions>
 
-  <context id="proxy-anything" class="no-spell-check mono">
-   <start>^(```.*)$</start>
+  <context id="proxy-anything" class="no-spell-check mono" style-ref="markdown:code">
+   <start>^(```\s*)(.*)$</start>
    <end>^(```)$</end>
    <include>
-    <context sub-pattern="1" where="start" style-ref="markdown:tag" />
-    <context sub-pattern="1" where="end" style-ref="markdown:tag" />
+    <context sub-pattern="1" where="start" style-ref="markdown:tag" class="cbstart invis" />
+    <context sub-pattern="2" where="start" style-ref="markdown:unknown-lang" class="cbtag" />
+    <context sub-pattern="1" where="end" style-ref="markdown:tag" class="cbend invis" />
    </include>
   </context>
 

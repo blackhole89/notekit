@@ -62,6 +62,7 @@ public:
 
 	void AttachView(CMainWindow *w, Gtk::TreeView *v);
 	void ExpandDirectory(std::string path, const Gtk::TreeNodeChildren *node);
+	void ExpandAndSelect(Glib::ustring path);
 	
 	void NextDoc();
 	void PrevDoc();

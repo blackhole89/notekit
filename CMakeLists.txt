@@ -91,7 +91,7 @@ execute_process(COMMAND
     OUTPUT_VARIABLE
     CL_TMP_VAR
     OUTPUT_STRIP_TRAILING_WHITESPACE)
-string(STRIP ${CL_TMP_VAR} CL_VAR_3)
+string(STRIP "${CL_TMP_VAR}" CL_VAR_3)
 execute_process(COMMAND 
     pkg-config --cflags fontconfig
     OUTPUT_VARIABLE
@@ -146,11 +146,11 @@ link_directories(
 # Define the CXX sources
 set ( CXX_SRCS
     ${CMAKE_CURRENT_LIST_DIR}/mainwindow.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/main.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/navigation.cpp
     ${CMAKE_CURRENT_LIST_DIR}/imagewidgets.cpp
     ${CMAKE_CURRENT_LIST_DIR}/notebook.cpp
     ${CMAKE_CURRENT_LIST_DIR}/drawing.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/main.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/navigation.cpp
 )
 
 set_source_files_properties(

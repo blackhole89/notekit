@@ -274,6 +274,42 @@ bool CNavigationView::on_expand_row(const Gtk::TreeModel::iterator& iter, const 
 	return false;
 }
 
+/* iteratively expand subtrees so we may select the node corresponding to [path] */
+void CNavigationView::ExpandAndSelect(Glib::ustring path)
+{
+	auto c = store->children();
+	while(1) {
+		for(auto r : c) {
+			Glib::ustring name = r[cols.full_path]+r[cols.name]+r[cols.ext];
+			// check if [name] is an initial segment of [path]
+			if(!path.compare(0,name.length(),name)) {
+				if(path==name) {
+					// yes, and in fact an exact match; done
+					v->get_selection()->select( r );
+					return;
+				} else if(r[cols.type] == CT_DIR_UNLOADED) {
+					// we're looking for something in this subdirectory,
+					// and it has not been loaded yet
+					auto p = store->get_path(r);
+					on_expand_row(r, p); 
+					v->expand_row(p, false);
+					c = r->children();
+					goto expand_and_select_descend;
+				} else if(r[cols.type] == CT_DIR_LOADED) {
+					// we're looking for something in this subdirectory,
+					// and it was already loaded so just descend
+					auto p = store->get_path(r);
+					v->expand_row(p, false);
+					c = r->children();
+					goto expand_and_select_descend;
+				}
+			}
+		}
+		break;
+	expand_and_select_descend:;
+	}
+}
+
 void CNavigationView::on_postexpand_row(const Gtk::TreeModel::iterator& iter, const Gtk::TreeModel::Path& path)
 {
 	for(auto r : iter->children()) {
