@@ -33,7 +33,7 @@ The following older binary builds are also available:
 Moreover, there is also
 
 * a [Launchpad PPA](https://launchpad.net/~msoloviev/+archive/ubuntu/notekit) with a DEB package for Ubuntu 18.04 and many other modern Debian-family systems;
-* a [Fedora COPR repository](https://copr.fedorainfracloud.org/coprs/lyessaadi/notekit/) (thanks to @LyesSaadi); 
+* a [Fedora package](https://src.fedoraproject.org/rpms/notekit/) (thanks to @LyesSaadi); 
 * an [OpenSUSE Build Service package](https://software.opensuse.org/download.html?project=home%3Asp1rit&package=notekit), and
 * an [Arch User Repository](https://aur.archlinux.org/packages/notekit-clatexmath-git/) (both thanks to @sp1ritCS).
 
