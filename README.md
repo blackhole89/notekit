@@ -25,17 +25,16 @@ The automated builds are by far the most up-to-date and should generally be as s
 * [Linux x86_64 generic tar.gz](https://github.com/blackhole89/notekit/releases/tag/latest) (untested on non-Debian systems; for those, the distro-specific repositories below might be better)
 * [Windows x86_64](https://github.com/blackhole89/notekit/actions/workflows/windows.yml) (select the top entry and download the artifact; may require you to log into Github)
 
+Moreover, there is also
+
+* an [Open Build Service package](https://software.opensuse.org//download.html?project=home%3Asp1rit%3Anotekit&package=notekit), which provides up-to-date packages for many distributions, including Arch Linux, Debian, Ubuntu, CentOS 8, Fedora, SLE and OpenSuSE (thanks to @sp1ritCS);
+* a [Fedora package](https://src.fedoraproject.org/rpms/notekit/) (thanks to @LyesSaadi);
+* a now significantly outdated [Launchpad PPA](https://launchpad.net/~msoloviev/+archive/ubuntu/notekit) with a DEB package for Ubuntu 18.04 and many other modern Debian-family systems.
+
 The following older binary builds are also available:
 
 * [Linux x86_64](http://twilightro.kafuka.org/%7Eblackhole89/files/notekit-20210403.tar.gz) (Git version of 2021-04-03)
 * [Windows x86_64](http://twilightro.kafuka.org/~blackhole89/files/notekit-20210422.zip) (Git version of 2020-04-22)
-
-Moreover, there is also
-
-* a [Launchpad PPA](https://launchpad.net/~msoloviev/+archive/ubuntu/notekit) with a DEB package for Ubuntu 18.04 and many other modern Debian-family systems;
-* a [Fedora package](https://src.fedoraproject.org/rpms/notekit/) (thanks to @LyesSaadi); 
-* an [OpenSUSE Build Service package](https://software.opensuse.org/download.html?project=home%3Asp1rit&package=notekit), and
-* an [Arch User Repository](https://aur.archlinux.org/packages/notekit-clatexmath-git/) (both thanks to @sp1ritCS).
 
 To run the binary, you will in addition require at least the following packages: `libgtkmm-3.0-1v5 libgtksourceviewmm-3.0-0v5 libjsoncpp1 zlib1g libxml2`, where the version of `libgtkmm-3.0-1v5` is at least 3.20. (In particular, this means that Ubuntu 16.04 LTS (xenial) and derived distributions are too old.) If the binary does not work for you, it is recommended that you build from source, as described below.
 
