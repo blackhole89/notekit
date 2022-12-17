@@ -14,16 +14,17 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 	// Determine paths to operate on.
 	CalculatePaths();
 	
+	printf("== This is notekit, built at " __TIMESTAMP__ ". ==\n");
+	printf("Detected paths:\n");
+	printf("Config: %s\n",config_path.c_str());
+	printf("Default notes path: %s\n",default_base_path.c_str());
+	printf("Resource path: %s\n",data_path.c_str());
+	
 	// Load config.
 	std::setlocale(LC_NUMERIC, "C"); // workaround for old jsoncpp on German (decimal comma) systems
 	LoadConfig();
 	
-	printf("== This is notekit, built at " __TIMESTAMP__ ". ==\n");
-	printf("Detected paths:\n");
-	printf("Config: %s\n",config_path.c_str());
 	printf("Active notes path: %s\n",config["base_path"].asString().c_str());
-	printf("Default notes path: %s\n",default_base_path.c_str());
-	printf("Resource path: %s\n",data_path.c_str());
 	printf("\n");
 	
 	#ifdef HAVE_CLATEXMATH
