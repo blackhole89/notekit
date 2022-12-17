@@ -745,10 +745,14 @@ bool CMainWindow::on_motion_notify(GdkEventMotion *e)
 		Gtk::RadioToolButton *b = nullptr;
 		
 		if(!sview.devicemodes.count(d)) {
-			if(gdk_device_get_n_axes(d)>4) {
-				// assume it's a pen
+			switch (gdk_device_get_source(d)) {
+			case GDK_SOURCE_PEN:
 				sview.devicemodes[d] = NB_MODE_DRAW;
-			} else {
+				break;
+			case GDK_SOURCE_ERASER:
+				sview.devicemodes[d] = NB_MODE_ERASE;
+				break;
+			default:
 				sview.devicemodes[d] = NB_MODE_TEXT;
 			}
 		}
