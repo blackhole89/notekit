@@ -11,6 +11,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: update package list
+      run: apt-get update
     - name: inspect debhelper
       run: apt-cache showpkg debhelper
     - name: removing gcc10
