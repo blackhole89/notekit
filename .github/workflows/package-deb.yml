@@ -16,7 +16,7 @@ jobs:
     - name: removing gcc10
       run: sudo apt remove libgcc-10-dev
     - name: setting the dependencies up
-      run: sudo apt install -t bionic-backports libfontconfig1-dev zlib1g-dev libjsoncpp-dev libgtksourceviewmm-3.0-dev libgtkmm-3.0-dev libtinyxml2-dev cmake debhelper=13.5.2ubuntu1~bpo18.04.1 dpkg-dev
+      run: sudo apt install -t bionic-backports libfontconfig1-dev zlib1g-dev libjsoncpp-dev libgtksourceviewmm-3.0-dev libgtkmm-3.0-dev libtinyxml2-dev cmake debhelper=13.6ubuntu1~bpo18.04.1 dpkg-dev
     - name: running debhelper
       run: dpkg-buildpackage -b -uc 
     - uses: "marvinpinto/action-automatic-releases@latest"
