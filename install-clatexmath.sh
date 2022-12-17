@@ -1,7 +1,7 @@
 #!/bin/bash
 git clone https://github.com/NanoMichael/cLaTeXMath.git
 cd cLaTeXMath
-git reset --hard HEAD
+git reset --hard e2adaa4
 # patch out C++17 feature use in code, but compile with -std=c++17
 (cat <<EOF
 diff --git a/CMakeLists.txt b/CMakeLists.txt
