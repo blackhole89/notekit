@@ -578,7 +578,10 @@ void CMainWindow::FollowLink(Glib::ustring url)
 		}
 		
 	} else { // proper URL, the DE should know how to handle it
-		show_uri(url, GDK_CURRENT_TIME);
+		//gtkmm 3.24+
+		//show_uri(url, GDK_CURRENT_TIME);
+		//gtk 3.22 compat
+		gtk_show_uri_on_window(GTK_WINDOW(gobj()), url.c_str(), GDK_CURRENT_TIME, NULL);
 	}
 }
 
