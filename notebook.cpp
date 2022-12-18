@@ -157,16 +157,10 @@ void CNotebook::Init(std::string data_path, bool use_highlight_proxy)
 	tag_blockquote->property_left_margin().set_value(16);
 	tag_blockquote->property_indent().set_value(-16);
 	tag_blockquote->property_accumulative_margin().set_value(true);
-	Gdk::RGBA fg = get_style_context()->get_color();
-	fg.set_alpha(0.75);
-	tag_blockquote->property_foreground_rgba().set_value(fg);
 	
-	tag_override_bg = sbuffer->create_tag();
-	Gdk::RGBA bg = get_style_context()->get_background_color();
-	tag_override_bg->property_background_rgba().set_value(bg);
+	tag_override_bg = sbuffer->create_tag(); // solid background of widget BG color, overriding underlay
 	
-	tag_invisible = sbuffer->create_tag();
-	tag_invisible->property_foreground_rgba().set_value(bg); //Gdk::RGBA("rgba(0,0,0,0)"));
+	tag_invisible = sbuffer->create_tag(); // foreground = widget BG color
 	
 	tag_hidden = sbuffer->create_tag();
 	tag_hidden->property_invisible().set_value(true);
@@ -177,6 +171,9 @@ void CNotebook::Init(std::string data_path, bool use_highlight_proxy)
 	
 	tag_is_anchor=sbuffer->create_tag();
 	
+	RecalculateColors();
+	signal_style_updated().connect(sigc::mem_fun(this, &CNotebook::RecalculateColors),true);
+	
 	/* remember position for proximity widgets */
 	last_position=sbuffer->create_mark("last_position", sbuffer->begin(),true);
 	tag_proximity=sbuffer->create_tag();
@@ -185,6 +182,25 @@ void CNotebook::Init(std::string data_path, bool use_highlight_proxy)
 	//tag_proximity->property_background_rgba().set_value(Gdk::RGBA("rgb(255,128,128)"));
 	
 	set_wrap_mode(Gtk::WRAP_WORD_CHAR);
+}
+
+// Calculate colors of tags not handled by the syntax highlighter.
+// May be necessary in the event of theme changes.
+void CNotebook::RecalculateColors()
+{
+	Gdk::RGBA fg = get_style_context()->get_color();
+	Gdk::RGBA bg = get_style_context()->get_background_color();
+	
+	Gdk::RGBA blended;
+	blended.set_rgba(0.75*fg.get_red()+0.25*bg.get_red(),
+					 0.75*fg.get_green()+0.25*bg.get_green(),
+					 0.75*fg.get_blue()+0.25*bg.get_blue(),
+					 1.0);
+	tag_blockquote->property_foreground_rgba().set_value(blended);
+	
+	tag_override_bg->property_background_rgba().set_value(bg);
+	
+	tag_invisible->property_foreground_rgba().set_value(bg); //Gdk::RGBA("rgba(0,0,0,0)"));
 }
 
 void CNotebook::DisableProximityRendering()
@@ -428,6 +444,7 @@ void CNotebook::on_redraw_underlay(const Cairo::RefPtr<Cairo::Context> &ctx)
 	
 	do{
 		if(sbuffer->iter_has_context_class(i, "hline")) {
+			// TODO?: use computed colours from theme instead of hardcoded
 			int y, height;
 			get_line_yrange(i,y,height);
 			int linex0,liney0;

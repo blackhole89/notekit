@@ -119,6 +119,7 @@ public:
 	// additional Gtk::TextTags for metadata and formatting unsupported by Gsv language spec
 	void DebugTags(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::iterator &end);
 	Glib::RefPtr<Gtk::TextTag> tag_extra_space, tag_blockquote, tag_invisible, tag_override_bg, tag_hidden, tag_mono, tag_is_anchor;
+	void RecalculateColors();
 	
 	std::map<int, Glib::RefPtr<Gtk::TextTag> > baseline_tags;
 	Glib::RefPtr<Gtk::TextTag> GetBaselineTag(int baseline);
