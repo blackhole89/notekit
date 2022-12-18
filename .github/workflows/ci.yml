@@ -91,7 +91,9 @@ jobs:
         run: patch -p1 < Apple/llvm.patch
       - name: Configure 🔧
         if: ${{ matrix.os.triplet == 'x86_64-apple-darwin' }}
-        run: meson ${{ matrix.os.triplet }}
+        run: |
+          export PKG_CONFIG_PATH="/usr/local/opt/icu4c/lib/pkgconfig"
+          meson ${{ matrix.os.triplet }}
       - name: Compile 🎲
         if: ${{ matrix.os.triplet == 'x86_64-apple-darwin' }}
         run: ninja -C ${{ matrix.os.triplet }}
