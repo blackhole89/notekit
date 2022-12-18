@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #ifdef MIGRATE_LEGACY_SETTINGS
 #include <json/json.h>
+#include <memory>
 #endif // MIGRATE_LEGACY_SETTINGS
 
 #ifdef HAVE_CLATEXMATH
