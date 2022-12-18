@@ -2,6 +2,7 @@
 #define G_SETTINGS_ENABLE_BACKEND
 #include <gio/gsettingsbackend.h>
 #include <json/json.h>
+#include <memory>
 
 #define NK_TYPE_JSON_SETTINGS_BACKEND (nk_json_settings_backend_get_type())
 #define NK_JSON_SETTINGS_BACKEND(inst) (G_TYPE_CHECK_INSTANCE_CAST ((inst), NK_TYPE_JSON_SETTINGS_BACKEND, NkJsonSettingsBackend))
@@ -94,9 +95,9 @@ static Json::Value gvariant_to_jsonvalue(GVariant* variant) {
 	else if (g_variant_is_of_type(variant, G_VARIANT_TYPE_UINT32))
 		return Json::Value(g_variant_get_uint32(variant));
 	else if (g_variant_is_of_type(variant, G_VARIANT_TYPE_INT64))
-		return Json::Value(g_variant_get_int64(variant));
+		return Json::Value((Json::Int64)g_variant_get_int64(variant));
 	else if (g_variant_is_of_type(variant, G_VARIANT_TYPE_UINT64))
-		return Json::Value(g_variant_get_uint64(variant));
+		return Json::Value((Json::UInt64)g_variant_get_uint64(variant));
 	else if (g_variant_is_of_type(variant, G_VARIANT_TYPE_DOUBLE))
 		return Json::Value(g_variant_get_double(variant));
 	// string types
@@ -136,8 +137,10 @@ static void nk_json_settings_backend_object_finalize(GObject* object) {
 	g_object_unref(self->permission);
 	g_object_unref(self->file);
 
-	if (self->config)
-		delete g_steal_pointer(&self->config);
+	if (self->config) {
+		delete self->config;
+		self->config = NULL;
+	}
 }
 
 static void nk_json_settings_backend_object_constructed(GObject* object) {
@@ -262,7 +265,7 @@ static gboolean nk_json_settings_backend_get_writable(GSettingsBackend*, const g
 static GPermission* nk_json_settings_backend_get_permission(GSettingsBackend *backend, const gchar*) {
 	NkJsonSettingsBackend* self = NK_JSON_SETTINGS_BACKEND(backend);
 
-	return g_object_ref(self->permission);
+	return (GPermission*)g_object_ref(self->permission);
 }
 
 static void nk_json_settings_backend_class_init(NkJsonSettingsBackendClass* klass) {
