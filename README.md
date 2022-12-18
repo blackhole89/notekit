@@ -50,6 +50,7 @@ Required dependencies (pkg-config names):
 * `gtksourceview-3.0`
 * `zlib`
 * `fontconfig`
+* `jsoncpp`
 * `clatexmath`*
 
 \* If clatexmath is not installed, meson will automatically build it too (you'll need the additional `tinyxml2` dependency). If you do not want cLaTeXMath, you can give meson the `-Dclatexmath=false` option.
@@ -80,6 +81,11 @@ For older LaTeX math support using [lasem](https://github.com/GNOME/lasem), you 
 * `libxml2-dev` ~ 2.9 (older versions may work)
 
 Development and testing was exclusively conducted on X11-based Linux. The one tested way of building on Windows involves [MSYS2](https://www.msys2.org/)'s mingw-w64 package family (following the `cmake` route outlined above). Since MSYS2's `coreutils` depend on its Cygwin fork, the released Windows binary packages instead include a subset of coreutils from [GnuWin32](http://gnuwin32.sourceforge.net/).
+
+### Development environment with meson
+
+If you want to hack on NoteKit, you can use the meson provided devenv to avoid having to install NoteKit each time you changed something. To make use of the devenv you need to invoke `meson devenv -C _build` after configuring. You can then build NoteKit simply by invoking `ninja` without any further parameter and launch NoteKit afterwards by simply invoking `notekit`. (*Please note, that you will want to use meson >= 0.59.0*)
+To exit out of the environment send an EOF to the shell (&lt;Ctrl&gt;D) or type `exit`.
 
 ## Installation notes
 * By default, configuration is saved in `$HOME/.config/notekit`, and notes are in `$HOME/.local/share/notekit`. This may depend on your `$XDG_` environmental variables, and the notes base path can be changed in the `config.json` file in the configuration folder.

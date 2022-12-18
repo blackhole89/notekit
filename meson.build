@@ -3,6 +3,13 @@ project('notekit', 'cpp',
 	default_options : ['warning_level=3', 'cpp_std=c++14']
 )
 
+has_devenv = meson.version().version_compare('>=0.58.0')
+if has_devenv
+	devenv = environment()
+	devenv.set('NK_DEVEL', meson.project_source_root())
+	devenv.set('NK_SETTINGS', 'json')
+endif
+
 conf_data = configuration_data()
 conf_data.set('version', meson.project_version())
 
@@ -49,3 +56,7 @@ executable('notekit',
 	dependencies: deps,
 	install : true
 )
+
+if has_devenv
+	meson.add_devenv(devenv)
+endif
