@@ -649,8 +649,6 @@ void CNotebook::DebugTags(Gtk::TextBuffer::iterator &start, Gtk::TextBuffer::ite
  * The deferral may be necessary because insertion invalidates all iterators. */
 void CNotebook::QueueChildAnchor(Glib::RefPtr<Gtk::TextMark> mstart)
 {
-	/* once the anchor is created, syntax highlighting will recalculate, eventually
-	 * calling this function again from the start */
 	auto s = Glib::IdleSource::create();
 	s->connect(sigc::slot<bool>( [mstart,this]() {
 		Gtk::TextIter start = sbuffer->get_iter_at_mark(mstart);
@@ -691,6 +689,8 @@ void CNotebook::RenderToWidget(Glib::ustring wtype, Gtk::TextBuffer::iterator &s
 	if(!(anch=start.get_child_anchor())) {
 		/* we haven't set up a child anchor yet, so we need to queue the creation of one */
 		Glib::RefPtr<Gtk::TextMark> mstart = sbuffer->create_mark(start,true);
+		/* once the anchor is created, syntax highlighting will recalculate, eventually
+		 * calling this function again from the start */
 		QueueChildAnchor(mstart);
 	} else {
 		auto j = start; ++j;

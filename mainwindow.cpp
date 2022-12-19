@@ -355,7 +355,6 @@ skip_default:
 
 							g_free(buf);
 
-							user_data->legacy_config_file->remove();
 							printf("NoteKit: successfully migrated configuration\n");
 							user_data->self->settings->set_boolean("legacy-config-migrated", TRUE);
 						} catch(Gio::Error &e) {
