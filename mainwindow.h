@@ -70,10 +70,8 @@ protected:
 	/* config */
 	std::string default_base_path;
 	std::string data_path;
-	gchar* json_config_path = NULL;
-#ifdef MIGRATE_LEGACY_SETTINGS
-	std::string legacy_config_path;
-#endif // MIGRATE_LEGACY_SETTINGS
+	std::string json_config_path;
+	
 	void CalculatePaths();
 	const gchar* InitializeSettings();
 	void RunPreferenceDiag();

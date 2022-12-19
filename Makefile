@@ -75,18 +75,6 @@ CMAKE_BINARY_DIR = /d0/coding/notekit
 #=============================================================================
 # Targets provided globally by CMake.
 
-# Special rule for the target install/strip
-install/strip: preinstall
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
-	/usr/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
-.PHONY : install/strip
-
-# Special rule for the target install/strip
-install/strip/fast: preinstall/fast
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
-	/usr/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
-.PHONY : install/strip/fast
-
 # Special rule for the target install/local
 install/local: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
@@ -143,6 +131,18 @@ rebuild_cache/fast: rebuild_cache
 
 .PHONY : rebuild_cache/fast
 
+# Special rule for the target install/strip
+install/strip: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
+	/usr/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+.PHONY : install/strip
+
+# Special rule for the target install/strip
+install/strip/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
+	/usr/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+.PHONY : install/strip/fast
+
 # The main all target
 all: cmake_check_build_system
 	$(CMAKE_COMMAND) -E cmake_progress_start /d0/coding/notekit/CMakeFiles /d0/coding/notekit//CMakeFiles/progress.marks
@@ -187,6 +187,46 @@ notekit: cmake_check_build_system
 notekit/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/notekit.dir/build.make CMakeFiles/notekit.dir/build
 .PHONY : notekit/fast
+
+#=============================================================================
+# Target rules for targets named schema
+
+# Build rule for target.
+schema: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 schema
+.PHONY : schema
+
+# fast build rule for target.
+schema/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/schema.dir/build.make CMakeFiles/schema.dir/build
+.PHONY : schema/fast
+
+about.o: about.cpp.o
+
+.PHONY : about.o
+
+# target to build an object file
+about.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/notekit.dir/build.make CMakeFiles/notekit.dir/about.cpp.o
+.PHONY : about.cpp.o
+
+about.i: about.cpp.i
+
+.PHONY : about.i
+
+# target to preprocess a source file
+about.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/notekit.dir/build.make CMakeFiles/notekit.dir/about.cpp.i
+.PHONY : about.cpp.i
+
+about.s: about.cpp.s
+
+.PHONY : about.s
+
+# target to generate assembly for a file
+about.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/notekit.dir/build.make CMakeFiles/notekit.dir/about.cpp.s
+.PHONY : about.cpp.s
 
 drawing.o: drawing.cpp.o
 
@@ -350,6 +390,33 @@ notebook.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/notekit.dir/build.make CMakeFiles/notekit.dir/notebook.cpp.s
 .PHONY : notebook.cpp.s
 
+settings.o: settings.cpp.o
+
+.PHONY : settings.o
+
+# target to build an object file
+settings.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/notekit.dir/build.make CMakeFiles/notekit.dir/settings.cpp.o
+.PHONY : settings.cpp.o
+
+settings.i: settings.cpp.i
+
+.PHONY : settings.i
+
+# target to preprocess a source file
+settings.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/notekit.dir/build.make CMakeFiles/notekit.dir/settings.cpp.i
+.PHONY : settings.cpp.i
+
+settings.s: settings.cpp.s
+
+.PHONY : settings.s
+
+# target to generate assembly for a file
+settings.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/notekit.dir/build.make CMakeFiles/notekit.dir/settings.cpp.s
+.PHONY : settings.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -362,7 +429,11 @@ help:
 	@echo "... install/strip"
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
+	@echo "... schema"
 	@echo "... notekit"
+	@echo "... about.o"
+	@echo "... about.i"
+	@echo "... about.s"
 	@echo "... drawing.o"
 	@echo "... drawing.i"
 	@echo "... drawing.s"
@@ -381,6 +452,9 @@ help:
 	@echo "... notebook.o"
 	@echo "... notebook.i"
 	@echo "... notebook.s"
+	@echo "... settings.o"
+	@echo "... settings.i"
+	@echo "... settings.s"
 .PHONY : help
 
 

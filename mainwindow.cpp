@@ -29,14 +29,16 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 	// Determine paths to operate on.
 	CalculatePaths();
 	
-	const gchar* provider = InitializeSettings();
-
 	printf("== This is notekit, built at " __TIMESTAMP__ ". ==\n");
-	printf("Settings provider: %s\n", provider);
 	printf("Detected paths:\n");
-	printf("Active notes path: %s\n",settings->get_string("base-path").c_str());
 	printf("Default notes path: %s\n",default_base_path.c_str());
 	printf("Resource path: %s\n",data_path.c_str());
+	printf("JSON config path: %s\n",json_config_path.c_str());
+	
+	const gchar* provider = InitializeSettings();
+	printf("Settings provider: %s\n", provider);
+	printf("Active notes path: %s\n",settings->get_string("base-path").c_str());
+	
 	printf("\n");
 	
 	settings->signal_changed().connect(sigc::mem_fun(this,&CMainWindow::SettingChange));
@@ -232,10 +234,7 @@ void CMainWindow::CalculatePaths()
 	if(dbg != NULL) {
 		fprintf(stderr,"INFO: Debug mode set! Will operate in %s.\n", dbg);
 		data_path=dbg;
-		json_config_path = g_strdup_printf("%s/notesbase", dbg);
-#ifdef MIGRATE_LEGACY_SETTINGS
-		legacy_config_path = data_path + "/notesbase";
-#endif // MIGRATE_LEGACY_SETTINGS
+		json_config_path = data_path + "/notesbase";
 		default_base_path= data_path + "/notesbase";
 		return;
 	}
@@ -244,19 +243,15 @@ void CMainWindow::CalculatePaths()
 	if(!home || !*home) {
 		fprintf(stderr,"WARNING: Could not determine user's home directory! Will operate in current working directory.\n");
 		default_base_path="notesbase";
-		json_config_path = g_strdup("notesbase");
-#ifdef MIGRATE_LEGACY_SETTINGS
-		legacy_config_path = "notesbase";
-#endif // MIGRATE_LEGACY_SETTINGS
+		json_config_path = "notesbase";
 		data_path=".";
 		return;
 	}	
 	
-#ifdef MIGRATE_LEGACY_SETTINGS
+
 	char *config_home = getenv("XDG_CONFIG_HOME");
-	if(!config_home || !*config_home) legacy_config_path=std::string(home)+"/.config/notekit";
-	else legacy_config_path=std::string(config_home)+"/notekit";
-#endif // MIGRATE_LEGACY_SETTINGS
+	if(!config_home || !*config_home) json_config_path=std::string(home)+"/.config/notekit";
+	else json_config_path=std::string(config_home)+"/notekit";
 
 	char *data_home = getenv("XDG_DATA_HOME");
 	if(!data_home || !*data_home) default_base_path=std::string(home)+"/.local/share/notekit";
@@ -296,34 +291,39 @@ struct InitializeSettingsMigrateConfigUd {
 #endif // MIGRATE_LEGACY_SETTINGS
 
 const gchar* CMainWindow::InitializeSettings() {
-	const gchar* provider; // TODO: this could probably be an enum instead
+	const gchar* provider; 
+	
+	provider = DEFAULT_SETTINGS_PROVIDER;
 
+	// possibly override settings provider from env. setting
 	const gchar* settings_provider = g_getenv("NK_SETTINGS");
 	if (settings_provider && *settings_provider) {
 		if (g_strcmp0(settings_provider, "json") == 0 || g_strcmp0(settings_provider, "gio") == 0) {
 			provider = settings_provider;
-			goto skip_default;
 		}
 	}
-	provider = DEFAULT_SETTINGS_PROVIDER;
-skip_default:
 
+	GSettingsSchemaSource* ss = g_settings_schema_source_new_from_directory((data_path+"/data").c_str(), NULL, false, NULL);
+	GSettingsSchema* nk_schema = NULL;
+	// This will try to fall back to the system schema provider if no compiled schema was put into /data.
+	if(ss) nk_schema = g_settings_schema_source_lookup(ss, "com.github.blackhole89.NoteKit", true);
+	
 	if (g_strcmp0(provider, "json") == 0) {
-		GSettingsBackend* nkjson = nk_json_settings_backend_new(json_config_path);
-		settings = Glib::wrap(g_settings_new_with_backend("com.github.blackhole89.NoteKit", nkjson), false);
+		GSettingsBackend* nkjson = nk_json_settings_backend_new(json_config_path.c_str());
+		settings = Glib::wrap(g_settings_new_full(nk_schema, nkjson, NULL), false);
 		g_object_unref(nkjson);
 	} else {
-		settings = Gio::Settings::create("com.github.blackhole89.NoteKit");
+		settings = Glib::wrap(g_settings_new_full(nk_schema, NULL, NULL), false);
 	}
 
 #ifdef MIGRATE_LEGACY_SETTINGS
-	struct InitializeSettingsMigrateConfigUd* migrate_config_ud = g_new(struct InitializeSettingsMigrateConfigUd, 1);
+	struct InitializeSettingsMigrateConfigUd* migrate_config_ud = new InitializeSettingsMigrateConfigUd();
 	migrate_config_ud->self = this;
-	migrate_config_ud->legacy_config_file = Gio::File::create_for_path(legacy_config_path+"/config.json");
+	migrate_config_ud->legacy_config_file = Gio::File::create_for_path(json_config_path+"/config.json");
 	if (!settings->get_boolean("legacy-config-migrated") && migrate_config_ud->legacy_config_file->query_exists()) {
 		g_signal_connect(this->gobj(), "show", G_CALLBACK(+[](GtkWidget* self, struct InitalizeSettingsMigrateConfigUd* user_data) {
-			GtkWidget* migratediag = gtk_message_dialog_new(GTK_WINDOW(self), GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_QUESTION, GTK_BUTTONS_NONE, "Migrate legacy config");
-			gtk_message_dialog_format_secondary_markup(GTK_MESSAGE_DIALOG(migratediag), "Legacy config detected, do you wish to migrate?\n\nThe old config will be deleted.");
+			GtkWidget* migratediag = gtk_message_dialog_new(GTK_WINDOW(self), GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_QUESTION, GTK_BUTTONS_NONE, "Legacy config migration");
+			gtk_message_dialog_format_secondary_markup(GTK_MESSAGE_DIALOG(migratediag), "Legacy configuration file detected.\n\nImport old settings?");
 			gtk_dialog_add_buttons(GTK_DIALOG(migratediag), "Yes", 0, "No", 1, "Ask again later", 2, NULL);
 			gtk_dialog_set_default_response(GTK_DIALOG(migratediag), 2);
 			g_signal_connect(migratediag, "response", G_CALLBACK(+[](GtkDialog* diag, gint resp, struct InitializeSettingsMigrateConfigUd* user_data) {
@@ -355,7 +355,7 @@ skip_default:
 
 							g_free(buf);
 
-							printf("NoteKit: successfully migrated configuration\n");
+							printf("Successfully migrated legacy configuration.\n");
 							user_data->self->settings->set_boolean("legacy-config-migrated", TRUE);
 						} catch(Gio::Error &e) {
 							g_warning("Unable to load/remove legacy config file. Please migrate settings manually.");
@@ -365,7 +365,7 @@ skip_default:
 						user_data->self->settings->set_boolean("legacy-config-migrated", TRUE);
 						break;
 					}
-				g_free(user_data);
+				delete user_data;
 				gtk_widget_hide(GTK_WIDGET(diag));
 				gtk_widget_destroy(GTK_WIDGET(diag));
 			}), user_data);
@@ -620,8 +620,7 @@ void CMainWindow::FollowLink(Glib::ustring url)
 
 CMainWindow::~CMainWindow()
 {
-	if (json_config_path)
-		g_free(g_steal_pointer(&json_config_path));
+	
 }
 
 bool CMainWindow::on_close(GdkEventAny* any_event)

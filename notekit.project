@@ -8,6 +8,8 @@
   <Description/>
   <Dependencies/>
   <VirtualDirectory Name="include">
+    <File Name="about.h"/>
+    <File Name="settings.h"/>
     <File Name="config.h.in"/>
     <File Name="imagewidgets.h"/>
     <File Name="drawing.h"/>
@@ -17,6 +19,8 @@
     <File Name="mainwindow.h"/>
   </VirtualDirectory>
   <VirtualDirectory Name="src">
+    <File Name="about.cpp"/>
+    <File Name="settings.cpp"/>
     <File Name="notebook_widgets.hpp"/>
     <File Name="notebook_highlight.hpp"/>
     <File Name="imagewidgets.cpp"/>
