@@ -372,7 +372,7 @@ const gchar* CMainWindow::InitializeSettings() {
 			gtk_window_set_modal(GTK_WINDOW(migratediag), TRUE);
 			gtk_widget_show(GTK_WIDGET(migratediag));
 		}), migrate_config_ud);
-	}
+	} else delete migrate_config_ud;
 #endif // MIGRATE_LEGACY_SETTINGS
 
 	return provider;
