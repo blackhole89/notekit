@@ -807,10 +807,12 @@ void CMainWindow::SettingCsdUpdate() {
 }
 
 void CMainWindow::SettingProximityUpdate() {
-	if (settings->get_boolean("proximity-widgets"))
+	bool state = settings->get_boolean("proximity-widgets");
+	if (state)
 		sview.EnableProximityRendering();
 	else
 		sview.DisableProximityRendering();
+	markdown_rendering_action->set_state(Glib::Variant<bool>::create(state));
 }
 
 void CMainWindow::SettingSidebarUpdate() {
