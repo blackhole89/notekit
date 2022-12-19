@@ -658,7 +658,7 @@ void CMainWindow::SettingBasepathUpdate() {
 	 * After changing base_dir within the preferences notekit should not drop any active document.
 	 */
 	if (!binit) {
-		settings->set_string("active-document", "");
+		OpenDocument("");
 	} else {
 		binit = false;
 	}
@@ -685,6 +685,24 @@ void CMainWindow::SettingDocumentUpdate() {
 	try {
 		Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(nav_model.base + "/" + filename);
 		file->load_contents(buf, length);
+
+		sbuffer->begin_not_undoable_action();
+		sbuffer->set_text("");
+
+		if(file->has_parent()) {
+			sview.SetDocumentPath(file->get_parent()->get_path());
+		} else {
+			sview.SetDocumentPath("");
+		}
+
+		Gtk::TextBuffer::iterator i = sbuffer->begin();
+		if(length)
+			sbuffer->deserialize(sbuffer,"text/notekit-markdown",i,(guint8*)buf,length);
+		sbuffer->end_not_undoable_action();
+
+		SetupDocumentWindow(filename);
+
+		g_free(buf);
 	} catch(Gio::Error &e) {
 		sview.set_editable(false);
 		sview.set_can_focus(false);
@@ -697,16 +715,6 @@ void CMainWindow::SettingDocumentUpdate() {
 		sbuffer->end_not_undoable_action();
 		return;
 	}
-
-	sbuffer->begin_not_undoable_action();
-	sbuffer->set_text("");
-	Gtk::TextBuffer::iterator i = sbuffer->begin();
-	if(length) sbuffer->deserialize(sbuffer,"text/notekit-markdown",i,(guint8*)buf,length);
-	sbuffer->end_not_undoable_action();
-
-	SetupDocumentWindow(filename);
-
-	g_free(buf);
 }
 
 void CMainWindow::SettingCsdUpdate() {
