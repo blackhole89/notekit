@@ -305,8 +305,8 @@ const gchar* CMainWindow::InitializeSettings() {
 
 	GSettingsSchemaSource* ss = g_settings_schema_source_new_from_directory((data_path+"/data").c_str(), NULL, false, NULL);
 	GSettingsSchema* nk_schema = NULL;
-	// This will try to fall back to the system schema provider if no compiled schema was put into /data.
-	if(ss) nk_schema = g_settings_schema_source_lookup(ss, "com.github.blackhole89.NoteKit", true);
+	if(!ss) ss = g_settings_schema_source_get_default();
+	nk_schema = g_settings_schema_source_lookup(ss, "com.github.blackhole89.NoteKit", true);
 	
 	if (g_strcmp0(provider, "json") == 0) {
 		GSettingsBackend* nkjson = nk_json_settings_backend_new(json_config_path.c_str());
