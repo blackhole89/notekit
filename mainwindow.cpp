@@ -288,6 +288,13 @@ void CMainWindow::CalculatePaths()
 	free(data_dirs);
 }
 
+#ifdef MIGRATE_LEGACY_SETTINGS
+struct InitializeSettingsMigrateConfigUd {
+	CMainWindow* self;
+	Glib::RefPtr<Gio::File> legacy_config_file;
+};
+#endif // MIGRATE_LEGACY_SETTINGS
+
 const gchar* CMainWindow::InitializeSettings() {
 	const gchar* provider; // TODO: this could probably be an enum instead
 
@@ -310,39 +317,62 @@ skip_default:
 	}
 
 #ifdef MIGRATE_LEGACY_SETTINGS
-	Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(legacy_config_path+"/config.json");
-	if (file->query_exists()) {
-		gchar* buf; gsize length;
-		try {
-			file->load_contents(buf, length);
+	struct InitializeSettingsMigrateConfigUd* migrate_config_ud = g_new(struct InitializeSettingsMigrateConfigUd, 1);
+	migrate_config_ud->self = this;
+	migrate_config_ud->legacy_config_file = Gio::File::create_for_path(legacy_config_path+"/config.json");
+	if (!settings->get_boolean("legacy-config-migrated") && migrate_config_ud->legacy_config_file->query_exists()) {
+		g_signal_connect(this->gobj(), "show", G_CALLBACK(+[](GtkWidget* self, struct InitalizeSettingsMigrateConfigUd* user_data) {
+			GtkWidget* migratediag = gtk_message_dialog_new(GTK_WINDOW(self), GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_QUESTION, GTK_BUTTONS_NONE, "Migrate legacy config");
+			gtk_message_dialog_format_secondary_markup(GTK_MESSAGE_DIALOG(migratediag), "Legacy config detected, do you wish to migrate?\n\nThe old config will be deleted.");
+			gtk_dialog_add_buttons(GTK_DIALOG(migratediag), "Yes", 0, "No", 1, "Ask again later", 2, NULL);
+			gtk_dialog_set_default_response(GTK_DIALOG(migratediag), 2);
+			g_signal_connect(migratediag, "response", G_CALLBACK(+[](GtkDialog* diag, gint resp, struct InitializeSettingsMigrateConfigUd* user_data) {
+				switch (resp) {
+					case 0: {
+						gchar* buf; gsize length;
+						try {
+							user_data->legacy_config_file->load_contents(buf, length);
 
-			Json::Value config;
-			Json::CharReaderBuilder rbuilder;
-			std::istringstream i(buf);
-			std::string errs;
-			Json::parseFromStream(rbuilder, i, &config, &errs);
+							Json::Value config;
+							Json::CharReaderBuilder rbuilder;
+							std::istringstream i(buf);
+							std::string errs;
+							Json::parseFromStream(rbuilder, i, &config, &errs);
 
-			settings->set_string("base-path", config["base_path"].asString());
-			settings->set_string("active-document", config["active_document"].asString());
-			settings->set_boolean("csd", config["use_headerbar"].asBool());
-			settings->set_boolean("syntax-highlighting", config["use_highlight_proxy"].asBool());
+							user_data->self->settings->set_string("base-path", config["base_path"].asString());
+							user_data->self->settings->set_string("active-document", config["active_document"].asString());
+							user_data->self->settings->set_boolean("csd", config["use_headerbar"].asBool());
+							user_data->self->settings->set_boolean("syntax-highlighting", config["use_highlight_proxy"].asBool());
 
-			GVariantBuilder builder;
-			g_variant_builder_init(&builder, G_VARIANT_TYPE ("a(dddd)"));
-			for(Json::Value::ArrayIndex i = 0; i < config["colors"].size(); i++) {
-				Json::Value color = config["colors"][i];
-				g_variant_builder_add(&builder, "(dddd)", color["r"].asDouble(), color["g"].asDouble(), color["b"].asDouble(), 1.0);
-			}
-			GVariant* variant = g_variant_builder_end(&builder);
-			g_settings_set_value(settings->gobj(), "colors", variant);
+							GVariantBuilder builder;
+							g_variant_builder_init(&builder, G_VARIANT_TYPE ("a(dddd)"));
+							for(Json::Value::ArrayIndex i = 0; i < config["colors"].size(); i++) {
+								Json::Value color = config["colors"][i];
+								g_variant_builder_add(&builder, "(dddd)", color["r"].asDouble(), color["g"].asDouble(), color["b"].asDouble(), 1.0);
+							}
+							GVariant* variant = g_variant_builder_end(&builder);
+							g_settings_set_value(user_data->self->settings->gobj(), "colors", variant);
 
-			g_free(buf);
+							g_free(buf);
 
-			file->remove();
-			printf("NoteKit: successfully migrated configuration\n");
-		} catch(Gio::Error &e) {
-			g_warning("Unable to load/remove legacy config file. Please migrate settings manually.");
-		}
+							user_data->legacy_config_file->remove();
+							printf("NoteKit: successfully migrated configuration\n");
+							user_data->self->settings->set_boolean("legacy-config-migrated", TRUE);
+						} catch(Gio::Error &e) {
+							g_warning("Unable to load/remove legacy config file. Please migrate settings manually.");
+						}
+						} break;
+					case 1:
+						user_data->self->settings->set_boolean("legacy-config-migrated", TRUE);
+						break;
+					}
+				g_free(user_data);
+				gtk_widget_hide(GTK_WIDGET(diag));
+				gtk_widget_destroy(GTK_WIDGET(diag));
+			}), user_data);
+			gtk_window_set_modal(GTK_WINDOW(migratediag), TRUE);
+			gtk_widget_show(GTK_WIDGET(migratediag));
+		}), migrate_config_ud);
 	}
 #endif // MIGRATE_LEGACY_SETTINGS
 

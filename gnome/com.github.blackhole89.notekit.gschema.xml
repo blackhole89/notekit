@@ -14,7 +14,7 @@
 			<summary>Display a GNOME style CSD title bar instead of deferring to the window manager / gtk fallback. </summary>
 		</key>
 		<key name="syntax-highlighting" type="b">
-			<default>false</default>
+			<default>true</default>
 			<summary>Enable syntax highlighting in three-backtick code spans, using the languages supported by your system's GtkSourceView (gedit, pluma etc.) setup.</summary>
 		</key>
 		<key name="proximity-widgets" type="b">
@@ -44,6 +44,10 @@
 				(0.76862746477127075,0.26666668057441711,0.49019607901573181,1.0)
 			]</default>
 			<summary>An array of selected colors specified as a tuple of four doubles, specifying RGBA values between 0 and 1. Each item represents one button within the toolbar.</summary>
+		</key>
+		<key name="legacy-config-migrated" type="b">
+			<default>false</default>
+			<summary>Show the config migration dialog, if a legacy config has been found and this is set to false.</summary>
 		</key>
 	</schema>
 </schemalist>
