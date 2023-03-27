@@ -18,7 +18,7 @@ int main (int argc, char *argv[])
 	app->set_accel_for_action("notebook.prev-note", "<Primary><Shift>Tab");
 	app->set_accel_for_action("notebook.show-find", "<Primary>F");
 	
-	auto ret = app->run();
+	auto ret = app->run ();
 
 	if(mainwindow != nullptr){
 		delete mainwindow;
