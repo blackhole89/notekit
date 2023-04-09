@@ -13,9 +13,18 @@ modules:
     config-opts:
       - "-Dtests=false"
     sources:
+      - type: git
+        url: https://github.com/leethomason/tinyxml2.git
+        commit: 1dee28e51f9175a31955b9791c74c430fe13dc82
+
+  - name: jsoncpp
+    buildsystem: meson
+    config-opts:
+      - "-Dtests=false"
+    sources:
       - type: archive
-        url: https://github.com/open-source-parsers/jsoncpp/archive/1.9.4.tar.gz
-        sha256: 'e34a628a8142643b976c7233ef381457efad79468c67cb1ae0b83a33d7493999' 
+        url: https://github.com/open-source-parsers/jsoncpp/archive/1.9.5.tar.gz
+        sha256: f409856e5920c18d0c2fb85276e24ee607d2a09b5e7d5f0a371368903c275da2
 
   - name: mm-common
     buildsystem: meson

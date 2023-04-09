@@ -370,6 +370,7 @@ void CNavigationView::AttachView(CMainWindow *w, Gtk::TreeView *view)
 	//conns[0] = store->signal_row_changed().connect(sigc::mem_fun(*this,&CNavigationView::on_row_edit));
 	
 	/* set up the sole column of the treeview */
+	v->remove_all_columns();
 	v->append_column("Name",cols.name);
 	Gtk::CellRendererText *cr = (Gtk::CellRendererText*)v->get_column_cell_renderer(0);
 	v->get_column(0)->set_cell_data_func(*cr, sigc::mem_fun(this,&CNavigationView::on_render_cell));
@@ -385,6 +386,7 @@ void CNavigationView::AttachView(CMainWindow *w, Gtk::TreeView *view)
 	
 	conns[6] = v->signal_button_press_event().connect_notify(sigc::mem_fun(this,&CNavigationView::on_button_press_event),false);
 	
+	store->clear();
 	/* expand root directory */
 	ExpandDirectory("",NULL);
 	for(auto r : store->children()) {
@@ -582,7 +584,7 @@ void CNavigationView::HandleRename(std::string oldname, std::string newname)
 {
 	//printf("handlerename %s->%s: %s\n",oldname.c_str(),newname.c_str(),mainwindow->active_document.c_str() );
 	if(mainwindow->active_document == oldname)
-		mainwindow->SetActiveFilename(newname);
+		mainwindow->SetupDocumentWindow(newname);
 }
 
 /* Recursively update the full_path entries for all of a tree node's children to react to a directory having been renamed.

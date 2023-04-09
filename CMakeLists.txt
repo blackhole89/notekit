@@ -34,6 +34,11 @@ set (LASEM_PATH "${CMAKE_CURRENT_LIST_DIR}/lasem/" CACHE STRING "Base path for l
 option (HAVE_CLATEXMATH "Use cLaTeXMath to render LaTeX math" OFF)
 set (CLATEXMATH_PATH "${CMAKE_CURRENT_LIST_DIR}/cLaTeXMath/" CACHE STRING "Base path for cLaTeXMath")
 
+option (MIGRATE_LEGACY_SETTINGS "Migrate settings from legacy config file" ON)
+
+set(DEFAULT_SETTINGS_PROVIDER "json" CACHE STRING "GSettings backend")
+set_property(CACHE DEFAULT_SETTINGS_PROVIDER PROPERTY STRINGS json gio)
+
 set (LATEX_COMMENT_START "<!--")
 set (LATEX_COMMENT_END "-->")
 
@@ -64,6 +69,28 @@ configure_file (
   "${CMAKE_CURRENT_LIST_DIR}/sourceview/markdown.lang.in"
   "${CMAKE_CURRENT_LIST_DIR}/sourceview/markdown.lang"
   )
+
+execute_process (COMMAND pkg-config gio-2.0 --variable glib_compile_schemas  OUTPUT_VARIABLE _glib_comple_schemas OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process (COMMAND ${_glib_comple_schemas} --dry-run --schema-file=${CMAKE_CURRENT_SOURCE_DIR}/gnome/com.github.blackhole89.notekit.gschema.xml ERROR_VARIABLE _schemas_invalid OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+if (_schemas_invalid)
+  message (SEND_ERROR "Schema validation error: ${_schemas_invalid}")
+endif (_schemas_invalid)
+
+add_custom_command(
+    OUTPUT "${CMAKE_CURRENT_LIST_DIR}/data/gschemas.compiled"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/gnome"
+    COMMAND
+        "${_glib_comple_schemas}"
+    ARGS
+        "${CMAKE_CURRENT_LIST_DIR}/gnome"
+        "--targetdir=${CMAKE_CURRENT_LIST_DIR}/data"
+    DEPENDS
+        "${CMAKE_CURRENT_LIST_DIR}/gnome/com.github.blackhole89.notekit.gschema.xml"
+    VERBATIM
+)
+
+add_custom_target(schema SOURCES "${CMAKE_CURRENT_LIST_DIR}/data/gschemas.compiled")
 #}}}}
 
 include_directories(
@@ -91,7 +118,7 @@ execute_process(COMMAND
     OUTPUT_VARIABLE
     CL_TMP_VAR
     OUTPUT_STRIP_TRAILING_WHITESPACE)
-string(STRIP "${CL_TMP_VAR}" CL_VAR_3)
+string(STRIP ${CL_TMP_VAR} CL_VAR_3)
 execute_process(COMMAND 
     pkg-config --cflags fontconfig
     OUTPUT_VARIABLE
@@ -145,12 +172,14 @@ link_directories(
 
 # Define the CXX sources
 set ( CXX_SRCS
+    ${CMAKE_CURRENT_LIST_DIR}/settings.cpp
     ${CMAKE_CURRENT_LIST_DIR}/mainwindow.cpp
     ${CMAKE_CURRENT_LIST_DIR}/main.cpp
     ${CMAKE_CURRENT_LIST_DIR}/navigation.cpp
     ${CMAKE_CURRENT_LIST_DIR}/imagewidgets.cpp
     ${CMAKE_CURRENT_LIST_DIR}/notebook.cpp
     ${CMAKE_CURRENT_LIST_DIR}/drawing.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/about.cpp
 )
 
 set_source_files_properties(
@@ -193,6 +222,8 @@ endif (HAVE_LASEM)
 if (HAVE_CLATEXMATH)
     target_link_libraries(notekit fontconfig)
 endif (HAVE_CLATEXMATH)
+
+add_dependencies(notekit schema)
 
 install(TARGETS notekit DESTINATION bin)
 install(DIRECTORY data DESTINATION share/notekit)

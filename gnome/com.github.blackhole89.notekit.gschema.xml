@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="com.github.blackhole89.NoteKit">
+	<schema id="com.github.blackhole89.NoteKit" path="/com/github/blackhole89/NoteKit/">
+		<key name="base-path" type="s">
+			<default>"µ{default}"</default>
+			<summary>The directory in which the tree of notes is stored.</summary>
+		</key>
+		<key name="active-document" type="s">
+			<default>""</default>
+			<summary>The currently active document</summary>
+		</key>
+		<key name="csd" type="b">
+			<default>true</default>
+			<summary>Display a GNOME style CSD title bar instead of deferring to the window manager / gtk fallback. </summary>
+		</key>
+		<key name="syntax-highlighting" type="b">
+			<default>true</default>
+			<summary>Enable syntax highlighting in three-backtick code spans, using the languages supported by your system's GtkSourceView (gedit, pluma etc.) setup.</summary>
+		</key>
+		<key name="proximity-widgets" type="b">
+			<default>true</default>
+			<summary>Enable proximity widgets</summary>
+		</key>
+		<key name="sidebar" type="b">
+			<default>true</default>
+			<summary>Change the sidebar visibility</summary>
+		</key>
+		<key name="presentation-mode" type="b">
+			<default>false</default>
+			<summary>Enables presentation / hide-everything mode</summary>
+		</key>
+		<key name="classic-sidebar" type="b">
+			<default>false</default>
+			<summary>If NoteKit should use the "classic" sidebar style, used upto the 8th Dec 2021 or a "slightly more theme-agnostic way".</summary>
+		</key>
+		<key name="colors" type="a(dddd)">
+			<default>[
+				(0.0,0.0,0.0,1.0),
+				(0.62745100259780884,0.65882354974746704,0.75294119119644165,1.0),
+				(0.97647058963775635,0.12156862765550613,0.21568627655506134,1.0),
+				(0.61568629741668701,0.7607843279838562,0.3960784375667572,1.0),
+				(0.21176470816135406,0.47058823704719543,0.73725491762161255,1.0),
+				(1.0,0.64313727617263794,0.0,1.0),
+				(0.76862746477127075,0.26666668057441711,0.49019607901573181,1.0)
+			]</default>
+			<summary>An array of selected colors specified as a tuple of four doubles, specifying RGBA values between 0 and 1. Each item represents one button within the toolbar.</summary>
+		</key>
+		<key name="legacy-config-migrated" type="b">
+			<default>false</default>
+			<summary>Show the config migration dialog, if a legacy config has been found and this is set to false.</summary>
+		</key>
+	</schema>
+</schemalist>

@@ -13,41 +13,10 @@ jobs:
           - ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Setting up cLaTeXMath cache 🗂
-      id: cache-clatexmath
-      uses: actions/cache@v2
-      with:
-        path: ~/cLaTeXMath/
-        key: ${{ runner.os }}-clatexmath
-    - name: Updating apt package lists
-      run: sudo apt-get update
     - name: Downloading dependencies 📥
-      run: sudo apt-get install build-essential libfontconfig1-dev zlib1g-dev libjsoncpp-dev libgtksourceviewmm-3.0-dev libgtkmm-3.0-dev libtinyxml2-dev python3 python3-pip python3-setuptools
-    - name: Download the latest version of Meson 🧰
-      run: |
-        sudo pip3 install meson ninja
-    - name: Build cLaTeXMath from cache ✏
-      id: build-clatexmath_cache
-      if: steps.cache-clatexmath.outputs.cache-hit == 'true'
-      run: |
-        pushd ~/cLaTeXMath/
-        git pull
-        meson _build --reconfigure
-        ninja -C _build
-        sudo meson install -C _build
-        popd
-    - name: Build cLaTeXMath from source 🖋
-      if: steps.cache-clatexmath.outputs.cache-hit != 'true' || steps.build-clatexmath_cache == 'failure'
-      run: |
-        rm -rf ~/cLaTeXMath/
-        git clone https://github.com/NanoMichael/cLaTexMath ~/cLaTeXMath/
-        pushd ~/cLaTeXMath/
-        meson _build
-        ninja -C _build
-        sudo meson install -C _build
-        popd
+      run: sudo apt-get install build-essential meson libfontconfig1-dev zlib1g-dev libgtksourceviewmm-3.0-dev libgtkmm-3.0-dev libtinyxml2-dev libjsoncpp-dev
     - name: Configure 🔧
-      run: meson _build
+      run: meson _build --default-library static
     - name: Compile 🎲
       run: ninja -C _build
     - name: Compress build artifacts 📦
@@ -82,8 +51,8 @@ jobs:
         run: patch -p1 < windows.patch
       - name: Configure 🔧
         run: |
-          export CFLAGS="-O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions --param=ssp-buffer-size=4 -mwindows" \
-            LDFLAGS="-fstack-protector -lssp -mwindows -Wl,--subsystem,windows"
+          export CFLAGS="-O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions --param=ssp-buffer-size=4" \
+            LDFLAGS="-fstack-protector -lssp"
           export CXXFLAGS="$CFLAGS"
           meson --prefix=/ --cross-file=/usr/share/mingw/toolchain-mingw64.meson --default-library shared x86_64-w64-mingw32
       - name: Compile 🎲
@@ -116,12 +85,15 @@ jobs:
       - name: Download dependencies 📥
         run: |
           brew install meson ninja pkg-config
-          brew install fontconfig gtkmm3 gtksourceviewmm3 jsoncpp librsvg sp1ritCS/tap/clatexmath zlib
+          brew install fontconfig gtkmm3 gtksourceviewmm3 jsoncpp librsvg zlib
+          brew install -s sp1ritCS/tap/clatexmath
       - name: Patch NoteKit 🩹
         run: patch -p1 < Apple/llvm.patch
       - name: Configure 🔧
         if: ${{ matrix.os.triplet == 'x86_64-apple-darwin' }}
-        run: meson ${{ matrix.os.triplet }}
+        run: |
+          export PKG_CONFIG_PATH="/usr/local/opt/icu4c/lib/pkgconfig"
+          meson ${{ matrix.os.triplet }}
       - name: Compile 🎲
         if: ${{ matrix.os.triplet == 'x86_64-apple-darwin' }}
         run: ninja -C ${{ matrix.os.triplet }}

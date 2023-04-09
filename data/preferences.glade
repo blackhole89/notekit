@@ -1,54 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.22.1 -->
+<!-- Generated with glade 3.40.0 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
   <object class="GtkDialog" id="preferences">
-    <property name="can_focus">False</property>
+    <property name="can-focus">False</property>
+    <property name="title" translatable="yes">Preferences - NoteKit</property>
     <property name="resizable">False</property>
     <property name="modal">True</property>
-    <property name="destroy_with_parent">True</property>
-    <property name="type_hint">dialog</property>
-    <child type="titlebar">
-      <placeholder/>
-    </child>
+    <property name="destroy-with-parent">True</property>
+    <property name="icon-name">com.github.blackhole89.notekit</property>
+    <property name="type-hint">dialog</property>
     <child internal-child="vbox">
       <object class="GtkBox">
-        <property name="can_focus">False</property>
-        <property name="margin_left">10</property>
-        <property name="margin_right">10</property>
-        <property name="margin_top">10</property>
-        <property name="margin_bottom">10</property>
+        <property name="can-focus">False</property>
+        <property name="margin-top">10</property>
+        <property name="margin-bottom">10</property>
         <property name="orientation">vertical</property>
         <child internal-child="action_area">
           <object class="GtkButtonBox">
-            <property name="can_focus">False</property>
-            <property name="layout_style">end</property>
+            <property name="can-focus">False</property>
+            <property name="margin-end">12</property>
+            <property name="layout-style">end</property>
             <child>
-              <object class="GtkButton" id="button1">
-                <property name="label">gtk-ok</property>
+              <object class="GtkButton" id="button">
+                <property name="label">gtk-close</property>
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="use_stock">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">True</property>
+                <property name="use-stock">True</property>
               </object>
               <packing>
                 <property name="expand">True</property>
                 <property name="fill">True</property>
                 <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkButton" id="button2">
-                <property name="label">gtk-cancel</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="use_stock">True</property>
-              </object>
-              <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
-                <property name="position">1</property>
               </packing>
             </child>
           </object>
@@ -59,123 +43,119 @@
           </packing>
         </child>
         <child>
-          <object class="GtkBox">
+          <!-- n-columns=2 n-rows=4 -->
+          <object class="GtkGrid">
             <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="orientation">vertical</property>
+            <property name="can-focus">False</property>
+            <property name="margin-start">12</property>
+            <property name="margin-end">12</property>
+            <property name="margin-top">12</property>
+            <property name="margin-bottom">12</property>
+            <property name="row-spacing">12</property>
+            <property name="column-spacing">12</property>
+            <child>
+              <object class="GtkLabel" id="label1">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="valign">start</property>
+                <property name="label" translatable="yes">Base Directory</property>
+                <property name="xalign">1</property>
+              </object>
+              <packing>
+                <property name="left-attach">0</property>
+                <property name="top-attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="label2">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="valign">start</property>
+                <property name="label" translatable="yes">Use headerbar</property>
+                <property name="xalign">1</property>
+              </object>
+              <packing>
+                <property name="left-attach">0</property>
+                <property name="top-attach">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="label3">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="valign">start</property>
+                <property name="label" translatable="yes">Syntax highlighting</property>
+                <property name="xalign">1</property>
+              </object>
+              <packing>
+                <property name="left-attach">0</property>
+                <property name="top-attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="label4">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="valign">start</property>
+                <property name="label" translatable="yes">Classic sidebar</property>
+                <property name="xalign">1</property>
+              </object>
+              <packing>
+                <property name="left-attach">0</property>
+                <property name="top-attach">3</property>
+              </packing>
+            </child>
             <child>
               <object class="GtkBox">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="spacing">5</property>
-                <child>
-                  <object class="GtkLabel" id="filler1">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">Base Directory</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">0</property>
-                  </packing>
-                </child>
+                <property name="can-focus">False</property>
+                <property name="orientation">vertical</property>
                 <child>
                   <object class="GtkFileChooserButton" id="base_path">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
+                    <property name="can-focus">True</property>
                     <property name="action">select-folder</property>
                     <property name="title" translatable="yes"/>
                   </object>
                   <packing>
                     <property name="expand">True</property>
                     <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="label" translatable="yes">&lt;small&gt;&lt;span foreground="grey"&gt;The directory in which the tree of notes is stored.&lt;/span&gt;&lt;/small&gt;</property>
+                    <property name="use-markup">True</property>
+                    <property name="wrap">True</property>
+                    <property name="max-width-chars">48</property>
+                    <property name="xalign">0</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
                     <property name="position">1</property>
                   </packing>
                 </child>
               </object>
               <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkLabel">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="halign">start</property>
-                <property name="margin_bottom">10</property>
-                <property name="label" translatable="yes">&lt;small&gt;&lt;span foreground="grey"&gt;The directory in which the tree of notes is stored.&lt;/span&gt;&lt;/small&gt;</property>
-                <property name="use_markup">True</property>
-                <property name="wrap">True</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">1</property>
+                <property name="left-attach">1</property>
+                <property name="top-attach">0</property>
               </packing>
             </child>
             <child>
               <object class="GtkBox">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <child>
-                  <object class="GtkLabel" id="filler2">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">0</property>
-                  </packing>
-                </child>
+                <property name="can-focus">False</property>
+                <property name="orientation">vertical</property>
                 <child>
                   <object class="GtkCheckButton" id="use_headerbar">
-                    <property name="label" translatable="yes">Use headerbar</property>
                     <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">False</property>
-                    <property name="draw_indicator">True</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">1</property>
-                  </packing>
-                </child>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">2</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkLabel">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="halign">start</property>
-                <property name="margin_bottom">10</property>
-                <property name="label" translatable="yes">&lt;small&gt;&lt;span foreground="grey"&gt;Display a GNOME 3 style CSD title bar instead of deferring to the window manager.&lt;/span&gt;&lt;/small&gt;</property>
-                <property name="use_markup">True</property>
-                <property name="wrap">True</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">3</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkBox">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <child>
-                  <object class="GtkLabel" id="filler3">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
+                    <property name="can-focus">True</property>
+                    <property name="receives-default">False</property>
+                    <property name="draw-indicator">True</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -184,12 +164,15 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkCheckButton" id="use_highlight_proxy">
-                    <property name="label" translatable="yes">Enable syntax highlighting</property>
+                  <object class="GtkLabel">
                     <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">False</property>
-                    <property name="draw_indicator">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="label" translatable="yes">&lt;small&gt;&lt;span foreground="grey"&gt;Display a GNOME 3 style CSD title bar instead of deferring to the window manager.
+&lt;/span&gt;&lt;/small&gt;</property>
+                    <property name="use-markup">True</property>
+                    <property name="wrap">True</property>
+                    <property name="max-width-chars">48</property>
+                    <property name="xalign">0</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -199,48 +182,96 @@
                 </child>
               </object>
               <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">4</property>
+                <property name="left-attach">1</property>
+                <property name="top-attach">1</property>
               </packing>
             </child>
             <child>
-              <object class="GtkLabel">
+              <object class="GtkBox">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="halign">start</property>
-                <property name="margin_bottom">10</property>
-                <property name="label" translatable="yes">&lt;small&gt;&lt;span foreground="grey"&gt;Enable syntax highlighting in three-backtick code spans, using the languages supported by your system's GtkSourceView (gedit, pluma etc.) setup.
+                <property name="can-focus">False</property>
+                <property name="orientation">vertical</property>
+                <child>
+                  <object class="GtkCheckButton" id="use_highlight_proxy">
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="receives-default">False</property>
+                    <property name="draw-indicator">True</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="label" translatable="yes">&lt;small&gt;&lt;span foreground="grey"&gt;Enable syntax highlighting in three-backtick code spans, using the languages supported by your system's GtkSourceView (gedit, pluma etc.) setup.
 This increases startup time and may result in markdown rendering failing if &lt;i&gt;any&lt;/i&gt; installed language specification is buggy.
 &lt;/span&gt;&lt;/small&gt;</property>
-                <property name="use_markup">True</property>
-                <property name="wrap">True</property>
-                <property name="max_width_chars">70</property>
+                    <property name="use-markup">True</property>
+                    <property name="wrap">True</property>
+                    <property name="max-width-chars">48</property>
+                    <property name="xalign">0</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
               </object>
               <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">5</property>
+                <property name="left-attach">1</property>
+                <property name="top-attach">2</property>
               </packing>
             </child>
             <child>
-              <object class="GtkLabel">
+              <object class="GtkBox">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="halign">end</property>
-                <property name="valign">end</property>
-                <property name="vexpand">True</property>
-                <property name="label" translatable="yes">Preference changes only take effect after restarting NoteKit.</property>
+                <property name="can-focus">False</property>
+                <property name="orientation">vertical</property>
+                <child>
+                  <object class="GtkCheckButton" id="use_classic_sidebar">
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="receives-default">False</property>
+                    <property name="draw-indicator">True</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="label" translatable="yes">&lt;small&gt;&lt;span foreground="grey"&gt;Use "classic" sidebar style, as it was before the 8th December 2021. Very useful for Themes which don't support Linux Mint applications.
+&lt;/span&gt;&lt;/small&gt;</property>
+                    <property name="use-markup">True</property>
+                    <property name="wrap">True</property>
+                    <property name="max-width-chars">48</property>
+                    <property name="xalign">0</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
               </object>
               <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">6</property>
+                <property name="left-attach">1</property>
+                <property name="top-attach">3</property>
               </packing>
             </child>
           </object>
           <packing>
-            <property name="expand">True</property>
+            <property name="expand">False</property>
             <property name="fill">True</property>
             <property name="position">1</property>
           </packing>
@@ -248,15 +279,35 @@ This increases startup time and may result in markdown rendering failing if &lt;
       </object>
     </child>
     <action-widgets>
-      <action-widget response="-5">button1</action-widget>
-      <action-widget response="-6">button2</action-widget>
+      <action-widget response="-7">button</action-widget>
     </action-widgets>
   </object>
-  <object class="GtkSizeGroup">
+  <object class="GtkSizeGroup" id="csd">
+    <property name="mode">vertical</property>
     <widgets>
-      <widget name="filler1"/>
-      <widget name="filler2"/>
-      <widget name="filler3"/>
+      <widget name="label2"/>
+      <widget name="use_headerbar"/>
     </widgets>
   </object>
+  <object class="GtkSizeGroup" id="dir">
+    <property name="mode">vertical</property>
+    <widgets>
+      <widget name="label1"/>
+      <widget name="base_path"/>
+    </widgets>
+  </object>
+  <object class="GtkSizeGroup" id="syntax">
+    <property name="mode">vertical</property>
+    <widgets>
+      <widget name="label3"/>
+      <widget name="use_highlight_proxy"/>
+    </widgets>
+  </object>
+  <object class="GtkSizeGroup" id="classic_sidebar">
+    <widgets>
+      <widget name="label4"/>
+      <widget name="use_classic_sidebar"/>
+    </widgets>
+  </object>
+
 </interface>
