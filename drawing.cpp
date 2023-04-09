@@ -416,13 +416,13 @@ void CBoundDrawing::Unselect() {
 
 void CBoundDrawing::on_unrealize()
 {
-	printf("unrealize event on %08lX\n", (unsigned long) this);
+	printf("unrealize event on %p\n", (void*) this);
 	//get_parent()->remove(*this);
 }
 
 void CBoundDrawing::destroy_notify_()
 {
-	printf("destroy event on %08lX\n", (unsigned long) this);
+	printf("destroy event on %p\n", (void*) this);
 	strokes.~vector<CStroke>();
 }
 

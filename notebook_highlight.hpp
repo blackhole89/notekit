@@ -1,14 +1,18 @@
 std::string CNotebook::GetHighlightProxyDir()
 {
-	if(mkdir("/tmp/notekit.gsv",0777) && errno!=EEXIST) {
+	g_autofree gchar* dir = g_build_path("/", g_get_tmp_dir(), "notekit.gsv", NULL);
+	errno = 0;
+	if (g_mkdir_with_parents(dir, 0777) && errno!=EEXIST) {
 		printf("Failed to create a temporary directory for syntax highlighting data.\n");
 		return "";
 	}
-	if(!access("/tmp/notekit.gsv/markdownlisting.lang", R_OK)) {
+
+	g_autofree gchar* listing = g_build_path("/", dir, "markdownlisting.lang", NULL);
+	if(!access(listing, R_OK)) {
 		// file already exists
-		return "/tmp/notekit.gsv";
+		return std::string (dir);
 	}
-	FILE *fl = fopen("/tmp/notekit.gsv/markdownlisting.lang","wb");
+	FILE *fl = fopen(listing,"wb");
 	if(!fl) {
 		printf("Failed to create a language definition for syntax highlighting data.\n");
 		return "";
@@ -65,5 +69,5 @@ std::string CNotebook::GetHighlightProxyDir()
 	
 	fclose(fl);
 	
-	return "/tmp/notekit.gsv";
+	return std::string (dir);
 }

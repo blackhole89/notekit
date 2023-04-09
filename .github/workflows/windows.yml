@@ -40,20 +40,14 @@ jobs:
         run: |
           dnf config-manager --add-repo https://download.opensuse.org/repositories/home:sp1rit:mingw/Fedora_33/home:sp1rit:mingw.repo
           dnf install -y mingw64-clatexmath mingw64-clatexmath-static
-      - name: Patch NoteKit 🩹
-        run: patch -p1 < windows.patch
       - name: Configure 🔧
-        run: |
-          export CFLAGS="-O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions --param=ssp-buffer-size=4 -mwindows" \
-            LDFLAGS="-fstack-protector -lssp -mwindows -Wl,--subsystem,windows"
-          export CXXFLAGS="$CFLAGS"
-          meson --prefix=/ --cross-file=/usr/share/mingw/toolchain-mingw64.meson --default-library shared x86_64-w64-mingw32
+        run: meson --prefix=/ --cross-file=/usr/share/mingw/toolchain-mingw64.meson --default-library shared bin-x86_64-w64-mingw32
       - name: Compile 🎲
-        run: ninja -C x86_64-w64-mingw32
+        run: ninja -C bin-x86_64-w64-mingw32
       - name: Build Windows-compatible directory 📁
         run: |
           mkdir dist
-          DESTDIR="$PWD/dist/" ninja -C x86_64-w64-mingw32 install
+          DESTDIR="$PWD/dist/" ninja -C bin-x86_64-w64-mingw32 install
           #cp $(x86_64-w64-mingw32-objdump -p dist/bin/notekit.exe | grep "DLL Name" | awk '{print $3}' | grep -vE '(KERNEL|msvcrt)' | sed "s|^|/usr/x86_64-w64-mingw32/sys-root/mingw/bin/|" | tr "\n" " ") dist/bin/
           # fuck it, we'll ship the whole bin/ folder for now
           cp -r /usr/x86_64-w64-mingw32/sys-root/mingw/bin/* dist/bin/

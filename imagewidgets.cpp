@@ -13,12 +13,12 @@ CImageWidget::CImageWidget(Glib::RefPtr<Gdk::Window> wnd) : Glib::ObjectBase("CI
 
 void CImageWidget::on_unrealize()
 {
-	printf("unrealize event on CImageWidget %08lX\n", (unsigned long) this);
+	printf("unrealize event on CImageWidget %p\n", (void*) this);
 }
 
 void CImageWidget::destroy_notify_()
 {
-	printf("destroy event on CImageWidget %08lX\n", (unsigned long) this);
+	printf("destroy event on CImageWidget %p\n", (void*) this);
 }
 
 void CImageWidget::SetSize(int x, int y)

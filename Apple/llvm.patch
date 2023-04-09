@@ -1,6 +1,6 @@
-From dab284742032488165f12dce09b10ab2187efea0 Mon Sep 17 00:00:00 2001
+From ea003311a6137abe7bd5737900b9d9babfd0a299 Mon Sep 17 00:00:00 2001
 From: sp1rit <sp1rit@disroot.org>
-Date: Tue, 27 Apr 2021 09:31:41 +0200
+Date: Mon, 30 Jan 2023 19:52:53 +0100
 Subject: [PATCH] tweaks to llvm clang build
 
 Signed-off-by: sp1rit <sp1rit@disroot.org>
@@ -10,12 +10,12 @@ Signed-off-by: sp1rit <sp1rit@disroot.org>
  2 files changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/main.cpp b/main.cpp
-index 02a736e..c97889e 100644
+index 98b67a7..43904bc 100644
 --- a/main.cpp
 +++ b/main.cpp
-@@ -9,8 +9,8 @@ int main (int argc, char *argv[])
- 	
+@@ -23,8 +23,8 @@ int main (int argc, char *argv[])
  	Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv, "com.github.blackhole89.notekit");
+ #endif
  	
 -	app->signal_activate().connect( [app,&mainwindow]() {
 -			mainwindow=new CMainWindow(app);
@@ -25,17 +25,17 @@ index 02a736e..c97889e 100644
  		} );
  	
 diff --git a/meson.build b/meson.build
-index 185a398..622e588 100644
+index 6720b25..c43cee1 100644
 --- a/meson.build
 +++ b/meson.build
 @@ -1,6 +1,6 @@
  project('notekit', 'cpp',
- 	version : '0.2.0',
+ 	version : '0.3.0',
 -	default_options : ['warning_level=3', 'cpp_std=c++14']
 +	default_options : ['warning_level=3', 'cpp_std=c++17']
  )
  
  has_devenv = meson.version().version_compare('>=0.58.0')
 -- 
-2.38.1
+2.39.1
 

@@ -17,6 +17,10 @@
 #include "latex.h"
 #endif
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #ifdef GDK_WINDOWING_X11
 #include <gdk/gdkx.h>
 #endif
@@ -510,9 +514,13 @@ void CMainWindow::FetchAndSave()
 	FILE *fl = fopen(tmp_filename.c_str(), "wb");
 	fwrite(str.c_str(),str.length(),1,fl);
 	fclose(fl);
-	
+
+#ifdef _WIN32
+	MoveFileExA(tmp_filename.c_str(), filename.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH);
+#else	
 	/* atomic replace */
 	rename(tmp_filename.c_str(), filename.c_str());
+#endif
 }
 
 void CMainWindow::FetchAndExport()

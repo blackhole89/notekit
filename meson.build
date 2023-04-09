@@ -44,7 +44,7 @@ install_subdir('sourceview/', install_dir: get_option('datadir')/'notekit')
 
 subdir('gnome')
 
-executable('notekit',
+src = [
 	'about.cpp',
 	'drawing.cpp',
 	'imagewidgets.cpp',
@@ -52,10 +52,21 @@ executable('notekit',
 	'mainwindow.cpp',
 	'navigation.cpp',
 	'notebook.cpp',
-	'settings.cpp',
-	dependencies: deps,
-	install : true
-)
+	'settings.cpp'
+]
+
+if meson.version().version_compare('>=0.56.0')
+	executable('notekit', src,
+		dependencies: deps,
+		install : true,
+		win_subsystem: 'windows'
+	)
+else
+	executable('notekit', src,
+		dependencies: deps,
+		install : true
+	)
+endif
 
 if has_devenv
 	meson.add_devenv(devenv)

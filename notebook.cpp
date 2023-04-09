@@ -1238,7 +1238,7 @@ void CNotebook::SelectBox(float x0, float x1, float y0, float y1)
 	for(Gtk::Widget *w : get_children()) {
 		if(CBoundDrawing *d = CBoundDrawing::TryUpcast(w)) {
 			if(!seen.count(d)) {
-				printf("unsel %p\n",d);
+				printf("unsel %p\n",(void*)d);
 				d->Unselect();
 			}
 		}
