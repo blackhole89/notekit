@@ -22,6 +22,7 @@ int main (int argc, char *argv[])
 
 	auto ret = app->run();
 
+
 	if(mainwindow != nullptr){
 		delete mainwindow;
 	}
