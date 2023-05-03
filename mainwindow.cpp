@@ -493,7 +493,8 @@ void CMainWindow::FocusDocument()
 void CMainWindow::FetchAndSave()
 {
 	sview.last_modified=0;
-	
+
+	if (!sview.get_editable()) return;
 	if(active_document=="") return;
 	
 	gsize len;
@@ -748,6 +749,14 @@ void CMainWindow::SettingDocumentUpdate() {
 		SetupDocumentWindow(filename);
 
 		g_free(buf);
+
+		try {
+			Glib::RefPtr<Gio::FileIOStream> stream = file->open_readwrite();
+			stream->close();
+		} catch (Gio::Error& e) {
+			g_printerr("Failed opening document for writing (%s), disabling editing.\n", e.what().c_str());
+			sview.set_editable(false);
+		}
 	} catch(Gio::Error &e) {
 		sview.set_editable(false);
 		sview.set_can_focus(false);
