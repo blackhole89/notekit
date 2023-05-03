@@ -3,6 +3,7 @@
 #include "settings.h"
 #include <clocale>
 #include <iostream>
+#include <errno.h>
 #include <fontconfig/fontconfig.h>
 #include <locale.h>
 
@@ -510,8 +511,16 @@ void CMainWindow::FetchAndSave()
 	tmp_filename = filename;
 	tmp_filename += ".tmp";
 	
+	errno = 0;
 	/* TODO: this kills the xattrs */
 	FILE *fl = fopen(tmp_filename.c_str(), "wb");
+	if (errno != 0) {
+		const int err = errno;
+		throw Glib::FileError(
+			Glib::FileError::Code(g_file_error_from_errno(err)),
+			Glib::ustring::compose("Failed opening file for writing: %1", Glib::strerror(err))
+		);
+	}
 	fwrite(str.c_str(),str.length(),1,fl);
 	fclose(fl);
 
