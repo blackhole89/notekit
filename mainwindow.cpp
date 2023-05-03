@@ -793,6 +793,7 @@ void CMainWindow::SettingCsdUpdate() {
 	 * unable to change the decorations after it's initial set, so
 	 * NoteKit had to be restarted in order to have proper decorations.
 	 */
+	#if GTK_CHECK_VERSION (3,24,0)
 	#ifdef GDK_WINDOWING_WAYLAND
 		if (GDK_IS_WAYLAND_DISPLAY (gdk_window_get_display(window))) {
 			if (state) {
@@ -801,6 +802,7 @@ void CMainWindow::SettingCsdUpdate() {
 				gdk_wayland_window_announce_ssd(window);
 			}
 		}
+	#endif
 	#endif
 	/*
 	 * TODO: here is space for potential support of broadway, w32 & quartz:
