@@ -12,7 +12,7 @@ jobs:
       image: registry.fedoraproject.org/fedora:33
       options: --privileged
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Download dependencies 📥
         run: |
           dnf install -y "dnf-command(config-manager)" curl git patch
