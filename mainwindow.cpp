@@ -156,7 +156,7 @@ CMainWindow::CMainWindow(const Glib::RefPtr<Gtk::Application>& app) : Gtk::Appli
 	insert_action_group("notebook",sview.actions);
 	UpdateToolbarColors(); 
 	split.pack_start(*toolbar,Gtk::PACK_SHRINK);
-	on_action("color0",WND_ACTION_COLOR,0);
+	on_action("color-foreground",WND_ACTION_COLOR,-1);
 	
 	#define ACTION(name,param1,param2) sview.actions->add_action(name, sigc::bind( sigc::mem_fun(this,&CMainWindow::on_action), std::string(name), param1, param2 ) )
 	ACTION("next-note",WND_ACTION_NEXT_NOTE,1);
@@ -422,10 +422,17 @@ void CMainWindow::InitToolbar()
 	thm->append_search_path(data_path+"/data/icons");
 	
 	toolbar_style = Gtk::CssProvider::create();
+	// what use does this serve?
 	toolbar_style->load_from_data("#color1 { -gtk-icon-palette: warning #ff00ff; }");
 	
+
 	/* generate colour buttons */
-	Gtk::RadioToolButton *b0 = nullptr;
+	#define ACTION(name,param1,param2) sview.actions->add_action(name, sigc::bind( sigc::mem_fun(this,&CMainWindow::on_action), std::string(name), param1, param2 ) )
+	ACTION("color-foreground",WND_ACTION_COLOR,-1);
+	Gtk::RadioToolButton* bfg;
+	toolbar_builder->get_widget("magic-pen", bfg);
+	Gtk::RadioToolButton::Group g = bfg->get_group();
+
 	Glib::Variant<std::vector<color_t>> colors;
 	settings->get_value("colors", colors);
 	for(unsigned int i=0;i<=colors.get_n_children()-1;++i) {
@@ -433,24 +440,16 @@ void CMainWindow::InitToolbar()
 		//Gtk::Widget *sdfg;
 		
 		sprintf(buf,"color%d",i);
-		
-		#define ACTION(name,param1,param2) sview.actions->add_action(name, sigc::bind( sigc::mem_fun(this,&CMainWindow::on_action), std::string(name), param1, param2 ) )
 		ACTION(buf,WND_ACTION_COLOR,i);
 		
-		Gtk::RadioToolButton *b = nullptr;
-		if(i == active_color) {
-			b = b0 = new Gtk::RadioToolButton(buf);
-		} else {
-			Gtk::RadioToolButton::Group g = b0->get_group(); // because for some reason, the group argument is &
-			b = new Gtk::RadioToolButton(g, buf);
-		}
+		Gtk::RadioToolButton* b = new Gtk::RadioToolButton(g, buf);
 		b->set_icon_name("pick-color-symbolic");
 		b->set_name(buf);
 		b->signal_button_press_event().connect(sigc::bind(sigc::mem_fun(this,&CMainWindow::on_click_color),i));
 		b->get_style_context()->add_provider(toolbar_style,GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 		sprintf(buf,"notebook.color%d",i);
 		gtk_actionable_set_action_name(GTK_ACTIONABLE(b->gobj()), buf);
-		
+
 		Gtk::manage(b);
 		toolbar->append(*b);
 	}
@@ -645,7 +644,13 @@ void CMainWindow::on_action(std::string name, int type, int param)
 {
 	printf("Action triggered: %s\n",name.c_str());
 	switch(type) {
-	case WND_ACTION_COLOR: { /* for some reason, this has to live in it's own seperate block */
+	case WND_ACTION_COLOR:
+		if (param == -1) {
+			sview.active.r = 0.f;
+			sview.active.g = 0.f;
+			sview.active.b = 0.f;
+			sview.active.a = -INFINITY;
+		} else {
 			GVariant* colors = g_settings_get_value(settings->gobj(), "colors");
 			double r,g,b,a;
 			g_variant_get_child(colors, param, "(dddd)", &r, &g, &b, &a);
@@ -653,8 +658,9 @@ void CMainWindow::on_action(std::string name, int type, int param)
 			sview.active.g = (float)g;
 			sview.active.b = (float)b;
 			sview.active.a = (float)a;
-			active_color = param;
-		} break;
+		}
+		active_color = param;
+		break;
 	case WND_ACTION_NEXT_NOTE:
 		nav_model.NextDoc();
 		break;

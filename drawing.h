@@ -23,11 +23,11 @@ public:
 	void GetHead(float &x, float &y);
 	float GetHeadCurvatureWrt(float x, float y);
 	void Simplify();
-	void Render(const Cairo::RefPtr<Cairo::Context> &ctx, float basex, float basey, int start_index=1);
+	void Render(const Cairo::RefPtr<Cairo::Context> &ctx, float basex, float basey, Gdk::RGBA fg, int start_index=1);
 	void GetBBox(float &x0, float &x1, float &y0, float &y1, int start_index=0);
 	void ForceMinXY(float x, float y);
 	
-	void RenderSelectionGlow(const Cairo::RefPtr<Cairo::Context> &ctx, float basex, float basey);
+	void RenderSelectionGlow(const Cairo::RefPtr<Cairo::Context> &ctx, float basex, float basey, Gdk::RGBA fg);
 	bool Select(float x0, float x1, float y0, float y1);
 	void Unselect();
 };
@@ -35,7 +35,7 @@ public:
 class CBoundDrawing : public Gtk::DrawingArea
 {
 public:
-	CBoundDrawing(Glib::RefPtr<Gdk::Window> wnd);
+	CBoundDrawing(Glib::RefPtr<Gdk::Window> wnd, Glib::RefPtr<Gtk::StyleContext> style_context);
 	
 	static CBoundDrawing *TryUpcast(Gtk::Widget *w);
 	
@@ -54,6 +54,8 @@ public:
 	bool selected;
 	
 	Glib::RefPtr<Gdk::Window> target_window;
+	Glib::RefPtr<Gtk::StyleContext> style_ctx;
+
 	Cairo::RefPtr<Cairo::Surface> image;
 	Cairo::RefPtr<Cairo::Context> image_ctx;
 	bool UpdateSize(int w, int h, int dx=0, int dy=0);

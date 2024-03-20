@@ -3,9 +3,11 @@
 /* **** bound drawings (i.e. those that are part of a document) **** */
 
 /* store the Gdk::Window so we can create accelerated surfaces for whatever app is rendering on */
-CBoundDrawing::CBoundDrawing(Glib::RefPtr<Gdk::Window> wnd) : Glib::ObjectBase("CBoundDrawing"), Gtk::DrawingArea()
+CBoundDrawing::CBoundDrawing(Glib::RefPtr<Gdk::Window> wnd, Glib::RefPtr<Gtk::StyleContext> style_context) : Glib::ObjectBase("CBoundDrawing"), Gtk::DrawingArea()
 {
 	target_window=wnd;
+	style_ctx = style_context;
+
 	w=h=1;
 	selected=false;
 	
@@ -126,7 +128,7 @@ bool CBoundDrawing::AddStroke(CStroke &s, float dx, float dy, bool force)
 	
 	UpdateSize(neww, newh);
 	
-	strokes.back().Render(image_ctx,0,0);
+	strokes.back().Render(image_ctx,0,0,style_ctx->get_color());
 	
 	return true;
 }
@@ -202,11 +204,13 @@ void CBoundDrawing::Redraw()
 	image_ctx->set_operator(Cairo::OPERATOR_SOURCE);
 	image_ctx->fill();
 	image_ctx->restore();
+
+	Gdk::RGBA fg = style_ctx->get_color();
 	
 	/* draw a halo around any selected strokes */
 	if(selected) {
 		for(auto &str : strokes) {
-			str.RenderSelectionGlow(image_ctx,0,0);
+			str.RenderSelectionGlow(image_ctx,0,0,fg);
 		}
 		image_ctx->save();
 		image_ctx->set_source_rgba(0,0,0,0.3);
@@ -218,7 +222,7 @@ void CBoundDrawing::Redraw()
 	
 	/* redraw all strokes */
 	for(auto &str : strokes) {
-		str.Render(image_ctx,0,0);
+		str.Render(image_ctx,0,0,fg);
 		//printf("%f %f\n",strokes[0].xcoords[0],strokes[0].ycoords[0]);
 	}
 }
@@ -272,7 +276,7 @@ std::string CBoundDrawing::SerializeSVG()
 	Cairo::RefPtr<Cairo::Context> svg_ctx = Cairo::Context::create(svg);
 	
 	for(auto &str : strokes) {
-		str.Render(svg_ctx,0,0);
+		str.Render(svg_ctx,0,0, style_ctx->get_color());
 	}
 	
 	svg_ctx.clear();
