@@ -29,7 +29,8 @@ Moreover, there is also
 
 * an [Open Build Service package](https://software.opensuse.org//download.html?project=home%3Asp1rit%3Anotekit&package=notekit), which provides up-to-date packages for many distributions, including Arch Linux, Debian, Ubuntu, CentOS 8, Fedora, SLE and OpenSuSE (thanks to @sp1ritCS);
 * a [Fedora package](https://src.fedoraproject.org/rpms/notekit/) (thanks to @LyesSaadi);
-* a now significantly outdated [Launchpad PPA](https://launchpad.net/~msoloviev/+archive/ubuntu/notekit) with a DEB package for Ubuntu 18.04 and many other modern Debian-family systems.
+* a now significantly outdated [Launchpad PPA](https://launchpad.net/~msoloviev/+archive/ubuntu/notekit) with a DEB package for Ubuntu 18.04 and many other modern Debian-family systems;
+* a macOS port in [MacPorts](https://ports.macports.org/port/notekit).
 
 The following older binary builds are also available:
 
