@@ -134,5 +134,20 @@
         <property name="homogeneous">True</property>
       </packing>
     </child>
+    <child>
+      <object class="GtkRadioToolButton" id="magic-pen">
+        <property name="visible">True</property>
+	<property name="can_focus">False</property>
+	<property name="tooltip_text" translatable="yes">Foreground color</property>
+	<property name="action_name">notebook.color-foreground</property>
+        <property name="use_underline">True</property>
+        <property name="icon_name">pick-color-magic-pen-symbolic</property>
+	<property name="active">true</property>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="homogeneous">True</property>
+      </packing>
+    </child>
   </object>
 </interface>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+ <title>Gnome Symbolic Icon Theme</title>
+ <metadata>
+  <rdf:RDF>
+   <cc:Work rdf:about="">
+    <dc:format>image/svg+xml</dc:format>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:title>Gnome Symbolic Icon Theme</dc:title>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <g transform="translate(8 8) scale(1.5) translate(-208 -504)">
+  <path d="m208 499.02c-2.7496 0-4.9831 2.2335-4.9831 4.9831 0 0.95897 0.27308 1.8541 0.74349 2.6146l7.1094-6.6862c-0.81161-0.57341-1.8016-0.91146-2.8698-0.91146zm4.2396 2.3685-7.1094 6.6862c0.81161 0.57342 1.8016 0.91146 2.8698 0.91146 2.7496 0 4.9831-2.2335 4.9831-4.9831 0-0.95897-0.27308-1.8541-0.74349-2.6146z" color="#bebebe" fill="#bebebe" style="text-indent:0pt;text-transform:none"/>
+ </g>
+</svg>

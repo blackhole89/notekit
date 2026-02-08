@@ -6,6 +6,7 @@
 #include "notebook_widgets.hpp"
 
 #include <unordered_set>
+#include <math.h>
 
 // #define _DEBUG_MOTION_
 
@@ -286,10 +287,17 @@ void CNotebook::on_allocate(Gtk::Allocation &a)
 	}
 }
 
-void CStroke::Render(const Cairo::RefPtr<Cairo::Context> &ctx, float basex, float basey, int start_index)
+static inline gboolean should_use_foreground_color(gfloat alpha) {
+	return fpclassify(alpha) == FP_INFINITE && alpha < 0;
+}
+
+void CStroke::Render(const Cairo::RefPtr<Cairo::Context> &ctx, float basex, float basey, Gdk::RGBA fg, int start_index)
 {
 	ctx->translate(-basex,-basey);
-	ctx->set_source_rgba(r,g,b,a);
+	if (should_use_foreground_color(a))
+		ctx->set_source_rgba(fg.get_red(), fg.get_green(), fg.get_blue(), fg.get_alpha());
+	else
+		ctx->set_source_rgba(r,g,b,a);
 	ctx->set_line_cap(Cairo::LINE_CAP_ROUND);
 	for(unsigned int i=start_index;i<xcoords.size();++i) {
 		ctx->move_to(xcoords[i-1],ycoords[i-1]);
@@ -300,12 +308,15 @@ void CStroke::Render(const Cairo::RefPtr<Cairo::Context> &ctx, float basex, floa
 	ctx->translate(basex,basey);
 }
 
-void CStroke::RenderSelectionGlow(const Cairo::RefPtr<Cairo::Context> &ctx, float basex, float basey)
+void CStroke::RenderSelectionGlow(const Cairo::RefPtr<Cairo::Context> &ctx, float basex, float basey, Gdk::RGBA fg)
 {
 	if(!selected.size()) return;
 	
 	ctx->translate(-basex,-basey);
-	ctx->set_source_rgba(r,g,b,a);
+	if (should_use_foreground_color(a))
+		ctx->set_source_rgba(fg.get_red(), fg.get_green(), fg.get_blue(), fg.get_alpha());
+	else
+		ctx->set_source_rgba(r,g,b,a);
 	ctx->set_line_cap(Cairo::LINE_CAP_ROUND);
 	for(unsigned int i=1;i<xcoords.size();++i) {
 		if(selected[i]) {
@@ -1129,7 +1140,7 @@ bool CNotebook::on_motion_notify(GdkEventMotion *e)
 		
 		int bx, by;
 		window_to_buffer_coords(Gtk::TEXT_WINDOW_WIDGET,0,0,bx,by);
-		active.Render(overlay_ctx,bx,by,active.xcoords.size()-1);
+		active.Render(overlay_ctx,bx,by,get_style_context()->get_color(),active.xcoords.size()-1);
 		
 		overlay.queue_draw_area(e->x-delta-p,e->y-delta-p,2*delta+4*p,2*delta+4*p);
 	} else if (active_state==NB_STATE_ERASE) {
@@ -1346,7 +1357,7 @@ void CNotebook::CommitStroke()
 commit_stroke_new_drawing:
 	{
 		/* couldn't find a region to merge with; create a new image */
-		d = new CBoundDrawing(get_window(Gtk::TEXT_WINDOW_TEXT));
+		d = new CBoundDrawing(get_window(Gtk::TEXT_WINDOW_TEXT), get_style_context());
 		Gtk::manage(d); 
 		get_iter_at_location(i,x0,y0);
 		if(i.has_tag(tag_hidden)) {
@@ -1434,7 +1445,7 @@ bool CNotebook::on_deserialize(const Glib::RefPtr<Gtk::TextBuffer>& content_buff
 			pos+=7; pos0=pos;
 			pos=str.find(')',pos);
 			
-			CBoundDrawing *d = new CBoundDrawing(get_window(Gtk::TEXT_WINDOW_TEXT));
+			CBoundDrawing *d = new CBoundDrawing(get_window(Gtk::TEXT_WINDOW_TEXT), get_style_context());
 			Gtk::manage(d);
 			
 			/* store iterator through mark creation */
