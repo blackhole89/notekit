@@ -3,6 +3,7 @@
 #include "settings.h"
 #include <clocale>
 #include <iostream>
+#include <errno.h>
 #include <fontconfig/fontconfig.h>
 #include <locale.h>
 
@@ -497,7 +498,8 @@ void CMainWindow::FocusDocument()
 void CMainWindow::FetchAndSave()
 {
 	sview.last_modified=0;
-	
+
+	if (!sview.get_editable()) return;
 	if(active_document=="") return;
 	
 	gsize len;
@@ -515,8 +517,16 @@ void CMainWindow::FetchAndSave()
 	tmp_filename = filename;
 	tmp_filename += ".tmp";
 	
+	errno = 0;
 	/* TODO: this kills the xattrs */
 	FILE *fl = fopen(tmp_filename.c_str(), "wb");
+	if (errno != 0) {
+		const int err = errno;
+		throw Glib::FileError(
+			Glib::FileError::Code(g_file_error_from_errno(err)),
+			Glib::ustring::compose("Failed opening file for writing: %1", Glib::strerror(err))
+		);
+	}
 	fwrite(str.c_str(),str.length(),1,fl);
 	fclose(fl);
 
@@ -755,6 +765,14 @@ void CMainWindow::SettingDocumentUpdate() {
 		SetupDocumentWindow(filename);
 
 		g_free(buf);
+
+		try {
+			Glib::RefPtr<Gio::FileIOStream> stream = file->open_readwrite();
+			stream->close();
+		} catch (Gio::Error& e) {
+			g_printerr("Failed opening document for writing (%s), disabling editing.\n", e.what().c_str());
+			sview.set_editable(false);
+		}
 	} catch(Gio::Error &e) {
 		sview.set_editable(false);
 		sview.set_can_focus(false);
