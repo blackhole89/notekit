@@ -1,0 +1,120 @@
+name: Build NoteKit AppImage Release
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: 
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    container: archlinux:latest 
+
+    steps:
+      - name: Install System Dependencies
+        run: |
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm base-devel git wget meson ninja cmake \
+            gtkmm3 gtksourceview3 fontconfig jsoncpp tinyxml2 \
+            xorg-server-xvfb patchelf zsync awk
+
+      - name: Build NoteKit and Create AppImage
+        run: |
+          #!/bin/bash
+          set -e
+
+          APP_NAME="NoteKit"
+          REPO_URL="https://github.com/blackhole89/notekit.git"
+          DEPS_DIR="$(pwd)/local-deps"
+
+          echo "=========================================="
+          echo "1. Compiling missing dependency (gtksourceviewmm 3.18)..."
+          mkdir -p "$DEPS_DIR"
+
+          if [ ! -d "gtksourceviewmm-3.18.0" ]; then
+              wget -qO gtksourceviewmm.tar.xz https://download.gnome.org/sources/gtksourceviewmm/3.18/gtksourceviewmm-3.18.0.tar.xz
+              tar -xf gtksourceviewmm.tar.xz
+              rm gtksourceviewmm.tar.xz
+          fi
+
+          cd gtksourceviewmm-3.18.0
+          ./configure --prefix="$DEPS_DIR" --disable-static
+          make -j$(nproc)
+          make install
+          cd ..
+
+          export PKG_CONFIG_PATH="$DEPS_DIR/lib/pkgconfig:$PKG_CONFIG_PATH"
+          export LD_LIBRARY_PATH="$DEPS_DIR/lib:$LD_LIBRARY_PATH"
+
+          echo "2. Downloading NoteKit source code..."
+          rm -rf notekit-src
+          git clone --depth=1 "$REPO_URL" notekit-src
+          cd notekit-src
+
+          echo "3. Configuring the environment..."
+          CXXFLAGS="-w" meson setup build --prefix=/usr --buildtype=release -Dwerror=false
+
+          echo "4. Applying safe fix for clatexmath (Cairo 1.18+)..."
+          awk '/^#include/ { last=NR } { lines[NR]=$0 } END { for(i=1;i<=NR;i++) { print lines[i]; if(i==last) print "#include <fontconfig/fcfreetype.h>" } }' subprojects/clatexmath/src/platform/cairo/graphic_cairo.cpp > tmp.cpp
+          mv tmp.cpp subprojects/clatexmath/src/platform/cairo/graphic_cairo.cpp
+
+          echo "5. Compiling NoteKit..."
+          ninja -C build
+
+          echo "6. Preparing the AppDir folder..."
+          rm -rf AppDir
+          mkdir -p AppDir
+          DESTDIR="$(pwd)/AppDir" ninja -C build install
+
+          echo "7. Creating the AppImage using anylinux-appimages..."
+          cd ..
+
+          if [ ! -d "anylinux-appimages" ]; then
+              git clone https://github.com/pkgforge-dev/anylinux-appimages.git
+          fi
+          chmod +x ./anylinux-appimages/useful-tools/quick-sharun.sh
+          chmod +x ./anylinux-appimages/useful-tools/get-debloated-pkgs.sh
+
+          ./anylinux-appimages/useful-tools/get-debloated-pkgs.sh --add-common --prefer-nano
+
+          glib-compile-schemas notekit-src/AppDir/usr/share/glib-2.0/schemas/
+
+          export ICON="$(pwd)/notekit-src/AppDir/usr/share/icons/hicolor/scalable/apps/com.github.blackhole89.notekit.svg"
+          export DESKTOP="$(pwd)/notekit-src/AppDir/usr/share/applications/com.github.blackhole89.notekit.desktop"
+          export OUTPATH="$(pwd)"
+          export OUTNAME="NoteKit-x86_64.AppImage"
+          export LD_LIBRARY_PATH="$(pwd)/notekit-src/AppDir/usr/lib:$LD_LIBRARY_PATH"
+
+          chmod -R u+w AppDir 2>/dev/null || true
+          rm -rf AppDir
+
+          echo "Running quick-sharun..."
+          ./anylinux-appimages/useful-tools/quick-sharun.sh notekit-src/AppDir/usr/bin/notekit
+
+          mkdir -p AppDir/share
+          cp -r notekit-src/AppDir/usr/share/* AppDir/share/
+
+          rm -rf AppDir/share/{doc,man,gtk-doc,include} AppDir/usr/include
+          
+          find AppDir -type f -exec file {} + | grep -i elf | awk -F: '{print $1}' | xargs -r strip --strip-unneeded || true
+
+          ./anylinux-appimages/useful-tools/quick-sharun.sh --make-appimage
+
+          echo "8. Full cleanup..."
+          rm -rf notekit-src
+          rm -rf gtksourceviewmm-3.18.0
+          rm -rf "$DEPS_DIR"
+          
+          echo "Build finished successfully."
+
+      - name: Publish to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: continuous
+          name: "NoteKit Continuous Build"
+          body: "Automated nightly build of the NoteKit AppImage. The size has been optimized and stripped of debug symbols."
+          files: "*.AppImage"
+          prerelease: true
